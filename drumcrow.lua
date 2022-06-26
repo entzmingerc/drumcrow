@@ -281,6 +281,7 @@ function setup_i2c()
 	-- ii.self.call4 = function(ch, note, vol, t)
 		-- print("Whereof one cannot speak, thereof one must be silent");
 	-- end
+	-- test comment for git
 end
 
 -- select channel, set value of a param in states array
