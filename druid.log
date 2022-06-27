@@ -1,1 +1,3 @@
-2022-06-06 22:24:30,069 druid.crow      INFO    MainProcess connected to crow on COM4
+2022-06-26 19:51:37,406 druid.crow      INFO    MainProcess connected to crow on COM4
+2022-06-26 21:40:05,669 druid.crow      ERROR   MainProcess lost connection: ClearCommError failed (PermissionError(13, 'The device does not recognize the command.', None, 22))
+2022-06-26 21:42:20,643 druid.crow      INFO    MainProcess connected to crow on COM4

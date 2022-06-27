@@ -142,6 +142,16 @@ function v8_to_freq(v8)
   return 261.61 * (2 ^ v8)
 end
 
+function get_digits(b1)
+	-- TT variables -32768..+32767 so 5 digit maximum
+	local digits = {}
+	for i = 1, 5 do
+		digits[i] = b1 % 10
+		b1 = (b1 - digits[i]) / 10
+	end
+	return digits
+end
+
 -- input 1 stream to update all the synths in a loop
 function setup_input()
     print("INPUT OK.")
@@ -219,20 +229,32 @@ function setup_i2c()
 	-- cmd changes what parameter input 1 voltage changes
 	-- 114 = 1 select engine, 1 channel, 4 engine
 	-- want channel / value / command
+	-- TT variables -32768..+32767 so 5 digit maximum
+	-- ABCDE digit number, AB action, CD param, E channel
     ii.self.call1 = function (b1)
-        if b1 > 100 then
-			-- set a channel's synth model, local definition of channel
-            local eng = b1 % 10
-            local ch = ((b1 - eng) % 100) / 10
-            print("setting ch "..ch.." to eng "..eng)
-            setup_synth(ch, eng)
-        else
-			-- set (channel, command) destination for input 1 voltage
-			-- 042 = 0 select command, 2 channel, 40 command
-            ch = (b1 % 10 % 4)
-            ch = (ch == 0 and 4) or ch
-            cmd = b1 - ch
+		digits = get_digits(b1)
+		local action  = (digits[5] * 10) + digits[4]
+		local param   = (digits[3] * 10) + digits[2]
+		local channel = (digits[1] % 10 % 4)
+        channel = (channel == 0 and 4) or channel
+		for i = 1,5 do
+			print("digits"..digits[i])
+		end
+		print("action "..action.." param "..param.." channel "..channel)
+		
+		-- map input 1 voltage to (ch, cmd)
+		if action == 0 then
+            ch = channel
+            cmd = param
             print("input 1 mapping to ch "..ch.." command "..cmd)
+			
+		-- set ch synth engine 
+        elseif action == 1 then
+            print("setting ch "..channel.." to eng "..param)
+            setup_synth(channel, param)
+		
+		-- continue adding actions for call1
+        else
         end
     end
 	
@@ -240,24 +262,27 @@ function setup_i2c()
 	-- 041 V 10
 	-- set channel 1, command 40, value V 10
     ii.self.call2 = function (b1, value)
-        ch = (b1 % 10 % 4)
-        ch = (ch == 0 and 4) or ch
-        param = b1 - ch
+        digits = get_digits(b1)
+		local action  = (digits[5] * 10) + digits[4]
+		local param   = (digits[3] * 10) + digits[2]
+		local channel = (digits[1] % 10 % 4)
+        channel = (channel == 0 and 4) or channel
 		value = (u16_to_v10(value) - 5) * 2
-        print("setting param to "..param.." on ch "..ch.." value "..value)
-		if     param == 14 then set_state(ch, 'pw', value / 5)
+        print("setting param to "..param.." on channel "..channel.." value "..value)
+		
+		if     param == 14 then set_state(channel, 'pw', value / 5)
 		elseif param == 20 then 
 			value = 2 ^ (0 - value)
-			set_state(ch, 'efr', value)
-		elseif param == 24 then set_state(ch, 'esy', value / 5)
-		elseif param == 34 then set_state(ch, 'epw', value / 5)
-		elseif param == 40 then set_state(ch, 'ent', value)
-		elseif param == 44 then set_state(ch, 'lfr', 2 ^ value)
-		elseif param == 50 then set_state(ch, 'lsy', value / 5)
-		elseif param == 64 then set_state(ch, 'lnt', value)
+			set_state(channel, 'efr', value)
+		elseif param == 24 then set_state(channel, 'esy', value / 5)
+		elseif param == 34 then set_state(channel, 'epw', value / 5)
+		elseif param == 40 then set_state(channel, 'ent', value)
+		elseif param == 44 then set_state(channel, 'lfr', 2 ^ value)
+		elseif param == 50 then set_state(channel, 'lsy', value / 5)
+		elseif param == 64 then set_state(channel, 'lnt', value)
 		elseif param == 84 then 
 			value = math.min(math.abs(value), 5)
-			setup_synth(ch, math.min(math.floor(value / 5 * 3) + 1), 3)
+			setup_synth(channel, math.min(math.floor(value / 5 * 3) + 1), 3)
 		else
 		end
     end
@@ -398,8 +423,7 @@ end
 function init()
     updating = false
 	
-	channels = 4 -- ch
-	for i = 1, channels do
+	for i = 1, 4 do
 		setup_state(i)
 		setup_synth(i, 1)
 	end
