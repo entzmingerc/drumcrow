@@ -44,7 +44,7 @@ just call c3 to trigger volume envelopes
 
 local states = {}
 local ch = 1
-local cmd = 20
+local cmd = 11
 local presets = {}
 local updating = false
 local c2 = {}
@@ -54,67 +54,70 @@ local bad_cmd = function (ch, value, cmd)
     print("CAW!")
 end
 
--- | ch play @ frq      | C2 | 01-04, frq          |
-c2[00] = function (ch, tt_value)
-    states[ch].nte = u16_to_v10(tt_value)
-    trigger_note(ch)
+c2[0] = function (ch, v5)
+	-- deselect
 end
--- | ch play @ amp      | C2 | 05-08, amp (+rtrg)  |
--- | ch frq set (leg)   | C2 | 11-14, frq          |
--- | ch tmb set         | C2 | 15-18, tmb          |
+
+-- model pw timbre
     -- there is a bug w/ model 1 when pw = 16250
     -- detuned, undertones, sounds SICK
     -- DO NOT FIX IT YET
-c2[14] = function (ch, v5)
-    --set_state(ch, 'pw', tt_value / 16384)
+c2[1] = function (ch, v5)
     set_state(ch, 'pw', v5 / 5)
 end
--- | ch env frq (Hz*10) | C2 | 21-24, Hz*10 (-lp)  |
-c2[20] = function (ch, v5)
-    --set_state(ch, 'efr', 2 ^ u16_to_v10(0 - tt_value))
+-- c2[2] = function (ch, v5)
+    -- set_state(ch, 'pw2', v5 / 5)
+-- end
+
+-- ENV 1X
+-- ENV frequency (Hz*10) Hz*10 (-lp)
+c2[11] = function (ch, v5)
     v5 = 2 ^ (0 - v5)
     set_state(ch, 'efr', v5)
 end
--- | ch env sym (A:D)   | C2 | 25-28, sym          |
-c2[24] = function (ch, v5)
-    --set_state(ch, 'esy', tt_value / 16384)
+-- ENV symmetry (A:D)
+c2[12] = function (ch, v5)
     set_state(ch, 'esy', v5 / 5)
 end
--- | ch env crv         | C2 | 31-34, exp          |
--- | ch env>tmb         | C2 | 35-38, dep          |
-c2[34] = function (ch, v5)
-    --set_state(ch, 'epw', tt_value / 16384)
+-- ENV curvature
+c2[13] = function (ch, v5)
+    set_state(ch, 'ecr', v5)
+end
+-- ENV pw timbre
+c2[14] = function (ch, v5)
     set_state(ch, 'epw', v5 / 5)
 end
--- | ch env>frq         | C2 | 41-44, dep          |
-c2[40] = function (ch, v5)
-    --set_state(ch, 'ent', u16_to_v10(tt_value))
+-- ENV depth
+c2[15] = function (ch, v5)
     set_state(ch, 'ent', v5)
 end
--- | ch lfo spd (Hz*10) | C2 | 45-48, Hz*10 (+rst) |
-c2[44] = function (ch, v5)
-    --set_state(ch, 'lfr', 2 ^ u16_to_v10(tt_value))
+-- LFO 2X
+-- LFO spd (Hz*10) | C2 | 45-48, Hz*10 (+rst) |
+c2[21] = function (ch, v5)
     set_state(ch, 'lfr', 2 ^ v5)
 end
--- | ch lfo sym (R:F)   | C2 | 51-54, sym          |
-c2[50] = function (ch, v5)
-    --set_state(ch, 'lsy', tt_value / 16384)
+-- LFO symmetry (R:F) 
+c2[22] = function (ch, v5)
     set_state(ch, 'lsy', v5 / 5)
 end
--- | ch lfo crv         | C2 | 55-58, exp          |
--- | ch lfo>tmb         | C2 | 61-64, dep          |
--- | ch lfo>frq         | C2 | 65-68, dep          |
-c2[64] = function (ch, v5)
-    --set_state(ch, 'lnt', u16_to_v10(tt_value))
+-- LFO curvature 
+c2[23] = function (ch, v5)
+    set_state(ch, 'lcr', v5)
+end
+-- LFO pulse width 
+c2[24] = function (ch, v5)
+    set_state(ch, 'lpw', v5)
+end
+-- LFO DEPTH
+c2[25] = function (ch, v5)
     set_state(ch, 'lnt', v5)
 end
+-- todo: slew
 -- | set frq slew       | C2 | 71-74, frq          |
 -- | set tmb slew       | C2 | 75-78, frq          |
 -- | set mod slew       | C2 | 81-84, frq          |
 -- | select "engine"    | C2 | 85-88, p/s/n        |
 c2[84] = function (ch, v5)
-    --setup_synth(ch, tt_value)
-
     v5 = math.min(math.abs(v5), 5)
     setup_synth(ch, math.min(math.floor(v5 / 5 * 3) + 1), 3)
 end
@@ -123,7 +126,7 @@ end
 
 
 
--- -32768 to 32767
+-- -32768 to +32767
 function u16_to_v10(u16)
     return u16/16384*10;
 end
@@ -131,11 +134,9 @@ end
 function v10_to_u16(u16)
     return u16/10*16384;
 end
-
 function v5_to_u16(u16)
     return u16/5*16384;
 end
-
 function v8_to_freq(v8)
     -- Tyler's Mordax said JF 0V = 261.61
     -- -5v - +5v = 8.17Hz - 8.37kHz.
@@ -224,11 +225,6 @@ end
 
 -- initialize i2c function calls for teletype
 function setup_i2c()
-	-- CROW.C1 1xy -- set ch x to engine y
-	-- CROW.C1 0xy -- set command and channel
-	-- cmd changes what parameter input 1 voltage changes
-	-- 114 = 1 select engine, 1 channel, 4 engine
-	-- want channel / value / command
 	-- TT variables -32768..+32767 so 5 digit maximum
 	-- ABCDE digit number, AB action, CD param, E channel
     ii.self.call1 = function (b1)
@@ -242,13 +238,13 @@ function setup_i2c()
 		end
 		print("action "..action.." param "..param.." channel "..channel)
 		
-		-- map input 1 voltage to (ch, cmd)
+		-- 0: map input 1 voltage to (ch, cmd)
 		if action == 0 then
             ch = channel
             cmd = param
             print("input 1 mapping to ch "..ch.." command "..cmd)
 			
-		-- set ch synth engine 
+		-- 1: set ch synth engine 
         elseif action == 1 then
             print("setting ch "..channel.." to eng "..param)
             setup_synth(channel, param)
@@ -270,16 +266,19 @@ function setup_i2c()
 		value = (u16_to_v10(value) - 5) * 2
         print("setting param to "..param.." on channel "..channel.." value "..value)
 		
-		if     param == 14 then set_state(channel, 'pw', value / 5)
-		elseif param == 20 then 
+		if     param == 1 then set_state(channel, 'pw', value / 5)
+		elseif param == 11 then 
 			value = 2 ^ (0 - value)
 			set_state(channel, 'efr', value)
-		elseif param == 24 then set_state(channel, 'esy', value / 5)
-		elseif param == 34 then set_state(channel, 'epw', value / 5)
-		elseif param == 40 then set_state(channel, 'ent', value)
-		elseif param == 44 then set_state(channel, 'lfr', 2 ^ value)
-		elseif param == 50 then set_state(channel, 'lsy', value / 5)
-		elseif param == 64 then set_state(channel, 'lnt', value)
+		elseif param == 12 then set_state(channel, 'esy', value / 5)
+		elseif param == 13 then set_state(channel, 'ecr', value)
+		elseif param == 14 then set_state(channel, 'epw', value / 5)
+		elseif param == 15 then set_state(channel, 'ent', value)
+		elseif param == 21 then set_state(channel, 'lfr', 2 ^ value)
+		elseif param == 22 then set_state(channel, 'lsy', value / 5)
+		elseif param == 23 then set_state(channel, 'lcr', value)
+		elseif param == 24 then set_state(channel, 'lpw', value)
+		elseif param == 25 then set_state(channel, 'lnt', value)
 		elseif param == 84 then 
 			value = math.min(math.abs(value), 5)
 			setup_synth(channel, math.min(math.floor(value / 5 * 3) + 1), 3)
@@ -300,13 +299,6 @@ function setup_i2c()
         states[ch].amp = amp
         trigger_note(ch)
     end
-	
-	-- CROW.C4 x y z t
-	-- currently unused
-	-- ii.self.call4 = function(ch, note, vol, t)
-		-- print("Whereof one cannot speak, thereof one must be silent");
-	-- end
-	-- test comment for git
 end
 
 -- select channel, set value of a param in states array
