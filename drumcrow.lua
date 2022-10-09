@@ -41,7 +41,6 @@ just call c3 to trigger volume envelopes
 | play frq, amp      | C3 | 01-04, frq, amp     |
 | play preset, amp   | C3 | 11-14, frq, amp     |
 --]]
-
 local states = {}
 local ch = 1
 local cmd = 11
@@ -69,7 +68,7 @@ end
     -- set_state(ch, 'pw2', v5 / 5)
 -- end
 
--- ENV 1X
+-- ENV 1XX
 -- ENV frequency (Hz*10) Hz*10 (-lp)
 c2[11] = function (ch, v5)
     v5 = 2 ^ (0 - v5)
@@ -91,8 +90,8 @@ end
 c2[15] = function (ch, v5)
     set_state(ch, 'ent', v5)
 end
--- LFO 2X
--- LFO spd (Hz*10) | C2 | 45-48, Hz*10 (+rst) |
+-- LFO 2XX
+-- LFO spd (Hz*10) Hz*10 (+rst)
 c2[21] = function (ch, v5)
     set_state(ch, 'lfr', 2 ^ v5)
 end
@@ -216,10 +215,20 @@ function setup_synth(output_index, model)
 			to(dyn{x = 1} / 32768 * dyn{amp=2}, dyn{cyc = 1/440} / 2)
 		} 
 	end
+	
+	function noise()
+		return loop {
+			-- random * range + minimumOffset
+			-- math.random()*2+0.001
+			-- math.random()*0.00245+0.00005
+			to(  dyn{amp=2}, dyn{cyc=1/440} *     dyn{pw=1/2}  ),
+			to(  dyn{amp=2}, dyn{cyc=1/440} *  (1-dyn{pw=1/2}) ),
+		} 
+	end
 
 	-- assign fucntions and models to state array
     states[output_index].mdl = model
-    output[output_index].action = ({ var_saw, pwm, lcg })[model]()
+    output[output_index].action = ({ var_saw, pwm, lcg, noise })[model]()
     output[output_index]()
 end
 
@@ -388,9 +397,15 @@ function update_synth(i)
     local note = s.nte + (modenv * s.ent) + (lfo * s.lnt)
     local freq = v8_to_freq(note)
     if freq <= 0 then freq = 0.0000000001 end
-    local cyc = 1/freq
+	if freq >= 20000 then freq = 20000 end
+	local cyc = 1/freq
     if cyc <= 0 then cyc = 0.0000000001 end
-    output[i].dyn.cyc = cyc
+	if cyc >= 20000 then cyc = 20000 end
+	if s.mdl == 4 then
+		output[i].dyn.cyc = math.random()*0.00245+0.00005
+	else
+		output[i].dyn.cyc = cyc
+	end
 
     -- AMP
     output[i].dyn.amp = ampenv * s.amp
