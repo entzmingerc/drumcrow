@@ -47,7 +47,7 @@ Trigger the envelope at channel X, with pitch Y, with volume Z
 M: 
 CV 4 PARAM
 EV 2: $ 1
-EV 4: $ 1
+EV 4: $ 2
 
 1:
 CROW.C3 1 V -2 V 10
@@ -56,6 +56,8 @@ CROW.C3 1 V -2 V 10
 CROW.C3 2 V 4 V 6
 
 LIVE INPUT: 
+Set M to your favorite tempo
+M 172
 Adjust Kick drum using these commands ENV DECAY TIME (111) ENV PITCH DEPTH (151)
 CROW.C1 111
 CROW.C1 151
