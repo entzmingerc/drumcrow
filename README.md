@@ -24,7 +24,7 @@ Z = Volume (teletype number)
 Trigger the envelope at channel X, with pitch Y, with volume Z  
 
 # Synth Parameters
-## Synth Model
+## Synth Models
 1 = Variable Saw  
 2 = Square (Pulse Width Modulation)  
 3 = LCG (Linear Congruential Generator = pseudorandom noise) (experimental)  
