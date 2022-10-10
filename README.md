@@ -22,8 +22,8 @@ Trigger the envelope at channel X, with pitch Y, with volume Z
 ## Synth Model
 1 = Variable Saw  
 2 = Square (Pulse Width Modulation)  
-3 = LCG (Linear Congruential Generator = pseudorandom noise) (experimental)
-4 = Splash (random noise applied to ASL cycle time = splashy synth) 
+3 = LCG (Linear Congruential Generator = pseudorandom noise) (experimental)  
+4 = Splash (random noise applied to ASL cycle time = splashy synth)  
 
 ## Mod Source 
 1 = ENV (envelope)  
@@ -73,3 +73,5 @@ Continue adding more voices, adjusting parameters, modulating sounds, sequencing
 - Experiment with different synth models
 - Do something with crow input 2
 - Add presets, get/set presets, sequence through presets, possibly using sequins table in Crow 
+- Better code documentation, clean up variable names, comments, organization
+- Remapping mod parameter ranges from 0 - 10V for easier / faster parameter tuning
