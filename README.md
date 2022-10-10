@@ -30,7 +30,7 @@ Trigger the envelope at channel X, with pitch Y, with volume Z
 2 = LFO  
 
 ## Mod Parameters
-1 = Frequency (ENV cycle time or LFO rate)
+1 = Frequency (ENV cycle time or LFO rate)  
 2 = Symmetry (attack : decay)  
 3 = Curvature  
 4 = Pulse Width (timbre)  
