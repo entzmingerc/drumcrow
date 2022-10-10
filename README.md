@@ -43,10 +43,10 @@ Trigger the envelope at channel X, with pitch Y, with volume Z
 4 = Crow Output 4  
 
 ## Synth Models
-1 = Variable Saw  
-2 = Square (Pulse Width Modulation)  
-3 = LCG (Linear Congruential Generator = pseudorandom noise) (experimental)  
-4 = Splash (random noise applied to ASL cycle time = splashy synth)  
+01 = Variable Saw  
+02 = Square (Pulse Width Modulation)  
+03 = LCG (Linear Congruential Generator = pseudorandom noise) (experimental)  
+04 = Splash (random noise applied to ASL cycle time = splashy synth)  
 
 # Example Kick and Snare Pattern
 Connect CV output 4 on Teletype to Crow input 1.  
