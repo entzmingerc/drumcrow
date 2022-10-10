@@ -216,19 +216,17 @@ function setup_synth(output_index, model)
 		} 
 	end
 	
-	function noise()
+	-- random noise applied to the var_saw synth
+	function splash()
 		return loop {
-			-- random * range + minimumOffset
-			-- math.random()*2+0.001
-			-- math.random()*0.00245+0.00005
-			to(  dyn{amp=2}, dyn{cyc=1/440} *     dyn{pw=1/2}  ),
-			to(  dyn{amp=2}, dyn{cyc=1/440} *  (1-dyn{pw=1/2}) ),
+			to(  dyn{amp=2}, dyn{cyc=1/440} *     dyn{pw=1/2} , 'rebound'),
+			to(0-dyn{amp=2}, dyn{cyc=1/440} *  (1-dyn{pw=1/2}), 'rebound'),
 		} 
 	end
 
 	-- assign fucntions and models to state array
     states[output_index].mdl = model
-    output[output_index].action = ({ var_saw, pwm, lcg, noise })[model]()
+    output[output_index].action = ({ var_saw, pwm, lcg, splash })[model]()
     output[output_index]()
 end
 
@@ -399,16 +397,19 @@ function update_synth(i)
     if freq <= 0 then freq = 0.0000000001 end
 	if freq >= 20000 then freq = 20000 end
 	local cyc = 1/freq
-    if cyc <= 0 then cyc = 0.0000000001 end
-	if cyc >= 20000 then cyc = 20000 end
 	if s.mdl == 4 then
-		output[i].dyn.cyc = math.random()*0.00245+0.00005
+		norm_cyc = cyc/0.1
+		if math.random()*0.1 < norm_cyc then
+			output[i].dyn.cyc = cyc + (cyc * 0.2 * math.random())
+		else
+			output[i].dyn.cyc = cyc + math.random()*0.002
+		end
 	else
 		output[i].dyn.cyc = cyc
 	end
 
     -- AMP
-    output[i].dyn.amp = ampenv * s.amp
+	output[i].dyn.amp = ampenv * s.amp
 
     -- TIMBRE
     if s.mdl == 3 then

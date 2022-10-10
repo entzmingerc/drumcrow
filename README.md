@@ -22,7 +22,7 @@ Synth Model
 1 = Variable Saw
 2 = Pulse Width Modulation Square
 3 = LCG (Linear Congruential Generator = pseudorandom noise)
-4 = math.random noise testing (non-functional)
+4 = Splash (random noise applied to cycle time = splashy synth)
 
 Mod Source 
 1 = ENV (envelope)
