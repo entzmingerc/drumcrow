@@ -1,5 +1,10 @@
 # drumcrow
-This script turns crow into a 4-channel drum machine driven with monome teletype. 
+This script turns crow into a 4-channel drum machine driven with monome teletype.  
+
+**Demos**  
+Originally adapted from License's Flash Crash performance [here](https://www.youtube.com/watch?v=SYfeBtJjQ-M)  
+postsolarpunk Flash Crash performance [here](https://www.youtube.com/watch?v=_EKpT1tO02o)  
+playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
 
 # Teletype Commands
 ## CROW.C1 X
@@ -25,24 +30,24 @@ Trigger the envelope at channel X, with pitch Y, with volume Z
 3 = LCG (Linear Congruential Generator = pseudorandom noise) (experimental)  
 4 = Splash (random noise applied to ASL cycle time = splashy synth)  
 
-## Mod Source 
+## Mod Sources 
 1 = ENV (envelope)  
 2 = LFO  
 
-## Mod Parameter
+## Mod Parameters
 1 = Frequency  
 2 = Symmetry (attack : decay)  
 3 = Curvature  
 4 = Pulse Width (timbre)  
 5 = Depth (amplitude)  
 
-## Channel
+## Channels
 1 = Crow Output 1  
 2 = Crow Output 2  
 3 = Crow Output 3  
 4 = Crow Output 4  
 
-# Example Kick Snare Pattern
+# Example Kick and Snare Pattern
 ```
 M: 
 CV 4 PARAM
