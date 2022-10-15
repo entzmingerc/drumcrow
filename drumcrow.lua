@@ -47,6 +47,7 @@ local cmd = 11
 local presets = {}
 local updating = false
 local c2 = {}
+local shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under','rebound'}
 
 
 local bad_cmd = function (ch, value, cmd) 
@@ -116,10 +117,10 @@ end
 -- | set tmb slew       | C2 | 75-78, frq          |
 -- | set mod slew       | C2 | 81-84, frq          |
 -- | select "engine"    | C2 | 85-88, p/s/n        |
-c2[84] = function (ch, v5)
-    v5 = math.min(math.abs(v5), 5)
-    setup_synth(ch, math.min(math.floor(v5 / 5 * 3) + 1), 3)
-end
+-- c2[84] = function (ch, v5)
+    -- v5 = math.min(math.abs(v5), 5)
+    -- setup_synth(ch, math.min(math.floor(v5 / 5 * 3) + 1), 1)
+-- end
 -- | load preset #      | C2 | 91-94, pset 0-9     |
 -- | save preset #      | C2 | 95-98, pset 0-9     |
 
@@ -178,7 +179,7 @@ function setup_input()
 end
 
 -- initialize sound engine functions to state array
-function setup_synth(output_index, model)
+function setup_synth(output_index, model, shape)
     -- variable saw wave
 	function var_saw () 
 		return loop {
@@ -211,7 +212,7 @@ function setup_synth(output_index, model)
 			to(dyn{x = 1}
 				: mul(dyn{pw2 = 4037})
 				: step(dyn{pw = 21032})
-				: wrap(-32768,  32768 )/32768 * dyn{amp = 2}, 0),
+				: wrap(-32768,  32768 ) / 32768 * dyn{amp = 2}, 0),
 			to(dyn{x = 1} / 32768 * dyn{amp=2}, dyn{cyc = 1/440} / 2)
 		} 
 	end
@@ -220,14 +221,28 @@ function setup_synth(output_index, model)
 	function splash()
 		return loop {
 			to(  dyn{amp=2}, dyn{cyc=1/440} *     dyn{pw=1/2} , 'rebound'),
-			to(0-dyn{amp=2}, dyn{cyc=1/440} *  (1-dyn{pw=1/2}), 'rebound'),
+			to(0-dyn{amp=2}, dyn{cyc=1/440} *  (1-dyn{pw=1/2}), 'rebound')
+		} 
+	end
+	
+	-- testing shape functions
+	function shaper(shape)
+		shape = shape or 'linear'
+		return loop {
+			to(  dyn{amp=2}, dyn{cyc=1/440} *     dyn{pw=1/2} , shape),
+			to(0-dyn{amp=2}, dyn{cyc=1/440} *  (1-dyn{pw=1/2}), shape),
 		} 
 	end
 
 	-- assign fucntions and models to state array
     states[output_index].mdl = model
-    output[output_index].action = ({ var_saw, pwm, lcg, splash })[model]()
-    output[output_index]()
+	states[output_index].shp = shapes[shape]
+	if model == 5 then 
+		output[output_index]( shaper(shapes[shape]) )
+	else
+		output[output_index].action = ({ var_saw, pwm, lcg, splash, shaper })[model]()
+		output[output_index]()
+	end
 end
 
 -- initialize i2c function calls for teletype
@@ -253,8 +268,8 @@ function setup_i2c()
 			
 		-- 1: set ch synth engine 
         elseif action == 1 then
-            print("setting ch "..channel.." to eng "..param)
-            setup_synth(channel, param)
+            print("setting ch "..channel.." to eng "..digits[2].." to shape "..digits[3])
+            setup_synth(channel, digits[2], digits[3])
 		
 		-- continue adding actions for call1
         else
@@ -286,9 +301,9 @@ function setup_i2c()
 		elseif param == 23 then set_state(channel, 'lcr', value)
 		elseif param == 24 then set_state(channel, 'lpw', value)
 		elseif param == 25 then set_state(channel, 'lnt', value)
-		elseif param == 84 then 
-			value = math.min(math.abs(value), 5)
-			setup_synth(channel, math.min(math.floor(value / 5 * 3) + 1), 3)
+		-- elseif param == 84 then 
+			-- value = math.min(math.abs(value), 5)
+			-- setup_synth(channel, math.min(math.floor(value / 5 * 3) + 1), 3)
 		else
 		end
     end
@@ -325,6 +340,7 @@ function setup_state(ch)
         pw  = 0, -- pulse width variable 1
         pw2 = 4037, -- pulse width variable 2
         mdl = 1, -- model number
+		shp = 'linear', -- shape (ASL CV Shape)
 		
         -- I think these are slew
         nsl = 16384, -- not referenced elsewhere
@@ -413,6 +429,7 @@ function update_synth(i)
 
     -- TIMBRE
     if s.mdl == 3 then
+		-- LCG code
         --local pw = s.pw + (env * s.epw) + (lfo * s.lpw)
         --pw = math.max(-1, math.min(pw, 1))
         --pw = (pw + 1) / 2
@@ -424,7 +441,7 @@ function update_synth(i)
         pw = math.max(-1, math.min(pw, 1))
         pw = (pw + 1) / 2
         output[i].dyn.pw = pw
-    end
+    end	
 end
 
 -- INIT
@@ -433,7 +450,7 @@ function init()
 	
 	for i = 1, 4 do
 		setup_state(i)
-		setup_synth(i, 1)
+		setup_synth(i, 1, 1)
 	end
 	
 	-- initialize the amp and cyc dynamic variables for oscillators
