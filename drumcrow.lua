@@ -156,10 +156,8 @@ end
 -- input 1 stream to update all the synths in a loop
 function setup_input()
     print("INPUT OK.")
-	-- read input voltage 1, map input 0..+10V to -10..+10 internally
-	-- call c2 to update the states
-	-- use the state array to update the synth
-	-- loop
+	
+	-- read input voltage 1, map input 0..+10V to -10..+10 internally, update synths
     input[1].stream = function (v)
         if     v <=  0 then v = -10
 		elseif v >= 10 then v =  10
@@ -178,26 +176,19 @@ function setup_input()
     input[2]{mode = 'stream', time = 10}
 end
 
--- initialize sound engine functions to state array
+-- create ASL table to loop
 function setup_synth(output_index, model, shape)
-    -- variable saw wave
-	function var_saw () 
-		return loop {
-			to(  dyn{amp=2}, dyn{cyc=1/440} *    dyn{pw=1/2} ),
-			to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}))
-		} 
-	end
-	
-	-- pulse width modulation
-    function pwm () 
-		return loop {
-			to(  dyn{amp=2},                              0  ),
-		    to(  dyn{amp=2}, dyn{cyc=1/440} *    dyn{pw=1/2} ),
-		    to(0-dyn{amp=2},                              0  ),
-		    to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}))
-		} 
-	end
 
+    -- variable 2-stage wave|\ to /\ to /|
+	function var_saw (shape) 
+		shape = shape or 'linear'
+		return loop {
+			to(  dyn{amp=2}, dyn{cyc=1/440} *    dyn{pw=1/2} , shape),
+			to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape)
+		} 
+	end	
+
+	-- linear congruential generator (LCG)
     -- a = pw2
     -- c = pw
     -- https://w.wiki/tV5
@@ -205,44 +196,25 @@ function setup_synth(output_index, model, shape)
     -- a-1 is divisible by all prime factors of m,
     -- a-1 is divisible by 4 if m is divisible by 4.
 	-- X(n+1) = (aX.n + c) mod m
-	-- linear congruential generator (LCG)
 	-- generates sequence of pseudo-random numbers
-    function lcg() 
+    function lcg(shape) 
+		shape = shape or 'linear'
 		return loop {
 			to(dyn{x = 1}
 				: mul(dyn{pw2 = 4037})
 				: step(dyn{pw = 21032})
-				: wrap(-32768,  32768 ) / 32768 * dyn{amp = 2}, 0),
-			to(dyn{x = 1} / 32768 * dyn{amp=2}, dyn{cyc = 1/440} / 2)
+				: wrap(-32768,  32768 ) / 32768 * dyn{amp=2},                  0, shape),
+			to(              dyn{x = 1} / 32768 * dyn{amp=2}, dyn{cyc=1/440} / 2, shape)
 		} 
 	end
 	
-	-- random noise applied to the var_saw synth
-	function splash()
-		return loop {
-			to(  dyn{amp=2}, dyn{cyc=1/440} *     dyn{pw=1/2} , 'rebound'),
-			to(0-dyn{amp=2}, dyn{cyc=1/440} *  (1-dyn{pw=1/2}), 'rebound')
-		} 
-	end
-	
-	-- testing shape functions
-	function shaper(shape)
-		shape = shape or 'linear'
-		return loop {
-			to(  dyn{amp=2}, dyn{cyc=1/440} *     dyn{pw=1/2} , shape),
-			to(0-dyn{amp=2}, dyn{cyc=1/440} *  (1-dyn{pw=1/2}), shape),
-		} 
-	end
-
-	-- assign fucntions and models to state array
+	-- assign action to output run it
     states[output_index].mdl = model
 	states[output_index].shp = shapes[shape]
-	if model == 5 then 
-		output[output_index]( shaper(shapes[shape]) )
-	else
-		output[output_index].action = ({ var_saw, pwm, lcg, splash, shaper })[model]()
-		output[output_index]()
+	if     model == 1 or 3 then output[output_index]( var_saw(shapes[shape]) )
+	elseif model == 2 then output[output_index]( lcg(shapes[shape]) )
 	end
+
 end
 
 -- initialize i2c function calls for teletype
@@ -310,8 +282,7 @@ function setup_i2c()
 	
 	-- CROW.C3 x y z -- play (freq, amp) or (preset, amp)
     ii.self.call3 = function (ch, note, vol)
-    -- | play frq, amp      | C3 | 01-04, frq, amp     |
-    -- | play preset, amp   | C3 | 11-14, frq, amp     |
+    -- | play frq, amp      
         if ch == nil or note == nil or vol == nil or ch < 1 or ch > 4 then 
             return 
         end
@@ -334,18 +305,12 @@ end
 function setup_state(ch)
     -- sy (symmetry) is like pulsewidth
     states[ch] = {
-		-- what are all these variable names?
         nte = 0, -- note (for frequency calculation)
         amp = 2, -- amplitude of oscillator
         pw  = 0, -- pulse width variable 1
         pw2 = 4037, -- pulse width variable 2
         mdl = 1, -- model number
 		shp = 'linear', -- shape (ASL CV Shape)
-		
-        -- I think these are slew
-        nsl = 16384, -- not referenced elsewhere
-        psl = 16384, -- not referenced elsewhere
-        msl = 16384, -- not referenced elsewhere
 		
         -- this crashes when I set it negative (or 0?)		
 		-- ENVELOPE
@@ -377,7 +342,7 @@ function peak(ph, pw, curve)
     return value
 end
 
--- accumulates phase? uhh?
+-- accumulates phase
 function acc(phase, freq, sec, looping)
     phase = phase + (freq * sec)
     phase = looping and ((1 + phase) % 2 - 1) or math.min(1, phase)
@@ -428,7 +393,7 @@ function update_synth(i)
 	output[i].dyn.amp = ampenv * s.amp
 
     -- TIMBRE
-    if s.mdl == 3 then
+    if s.mdl == 2 then
 		-- LCG code
         --local pw = s.pw + (env * s.epw) + (lfo * s.lpw)
         --pw = math.max(-1, math.min(pw, 1))

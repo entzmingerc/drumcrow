@@ -1,4 +1,4 @@
-2022-10-14 20:14:48,501 druid.crow      INFO    MainProcess connected to crow on COM3
-2022-10-14 21:19:51,227 druid.crow      ERROR   MainProcess lost connection: ClearCommError failed (PermissionError(13, 'The device does not recognize the command.', None, 22))
-2022-10-14 21:19:53,360 druid.crow      INFO    MainProcess connected to crow on COM3
-2022-10-14 21:55:49,756 druid.crow      ERROR   MainProcess lost connection: ClearCommError failed (PermissionError(13, 'The device does not recognize the command.', None, 22))
+2022-10-16 15:44:28,995 druid.crow      INFO    MainProcess connected to crow on COM3
+2022-10-16 15:49:34,865 druid.crow      ERROR   MainProcess lost connection: ClearCommError failed (PermissionError(13, 'The device does not recognize the command.', None, 22))
+2022-10-16 15:51:10,895 druid.crow      INFO    MainProcess connected to crow on COM3
+2022-10-16 15:52:02,349 druid.crow      ERROR   MainProcess lost connection: ClearCommError failed (PermissionError(13, 'The device does not recognize the command.', None, 22))
