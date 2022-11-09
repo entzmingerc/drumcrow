@@ -1,56 +1,19 @@
---- teletyping drums
+--- drumcrow
 --[[
-deleted setup_synths() function 
-setup_synth() is used to define the oscillator which always runs
-state is used to define LFO, ENV, TIMBRE parameters
-then update_synth is used to update the LFO, ENV, TIMBRE, NOTE, parameters
-can we combine the synth_setup and update_synth and state parameters into something cleaner
+4 voice drum machine
+CROW.C1 X
+CROW.C2 X Y
+CROW.C3 X Y Z
 
-fixed i in setup_synths, changed to ch
-MAYBE: change variable names to be clearer?
-TODO: rewrite so digit places for ch is the same for each i2c call in setup_i2c
-TODO: what do the output dyn vars do in INIT()?
-TODO: how does update_synth()?! acc? peak? 
-okay so I think the outputs are always oscillating and outputing
-just call c3 to trigger volume envelopes
-
-
-| desc               | fn | ...args             |
-|--------------------|----|---------------------|
-| ch play            | C1 | 01-04               |
-
-| ch play @ amp      | C2 | 05-08, amp (+rtrg)  |
-| ch frq set (leg)   | C2 | 11-14, frq          |
-| ch tmb set         | C2 | 15-18, tmb          |
-| ch env sym (A:D)   | C2 | 25-28, sym          |
-| ch env crv         | C2 | 31-34, exp          |
-| ch env>tmb         | C2 | 35-38, dep          |
-| ch env>frq         | C2 | 41-44, dep          |
-| ch lfo spd (Hz*10) | C2 | 45-48, Hz*10 (+rst) |
-| ch lfo sym (R:F)   | C2 | 51-54, sym          |
-| ch lfo crv         | C2 | 55-58, exp          |
-| ch lfo>tmb         | C2 | 61-64, dep          |
-| ch lfo>frq         | C2 | 65-68, dep          |
-| set frq slew       | C2 | 71-74, frq          |
-| set tmb slew       | C2 | 75-78, frq          |
-| set mod slew       | C2 | 81-84, frq          |
-| select "engine"    | C2 | 85-88, p/s/n        |
-| load preset #      | C2 | 91-94, pset 0-9     |
-| save preset #      | C2 | 95-98, pset 0-9     |
-
-| play frq, amp      | C3 | 01-04, frq, amp     |
-| play preset, amp   | C3 | 11-14, frq, amp     |
 --]]
 local states = {}
 local ch = 1
 local cmd = 11
 local presets = {}
-local updating = false
 local c2 = {}
 local shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under','rebound'}
 
-
-local bad_cmd = function (ch, value, cmd) 
+local bad_cmd = function (ch, value) 
     print("CAW!")
 end
 
@@ -65,8 +28,13 @@ end
 c2[1] = function (ch, v5)
     set_state(ch, 'pw', v5 / 5)
 end
--- c2[2] = function (ch, v5)
-    -- set_state(ch, 'pw2', v5 / 5)
+
+c2[2] = function (ch, v5)
+    set_state(ch, 'pw2', v5 / 5)
+end
+
+-- c2[3] = function (ch, v5)
+    -- set_state(ch, 'slw', v5)
 -- end
 
 -- ENV 1XX
@@ -112,18 +80,28 @@ end
 c2[25] = function (ch, v5)
     set_state(ch, 'lnt', v5)
 end
--- todo: slew
--- | set frq slew       | C2 | 71-74, frq          |
--- | set tmb slew       | C2 | 75-78, frq          |
--- | set mod slew       | C2 | 81-84, frq          |
--- | select "engine"    | C2 | 85-88, p/s/n        |
--- c2[84] = function (ch, v5)
-    -- v5 = math.min(math.abs(v5), 5)
-    -- setup_synth(ch, math.min(math.floor(v5 / 5 * 3) + 1), 1)
--- end
--- | load preset #      | C2 | 91-94, pset 0-9     |
--- | save preset #      | C2 | 95-98, pset 0-9     |
-
+-- AMP ENV 1XX
+-- AMP ENV frequency (Hz*10) Hz*10 (-lp)
+c2[31] = function (ch, v5)
+    v5 = 2 ^ (0 - v5)
+    set_state(ch, 'afr', v5)
+end
+-- AMP ENV symmetry (A:D)
+c2[32] = function (ch, v5)
+    set_state(ch, 'asy', v5 / 5)
+end
+-- AMP ENV curvature
+c2[33] = function (ch, v5)
+    set_state(ch, 'acr', v5)
+end
+-- AMP ENV pw timbre
+c2[34] = function (ch, v5)
+    set_state(ch, 'apw', v5 / 5)
+end
+-- AMP ENV depth
+c2[35] = function (ch, v5)
+    set_state(ch, 'ant', v5)
+end
 
 
 -- -32768 to +32767
@@ -163,7 +141,7 @@ function setup_input()
 		elseif v >= 10 then v =  10
         else   v = (v - 5) * 2
         end 
-        ;(c2[cmd] or bad_cmd)(ch,v,cmd)--KEEP SEMICOLON!
+        ;(c2[cmd] or bad_cmd)(ch,v)--KEEP SEMICOLON!
         for i = 1, 4 do
             if i ~= nil then
                 update_synth(i)
@@ -176,7 +154,7 @@ function setup_input()
     input[2]{mode = 'stream', time = 10}
 end
 
--- create ASL table to loop
+-- initialize ASL table to loop as oscillator
 function setup_synth(output_index, model, shape)
 
     -- variable 2-stage wave|\ to /\ to /|
@@ -208,19 +186,28 @@ function setup_synth(output_index, model, shape)
 		} 
 	end
 	
-	-- assign action to output run it
+	function bytebeat(shape)
+		shape = shape or 'linear'
+		return loop { 
+			to(dyn{x=1}:step(3):wrap(-10,10) * dyn{pw=1/2}, dyn{cyc=1/440}, shape)
+		}
+	end
+		
+	
+	-- assign action to output then run the output action
     states[output_index].mdl = model
 	states[output_index].shp = shapes[shape]
-	if     model == 1 or 3 then output[output_index]( var_saw(shapes[shape]) )
-	elseif model == 2 then output[output_index]( lcg(shapes[shape]) )
+	if model == 1 or model == 3 then output[output_index]( var_saw(shapes[shape]) )
+	elseif model == 2           then output[output_index]( lcg(shapes[shape]) )
+	elseif model == 4           then output[output_index]( bytebeat(shapes[shape]) )
 	end
-
 end
 
 -- initialize i2c function calls for teletype
 function setup_i2c()
 	-- TT variables -32768..+32767 so 5 digit maximum
 	-- ABCDE digit number, AB action, CD param, E channel
+	-- set CV input 1 to <mod source, mod parameter, channel>
     ii.self.call1 = function (b1)
 		digits = get_digits(b1)
 		local action  = (digits[5] * 10) + digits[4]
@@ -242,15 +229,11 @@ function setup_i2c()
         elseif action == 1 then
             print("setting ch "..channel.." to eng "..digits[2].." to shape "..digits[3])
             setup_synth(channel, digits[2], digits[3])
-		
-		-- continue adding actions for call1
         else
         end
     end
 	
-	-- CROW.C2 x y -- set sound engine parameter using TT
-	-- 041 V 10
-	-- set channel 1, command 40, value V 10
+	-- CROW.C2 x y -- set <mod source, mod parameter, channel> to <value>
     ii.self.call2 = function (b1, value)
         digits = get_digits(b1)
 		local action  = (digits[5] * 10) + digits[4]
@@ -259,24 +242,12 @@ function setup_i2c()
         channel = (channel == 0 and 4) or channel
 		value = (u16_to_v10(value) - 5) * 2
         print("setting param to "..param.." on channel "..channel.." value "..value)
-		
-		if     param == 1 then set_state(channel, 'pw', value / 5)
-		elseif param == 11 then 
-			value = 2 ^ (0 - value)
-			set_state(channel, 'efr', value)
-		elseif param == 12 then set_state(channel, 'esy', value / 5)
-		elseif param == 13 then set_state(channel, 'ecr', value)
-		elseif param == 14 then set_state(channel, 'epw', value / 5)
-		elseif param == 15 then set_state(channel, 'ent', value)
-		elseif param == 21 then set_state(channel, 'lfr', 2 ^ value)
-		elseif param == 22 then set_state(channel, 'lsy', value / 5)
-		elseif param == 23 then set_state(channel, 'lcr', value)
-		elseif param == 24 then set_state(channel, 'lpw', value)
-		elseif param == 25 then set_state(channel, 'lnt', value)
-		-- elseif param == 84 then 
-			-- value = math.min(math.abs(value), 5)
-			-- setup_synth(channel, math.min(math.floor(value / 5 * 3) + 1), 3)
-		else
+		-- cmd = param
+		if param < 36 then 
+			c2[param](channel, value) 
+			update_synth(channel)
+		else 
+			bad_cmd(channel, value) 
 		end
     end
 	
@@ -312,11 +283,19 @@ function setup_state(ch)
         mdl = 1, -- model number
 		shp = 'linear', -- shape (ASL CV Shape)
 		
+		-- ENVELOPE AMP
+		afr = 100, -- decay time
+		asy = -1, -- symmetry
+		acr = 4, -- not referenced elsewhere (curvature?)
+		apw = 0, -- pulse width
+		ant = 0, -- note
+		aph = 0, -- phase
+		
         -- this crashes when I set it negative (or 0?)		
-		-- ENVELOPE
-        efr = 100, -- frequency
+		-- ENVELOPE PITCH
+        efr = 100, -- cycle length
 		esy = -1, -- pulse width or symmetry
-		ecr = 4, -- not referenced elsewhere (cycle rate?)
+		ecr = 4, -- not referenced elsewhere (curvature)
 		epw = 0, -- pulse width
 		ent = 0, -- note 
 		eph = 1, -- phase 
@@ -324,10 +303,12 @@ function setup_state(ch)
 		-- LFO
 		lfr = 5, -- frequency 
 		lsy = 0, -- symmetry
-		lcr = 0, -- not reference elsewhere (cycle rate?)
+		lcr = 0, -- curvature
 		lpw = 0, -- pulse width
 		lnt = 0, -- note
-		lph = -1 -- phase
+		lph = -1, -- phase
+		
+		--slw = 0
     }
     print("setting up state ")
     print("state #"..ch..": "..states[ch].nte)
@@ -356,16 +337,22 @@ function trigger_note(ch)
     if states[ch].eph >= states[ch].esy then
         states[ch].eph = -1
     end
+	if states[ch].aph >= states[ch].asy then
+        states[ch].aph = -1
+    end
 end
 
 -- get state parameters, set output
 function update_synth(i)
     local s = states[i]
     local sec = input[1].time
+	
+	-- AMPLITUDE ENVELOPE
+	s.aph = acc(s.aph, s.afr, sec, false)
+    local ampenv = peak(s.aph, s.asy, 3) 
 
-    -- ENVELOPES
+    -- MOD ENVELOPES
     s.eph = acc(s.eph, s.efr, sec, false)
-    local ampenv = peak(s.eph, s.esy, 3) 
     local modenv = peak(s.eph, s.esy, 4)
 
     -- LFO
@@ -373,12 +360,14 @@ function update_synth(i)
     local lfo = peak(s.lph, s.lsy, s.lcr)
 
     -- FREQ
-    local note = s.nte + (modenv * s.ent) + (lfo * s.lnt)
+    local note = s.nte + (modenv * s.ent) + (lfo * s.lnt) + (ampenv * s.ant)
     local freq = v8_to_freq(note)
     if freq <= 0 then freq = 0.0000000001 end
 	if freq >= 20000 then freq = 20000 end
+	
+	-- Time of ASL stages
 	local cyc = 1/freq
-	if s.mdl == 4 then
+	if s.mdl == 3 then
 		norm_cyc = cyc/0.1
 		if math.random()*0.1 < norm_cyc then
 			output[i].dyn.cyc = cyc + (cyc * 0.2 * math.random())
@@ -388,9 +377,12 @@ function update_synth(i)
 	else
 		output[i].dyn.cyc = cyc
 	end
-
+	
     -- AMP
-	output[i].dyn.amp = ampenv * s.amp
+	if s.mdl == 4 then
+	else
+		output[i].dyn.amp = ampenv * s.amp
+	end
 
     -- TIMBRE
     if s.mdl == 2 then
@@ -401,38 +393,25 @@ function update_synth(i)
         local pw = s.pw
         output[i].dyn.pw = math.abs(pw * 16384)
         output[i].dyn.pw2 = s.pw2
-    else
-        local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw)
+    --elseif s.mdl == 4 then
+	else
+        local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw) + (ampenv * s.apw)
         pw = math.max(-1, math.min(pw, 1))
         pw = (pw + 1) / 2
         output[i].dyn.pw = pw
     end	
+	
+	-- SLEW
+	-- output[i].slew = s.slw
+
 end
 
 -- INIT
 function init()
-    updating = false
-	
 	for i = 1, 4 do
 		setup_state(i)
 		setup_synth(i, 1, 1)
-	end
-	
-	-- initialize the amp and cyc dynamic variables for oscillators
-	output[1].dyn.amp = 5
-    output[2].dyn.amp = 0.25
-    output[3].dyn.amp = 0.3
-    output[4].dyn.amp = 0.3
-    output[3].dyn.cyc = 1/2000
-	
+	end	
 	setup_i2c()
-	
-	-- start output
-    output[1]()
-    output[2]()
-    output[3]()
-    output[4]()
-
-	-- start updating synths
 	setup_input()
 end 
