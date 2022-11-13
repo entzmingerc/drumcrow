@@ -180,6 +180,12 @@ function setup_synth(output_index, model, shape)
 		}
 	end
 	
+	function noise(shape) 
+		return loop {
+			to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, 0.00005, shape)
+		} 
+	end
+	
 	-- assign action to output then run the output action
     states[output_index].mdl = model
 	states[output_index].shp = shapes[shape]
@@ -189,6 +195,8 @@ function setup_synth(output_index, model, shape)
 		output[output_index]( lcg(shapes[shape]) )
 	elseif model == 4 then
 		output[output_index]( bytebeat(shapes[shape]) )
+	elseif model == 5 then
+		output[output_index]( noise(shapes[shape]) )
 	end
 end
 
@@ -379,6 +387,8 @@ function update_synth(i)
 		else
 			output[i].dyn.cyc = cyc + math.random()*0.002
 		end
+	elseif s.mdl == 5 then
+		output[i].dyn.pw2 = cyc
 	else
 		output[i].dyn.cyc = cyc
 	end
@@ -397,7 +407,7 @@ function update_synth(i)
 	    local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw) + (ampenv * s.apw)
         pw = math.max(-1, math.min(pw, 1))
         pw = (pw + 1) / 2
-		if s.mdl == 4 then
+		if s.mdl == 4 or s.mdl == 5 then
 			output[i].dyn.pw = pw * s.pw2
 		end
     end	
