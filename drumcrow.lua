@@ -26,16 +26,12 @@ end
     -- detuned, undertones, sounds SICK
     -- DO NOT FIX IT YET
 c2[1] = function (ch, v5)
-    set_state(ch, 'pw', v5 / 5)
+    set_state(ch, 'pw', v5 / 10)
 end
 
 c2[2] = function (ch, v5)
-    set_state(ch, 'pw2', v5 / 5)
+    set_state(ch, 'pw2', v5 / 2)
 end
-
--- c2[3] = function (ch, v5)
-    -- set_state(ch, 'slw', v5)
--- end
 
 -- ENV 1XX
 -- ENV frequency (Hz*10) Hz*10 (-lp)
@@ -159,47 +155,40 @@ function setup_synth(output_index, model, shape)
 
     -- variable 2-stage wave|\ to /\ to /|
 	function var_saw (shape) 
-		shape = shape or 'linear'
 		return loop {
 			to(  dyn{amp=2}, dyn{cyc=1/440} *    dyn{pw=1/2} , shape),
 			to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape)
 		} 
 	end	
 
-	-- linear congruential generator (LCG)
-    -- a = pw2
-    -- c = pw
-    -- https://w.wiki/tV5
-    -- m and c are relatively prime,
-    -- a-1 is divisible by all prime factors of m,
-    -- a-1 is divisible by 4 if m is divisible by 4.
-	-- X(n+1) = (aX.n + c) mod m
+	-- linear congruential generator (LCG) (https://w.wiki/tV5)
 	-- generates sequence of pseudo-random numbers
+	-- X(n+1) = (aX.n + c) mod m
+    -- a = pw2, c = pw, m and c are relatively prime
+    -- a-1 is divisible by all prime factors of m
+    -- a-1 is divisible by 4 if m is divisible by 4.
     function lcg(shape) 
-		shape = shape or 'linear'
 		return loop {
-			to(dyn{x = 1}
-				: mul(dyn{pw2 = 4037})
-				: step(dyn{pw = 21032})
-				: wrap(-32768,  32768 ) / 32768 * dyn{amp=2},                  0, shape),
-			to(              dyn{x = 1} / 32768 * dyn{amp=2}, dyn{cyc=1/440} / 2, shape)
+			to(dyn{x = 1}:mul(dyn{pw2 = 4037}):step(dyn{pw = 21032}):wrap(-32768,  32768 ) / 32768 * dyn{amp=2}, 0, shape),
+			to(dyn{x = 1} / 32768 * dyn{amp=2}, dyn{cyc=1/440} / 2, shape)
 		} 
 	end
 	
 	function bytebeat(shape)
-		shape = shape or 'linear'
 		return loop { 
-			to(dyn{x=1}:step(3):wrap(-10,10) * dyn{pw=1/2}, dyn{cyc=1/440}, shape)
+			to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape)
 		}
 	end
-		
 	
 	-- assign action to output then run the output action
     states[output_index].mdl = model
 	states[output_index].shp = shapes[shape]
-	if model == 1 or model == 3 then output[output_index]( var_saw(shapes[shape]) )
-	elseif model == 2           then output[output_index]( lcg(shapes[shape]) )
-	elseif model == 4           then output[output_index]( bytebeat(shapes[shape]) )
+	if model == 1 or model == 3 then 
+		output[output_index]( var_saw(shapes[shape]) )
+	elseif model == 2 then 
+		output[output_index]( lcg(shapes[shape]) )
+	elseif model == 4 then
+		output[output_index]( bytebeat(shapes[shape]) )
 	end
 end
 
@@ -229,6 +218,16 @@ function setup_i2c()
         elseif action == 1 then
             print("setting ch "..channel.." to eng "..digits[2].." to shape "..digits[3])
             setup_synth(channel, digits[2], digits[3])
+		
+		-- 2: set ch synth amplitude quantizing (bitcrushery?) 
+		-- 2121 = (2) command, (1) temperament, (2) scaling (1) channel
+        elseif action == 2 then
+            print("setting ch "..channel.." to temperament "..digits[3].." with scaling "..digits[2])
+			if digits[3] == 0 or digits[2] == 0 then
+				output[channel].scale( 'none' )
+			else
+				output[channel].scale( {}, digits[3], digits[2] )
+			end
         else
         end
     end
@@ -240,13 +239,21 @@ function setup_i2c()
 		local param   = (digits[3] * 10) + digits[2]
 		local channel = (digits[1] % 10 % 4)
         channel = (channel == 0 and 4) or channel
-		value = (u16_to_v10(value) - 5) * 2
-        print("setting param to "..param.." on channel "..channel.." value "..value)
-		-- cmd = param
+
+		-- set a parameter value directly
 		if param < 36 then 
+			value = (u16_to_v10(value) - 5) * 2
+			print("setting param to "..param.." on channel "..channel.." value "..value)
 			c2[param](channel, value) 
 			update_synth(channel)
-		else 
+			
+		-- set global synth update time
+		-- 0.002 - 0.1 sec time range from V -10 or V 10 in TT, initial is 0.003
+		elseif param == 99 then
+			value = (u16_to_v10(value) + 10) / 20 * (0.1 - 0.002) + 0.002
+			print("setting input stream update time to "..value)
+			input[1]{mode = 'stream', time = value}
+		else
 			bad_cmd(channel, value) 
 		end
     end
@@ -279,7 +286,7 @@ function setup_state(ch)
         nte = 0, -- note (for frequency calculation)
         amp = 2, -- amplitude of oscillator
         pw  = 0, -- pulse width variable 1
-        pw2 = 4037, -- pulse width variable 2
+        pw2 = 1, -- pulse width variable 2 4037
         mdl = 1, -- model number
 		shp = 'linear', -- shape (ASL CV Shape)
 		
@@ -307,8 +314,6 @@ function setup_state(ch)
 		lpw = 0, -- pulse width
 		lnt = 0, -- note
 		lph = -1, -- phase
-		
-		--slw = 0
     }
     print("setting up state ")
     print("state #"..ch..": "..states[ch].nte)
@@ -379,31 +384,23 @@ function update_synth(i)
 	end
 	
     -- AMP
-	if s.mdl == 4 then
-	else
-		output[i].dyn.amp = ampenv * s.amp
-	end
+	output[i].dyn.amp = ampenv * s.amp
+
 
     -- TIMBRE
     if s.mdl == 2 then
 		-- LCG code
-        --local pw = s.pw + (env * s.epw) + (lfo * s.lpw)
-        --pw = math.max(-1, math.min(pw, 1))
-        --pw = (pw + 1) / 2
         local pw = s.pw
         output[i].dyn.pw = math.abs(pw * 16384)
         output[i].dyn.pw2 = s.pw2
-    --elseif s.mdl == 4 then
-	else
-        local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw) + (ampenv * s.apw)
+    else
+	    local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw) + (ampenv * s.apw)
         pw = math.max(-1, math.min(pw, 1))
         pw = (pw + 1) / 2
-        output[i].dyn.pw = pw
+		if s.mdl == 4 then
+			output[i].dyn.pw = pw * s.pw2
+		end
     end	
-	
-	-- SLEW
-	-- output[i].slew = s.slw
-
 end
 
 -- INIT
