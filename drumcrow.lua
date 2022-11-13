@@ -1,9 +1,20 @@
 --- drumcrow
 --[[
-4 voice drum machine
+4 voice drum machine for monome crow
+Driven with i2c commands
 CROW.C1 X
 CROW.C2 X Y
 CROW.C3 X Y Z
+
+Future
+[ ] Calibrate C1 inputs to nicer values 0 to 10V
+[ ] Calibrate inputs for TT voltage values directly to same internal values
+[ ] Calibrate inputs for norns numbers if possible
+[ ] Test norns input
+[ ] Replace LCG with new noise function, responsive to inputs
+[ ] Redo pulse width inputs and update loop with pulse width
+[ ] Add ability to modulate pw2 maybe
+[ ] set up better defaults
 
 --]]
 local states = {}
