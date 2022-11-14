@@ -6,21 +6,21 @@ CROW.C1 X
 CROW.C2 X Y
 CROW.C3 X Y Z
 
-Future
-[ ] Calibrate C1 inputs to nicer values 0 to 10V
-[ ] Calibrate inputs for TT voltage values directly to same internal values
-[ ] Calibrate inputs for norns numbers if possible
-[ ] Test norns input
-[ ] Replace LCG with new noise function, responsive to inputs
-[ ] Redo pulse width inputs and update loop with pulse width
-[ ] Add ability to modulate pw2 maybe
-[ ] set up better defaults
+Before release
+[ ] Calibrate all inputs to respond to 0 - 10V
+[ ] Calibrate all CROW.C2 values to map to V 0 .. V 10
+[ ] Investigate LFO values below V 5, 234 below V 5 causes event queue overflow
+[x] Replace LCG with new noise function, responsive to inputs
+[x] Redo pulse width inputs and update loop with pulse width
+[ ] set up initial defaults
 
+Future
+[ ] Test norns input
+[ ] Crow query commands? Crow.q1 151 could return the value from v0 to v10
 --]]
 local states = {}
 local ch = 1
 local cmd = 11
-local presets = {}
 local c2 = {}
 local shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under','rebound'}
 
@@ -56,7 +56,7 @@ c2[12] = function (ch, v5)
 end
 -- ENV curvature
 c2[13] = function (ch, v5)
-    set_state(ch, 'ecr', v5)
+    set_state(ch, 'ecr', v5 / 2)
 end
 -- ENV pw timbre
 c2[14] = function (ch, v5)
@@ -99,7 +99,7 @@ c2[32] = function (ch, v5)
 end
 -- AMP ENV curvature
 c2[33] = function (ch, v5)
-    set_state(ch, 'acr', v5)
+    set_state(ch, 'acr', v5 / 2)
 end
 -- AMP ENV pw timbre
 c2[34] = function (ch, v5)
@@ -107,25 +107,25 @@ c2[34] = function (ch, v5)
 end
 -- AMP ENV depth
 c2[35] = function (ch, v5)
-    set_state(ch, 'ant', v5)
+	set_state(ch, 'ant', v5)
 end
 
 
 -- -32768 to +32767
 function u16_to_v10(u16)
-    return u16/16384*10;
+	return u16/16384*10;
 end
 
 function v10_to_u16(u16)
-    return u16/10*16384;
+	return u16/10*16384;
 end
 function v5_to_u16(u16)
-    return u16/5*16384;
+	return u16/5*16384;
 end
 function v8_to_freq(v8)
     -- Tyler's Mordax said JF 0V = 261.61
     -- -5v - +5v = 8.17Hz - 8.37kHz.
-  return 261.61 * (2 ^ v8)
+	return 261.61 * (2 ^ v8)
 end
 
 function get_digits(b1)
@@ -144,10 +144,9 @@ function setup_input()
 	
 	-- read input voltage 1, map input 0..+10V to -10..+10 internally, update synths
     input[1].stream = function (v)
-        if     v <=  0 then v = -10
-		elseif v >= 10 then v =  10
-        else   v = (v - 5) * 2
-        end 
+		v = math.min(math.max(v, -10), 10)
+		v = (v - 5) * 2
+		
         ;(c2[cmd] or bad_cmd)(ch,v)--KEEP SEMICOLON!
         for i = 1, 4 do
             if i ~= nil then
@@ -165,7 +164,7 @@ end
 function setup_synth(output_index, model, shape)
 
     -- variable 2-stage wave|\ to /\ to /|
-	function var_saw (shape) 
+	function var_saw(shape) 
 		return loop {
 			to(  dyn{amp=2}, dyn{cyc=1/440} *    dyn{pw=1/2} , shape),
 			to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape)
@@ -178,12 +177,12 @@ function setup_synth(output_index, model, shape)
     -- a = pw2, c = pw, m and c are relatively prime
     -- a-1 is divisible by all prime factors of m
     -- a-1 is divisible by 4 if m is divisible by 4.
-    function lcg(shape) 
-		return loop {
-			to(dyn{x = 1}:mul(dyn{pw2 = 4037}):step(dyn{pw = 21032}):wrap(-32768,  32768 ) / 32768 * dyn{amp=2}, 0, shape),
-			to(dyn{x = 1} / 32768 * dyn{amp=2}, dyn{cyc=1/440} / 2, shape)
-		} 
-	end
+    -- function lcg(shape) 
+		-- return loop {
+			-- to(dyn{x = 1}:mul(dyn{pw2 = 4037}):step(dyn{pw = 21032}):wrap(-32768,  32768 ) / 32768 * dyn{amp=2}, 0, shape),
+			-- to(dyn{x = 1} / 32768 * dyn{amp=2}, dyn{cyc=1/440} / 2, shape)
+		-- } 
+	-- end
 	
 	function bytebeat(shape)
 		return loop { 
@@ -191,23 +190,23 @@ function setup_synth(output_index, model, shape)
 		}
 	end
 	
+	-- linear congruential generator (LCG)
+	-- pseudo-random numbers generator
+	-- X[n+1] = (a*X[n] + c) mod m
 	function noise(shape) 
 		return loop {
-			to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, 0.00005, shape)
+			to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}/2, shape)
 		} 
 	end
 	
-	-- assign action to output then run the output action
+	-- set crow output action to ASL then run action
     states[output_index].mdl = model
-	states[output_index].shp = shapes[shape]
-	if model == 1 or model == 3 then 
-		output[output_index]( var_saw(shapes[shape]) )
-	elseif model == 2 then 
-		output[output_index]( lcg(shapes[shape]) )
-	elseif model == 4 then
+	if model == 3 then
 		output[output_index]( bytebeat(shapes[shape]) )
-	elseif model == 5 then
+	elseif model == 4 then
 		output[output_index]( noise(shapes[shape]) )
+	else
+		output[output_index]( var_saw(shapes[shape]) )
 	end
 end
 
@@ -283,10 +282,8 @@ function setup_i2c()
         if ch == nil or note == nil or vol == nil or ch < 1 or ch > 4 then 
             return 
         end
-        local v8 = u16_to_v10(note)
-        local amp = u16_to_v10(vol)
-        states[ch].nte = v8
-        states[ch].amp = amp
+        states[ch].nte = u16_to_v10(note)
+        states[ch].amp = u16_to_v10(vol)
         trigger_note(ch)
     end
 end
@@ -305,14 +302,13 @@ function setup_state(ch)
         nte = 0, -- note (for frequency calculation)
         amp = 2, -- amplitude of oscillator
         pw  = 0, -- pulse width variable 1
-        pw2 = 1, -- pulse width variable 2 4037
+        pw2 = 1, -- extra parameter for affecting ASL oscillators
         mdl = 1, -- model number
-		shp = 'linear', -- shape (ASL CV Shape)
 		
 		-- ENVELOPE AMP
-		afr = 100, -- decay time
+		afr = 200, -- decay time
 		asy = -1, -- symmetry
-		acr = 4, -- not referenced elsewhere (curvature?)
+		acr = 3, -- exponent for peak function (curve)
 		apw = 0, -- pulse width
 		ant = 0, -- note
 		aph = 0, -- phase
@@ -321,7 +317,7 @@ function setup_state(ch)
 		-- ENVELOPE PITCH
         efr = 100, -- cycle length
 		esy = -1, -- pulse width or symmetry
-		ecr = 4, -- not referenced elsewhere (curvature)
+		ecr = 4, -- exponent for peak function (curve)
 		epw = 0, -- pulse width
 		ent = 0, -- note 
 		eph = 1, -- phase 
@@ -371,13 +367,13 @@ function update_synth(i)
     local s = states[i]
     local sec = input[1].time
 	
-	-- AMPLITUDE ENVELOPE
+	-- ENV AMPLITUDE
 	s.aph = acc(s.aph, s.afr, sec, false)
-    local ampenv = peak(s.aph, s.asy, 3) 
+    local ampenv = peak(s.aph, s.asy, s.acr) 
 
-    -- MOD ENVELOPES
+    -- ENV FREQUENCY
     s.eph = acc(s.eph, s.efr, sec, false)
-    local modenv = peak(s.eph, s.esy, 4)
+    local modenv = peak(s.eph, s.esy, s.ecr)
 
     -- LFO
     s.lph = acc(s.lph, s.lfr, sec, true)
@@ -386,20 +382,20 @@ function update_synth(i)
     -- FREQ
     local note = s.nte + (modenv * s.ent) + (lfo * s.lnt) + (ampenv * s.ant)
     local freq = v8_to_freq(note)
-    if freq <= 0 then freq = 0.0000000001 end
-	if freq >= 20000 then freq = 20000 end
+	freq = math.min(math.max(freq, 0.0001), 20000)
 	
-	-- Time of ASL stages
+	-- TIME for ASL stages
 	local cyc = 1/freq
-	if s.mdl == 3 then
+	if s.mdl == 2 then
 		norm_cyc = cyc/0.1
 		if math.random()*0.1 < norm_cyc then
 			output[i].dyn.cyc = cyc + (cyc * 0.2 * math.random())
 		else
 			output[i].dyn.cyc = cyc + math.random()*0.002
 		end
-	elseif s.mdl == 5 then
-		output[i].dyn.pw2 = cyc
+	-- elseif s.mdl == 1 or s.mdl == 3 then
+		-- output[i].dyn.cyc = cyc
+	-- end
 	else
 		output[i].dyn.cyc = cyc
 	end
@@ -407,20 +403,17 @@ function update_synth(i)
     -- AMP
 	output[i].dyn.amp = ampenv * s.amp
 
-
-    -- TIMBRE
-    if s.mdl == 2 then
-		-- LCG code
-        local pw = s.pw
-        output[i].dyn.pw = math.abs(pw * 16384)
-        output[i].dyn.pw2 = s.pw2
-    else
-	    local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw) + (ampenv * s.apw)
-        pw = math.max(-1, math.min(pw, 1))
-        pw = (pw + 1) / 2
-		if s.mdl == 4 or s.mdl == 5 then
-			output[i].dyn.pw = pw * s.pw2
-		end
+    -- TIMBRE, PW is -1..+1
+	local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw) + (ampenv * s.apw)
+	pw = math.min(math.max(pw, -1), 1)
+	pw = (pw + 1) / 2
+	if s.mdl == 3 then
+		output[i].dyn.pw = pw * s.pw2
+	elseif s.mdl == 4 then
+		output[i].dyn.pw = pw
+		output[i].dyn.pw2 = s.pw2
+	else
+		output[i].dyn.pw = pw
     end	
 end
 
