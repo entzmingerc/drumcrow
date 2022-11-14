@@ -77,7 +77,7 @@ c2[22] = function (ch, v5)
 end
 -- LFO curvature 
 c2[23] = function (ch, v5)
-    set_state(ch, 'lcr', v5)
+    set_state(ch, 'lcr', v5 / 2)
 end
 -- LFO pulse width 
 c2[24] = function (ch, v5)
@@ -261,7 +261,8 @@ function setup_i2c()
 		-- set a parameter value directly
 		if param < 36 then 
 			value = (u16_to_v10(value) - 5) * 2
-			print("setting param to "..param.." on channel "..channel.." value "..value)
+			value = math.min(math.max(value, -10), 10)
+			print("setting param "..param.." on channel "..channel.." to value "..value)
 			c2[param](channel, value) 
 			update_synth(channel)
 			
@@ -269,6 +270,7 @@ function setup_i2c()
 		-- 0.002 - 0.1 sec time range from V -10 or V 10 in TT, initial is 0.003
 		elseif param == 99 then
 			value = (u16_to_v10(value) + 10) / 20 * (0.1 - 0.002) + 0.002
+			value = math.min(math.max(value, 0.002), 0.1)
 			print("setting input stream update time to "..value)
 			input[1]{mode = 'stream', time = value}
 		else
@@ -393,9 +395,6 @@ function update_synth(i)
 		else
 			output[i].dyn.cyc = cyc + math.random()*0.002
 		end
-	-- elseif s.mdl == 1 or s.mdl == 3 then
-		-- output[i].dyn.cyc = cyc
-	-- end
 	else
 		output[i].dyn.cyc = cyc
 	end
