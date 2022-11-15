@@ -5,18 +5,6 @@ Driven with i2c commands
 CROW.C1 X
 CROW.C2 X Y
 CROW.C3 X Y Z
-
-Before release
-[ ] Calibrate all inputs to respond to 0 - 10V
-[ ] Calibrate all CROW.C2 values to map to V 0 .. V 10
-[ ] Investigate LFO values below V 5, 234 below V 5 causes event queue overflow
-[x] Replace LCG with new noise function, responsive to inputs
-[x] Redo pulse width inputs and update loop with pulse width
-[ ] set up initial defaults
-
-Future
-[ ] Test norns input
-[ ] Crow query commands? Crow.q1 151 could return the value from v0 to v10
 --]]
 local states = {}
 local ch = 1
@@ -171,19 +159,7 @@ function setup_synth(output_index, model, shape)
 		} 
 	end	
 
-	-- linear congruential generator (LCG) (https://w.wiki/tV5)
-	-- generates sequence of pseudo-random numbers
-	-- X(n+1) = (aX.n + c) mod m
-    -- a = pw2, c = pw, m and c are relatively prime
-    -- a-1 is divisible by all prime factors of m
-    -- a-1 is divisible by 4 if m is divisible by 4.
-    -- function lcg(shape) 
-		-- return loop {
-			-- to(dyn{x = 1}:mul(dyn{pw2 = 4037}):step(dyn{pw = 21032}):wrap(-32768,  32768 ) / 32768 * dyn{amp=2}, 0, shape),
-			-- to(dyn{x = 1} / 32768 * dyn{amp=2}, dyn{cyc=1/440} / 2, shape)
-		-- } 
-	-- end
-	
+	-- adding pw to x every stage, wrapping around and incrementing, bytebeat inspired
 	function bytebeat(shape)
 		return loop { 
 			to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape)
@@ -191,7 +167,7 @@ function setup_synth(output_index, model, shape)
 	end
 	
 	-- linear congruential generator (LCG)
-	-- pseudo-random numbers generator
+	-- pseudo-random number generator
 	-- X[n+1] = (a*X[n] + c) mod m
 	function noise(shape) 
 		return loop {
@@ -304,11 +280,11 @@ function setup_state(ch)
         nte = 0, -- note (for frequency calculation)
         amp = 2, -- amplitude of oscillator
         pw  = 0, -- pulse width variable 1
-        pw2 = 1, -- extra parameter for affecting ASL oscillators
+        pw2 = 5.99, -- extra parameter for affecting ASL oscillators
         mdl = 1, -- model number
 		
 		-- ENVELOPE AMP
-		afr = 200, -- decay time
+		afr = 4, -- decay time
 		asy = -1, -- symmetry
 		acr = 3, -- exponent for peak function (curve)
 		apw = 0, -- pulse width
@@ -317,7 +293,7 @@ function setup_state(ch)
 		
         -- this crashes when I set it negative (or 0?)		
 		-- ENVELOPE PITCH
-        efr = 100, -- cycle length
+        efr = 1, -- cycle length
 		esy = -1, -- pulse width or symmetry
 		ecr = 4, -- exponent for peak function (curve)
 		epw = 0, -- pulse width
