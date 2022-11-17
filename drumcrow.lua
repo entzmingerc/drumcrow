@@ -13,7 +13,7 @@ local c2 = {}
 local shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under','rebound'}
 
 local bad_cmd = function (ch, value) 
-    print("CAW!")
+    print("CAW! Bad command!")
 end
 
 c2[0] = function (ch, v5)
@@ -29,14 +29,15 @@ c2[1] = function (ch, v5)
 end
 
 c2[2] = function (ch, v5)
-    set_state(ch, 'pw2', v5 / 2)
+    set_state(ch, 'pw2', v5)
 end
 
 -- ENV 1XX
 -- ENV frequency (Hz*10) Hz*10 (-lp)
 c2[11] = function (ch, v5)
-    v5 = 2 ^ (0 - v5)
-    set_state(ch, 'efr', v5)
+	set_state(ch, 'efr', 
+	(v5 <= 9.5) and (2 ^ (0 - v5*0.7)) or
+	(v5 >  9.5) and (2 ^ (0 - v5*3.2))) -- billions and billions
 end
 -- ENV symmetry (A:D)
 c2[12] = function (ch, v5)
@@ -57,7 +58,9 @@ end
 -- LFO 2XX
 -- LFO spd (Hz*10) Hz*10 (+rst)
 c2[21] = function (ch, v5)
-    set_state(ch, 'lfr', 2 ^ v5)
+	set_state(ch, 'lfr', 
+	(v5 >  -9.5) and (2 ^ v5) or
+	(v5 <= -9.5) and (2 ^ v5*3.2)) -- billions and billions
 end
 -- LFO symmetry (R:F) 
 c2[22] = function (ch, v5)
@@ -78,8 +81,9 @@ end
 -- AMP ENV 1XX
 -- AMP ENV frequency (Hz*10) Hz*10 (-lp)
 c2[31] = function (ch, v5)
-    v5 = 2 ^ (0 - v5)
-    set_state(ch, 'afr', v5)
+	set_state(ch, 'afr', 
+	(v5 <= 9.5) and (2 ^ (0 - v5*0.7)) or
+	(v5 >  9.5) and (2 ^ (0 - v5*3.2))) -- billions and billions
 end
 -- AMP ENV symmetry (A:D)
 c2[32] = function (ch, v5)
@@ -175,12 +179,21 @@ function setup_synth(output_index, model, shape)
 		} 
 	end
 	
+	function FMstep(shape)
+		return loop { 
+			to(  dyn{amp=2}, dyn{x=1}:step(dyn{pw2=1}):wrap(1,2) * dyn{cyc=1} * dyn{pw=1}, shape),
+			to(0-dyn{amp=2}, dyn{x=1} * dyn{cyc=1} * (1-dyn{pw=1}), shape)
+		}
+	end
+	
 	-- set crow output action to ASL then run action
     states[output_index].mdl = model
 	if model == 3 then
 		output[output_index]( bytebeat(shapes[shape]) )
 	elseif model == 4 then
 		output[output_index]( noise(shapes[shape]) )
+	elseif model == 5 then
+		output[output_index]( FMstep(shapes[shape]) )
 	else
 		output[output_index]( var_saw(shapes[shape]) )
 	end
@@ -280,7 +293,7 @@ function setup_state(ch)
         nte = 0, -- note (for frequency calculation)
         amp = 2, -- amplitude of oscillator
         pw  = 0, -- pulse width variable 1
-        pw2 = 5.99, -- extra parameter for affecting ASL oscillators
+        pw2 = 4, -- extra parameter for affecting ASL oscillators
         mdl = 1, -- model number
 		
 		-- ENVELOPE AMP
@@ -289,7 +302,7 @@ function setup_state(ch)
 		acr = 3, -- exponent for peak function (curve)
 		apw = 0, -- pulse width
 		ant = 0, -- note
-		aph = 0, -- phase
+		aph = 1, -- phase
 		
         -- this crashes when I set it negative (or 0?)		
 		-- ENVELOPE PITCH
@@ -387,6 +400,9 @@ function update_synth(i)
 	elseif s.mdl == 4 then
 		output[i].dyn.pw = pw
 		output[i].dyn.pw2 = s.pw2
+	elseif s.mdl == 5 then
+		output[i].dyn.pw = pw
+		output[i].dyn.pw2 = s.pw2 / 50		
 	else
 		output[i].dyn.pw = pw
     end	
