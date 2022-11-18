@@ -37,7 +37,7 @@ end
 c2[11] = function (ch, v5)
 	set_state(ch, 'efr', 
 	(v5 <= 9.5) and (2 ^ (0 - v5*0.7)) or
-	(v5 >  9.5) and (2 ^ (0 - v5*3.2))) -- billions and billions
+	(v5 >  9.5) and 0.0000000002328)-- 2^-32 billions and billions
 end
 -- ENV symmetry (A:D)
 c2[12] = function (ch, v5)
@@ -60,7 +60,7 @@ end
 c2[21] = function (ch, v5)
 	set_state(ch, 'lfr', 
 	(v5 >  -9.5) and (2 ^ v5) or
-	(v5 <= -9.5) and (2 ^ v5*3.2)) -- billions and billions
+	(v5 <= -9.5) and 0.0000000002328) -- 2^-32 billions and billions
 end
 -- LFO symmetry (R:F) 
 c2[22] = function (ch, v5)
@@ -83,7 +83,7 @@ end
 c2[31] = function (ch, v5)
 	set_state(ch, 'afr', 
 	(v5 <= 9.5) and (2 ^ (0 - v5*0.7)) or
-	(v5 >  9.5) and (2 ^ (0 - v5*3.2))) -- billions and billions
+	(v5 >  9.5) and 0.0000000002328) -- 2^-32 billions and billions
 end
 -- AMP ENV symmetry (A:D)
 c2[32] = function (ch, v5)
@@ -186,16 +186,26 @@ function setup_synth(output_index, model, shape)
 		}
 	end
 	
+	-- root-product sine approximation, less complex than 7th order taylor series, more error
+	-- y = x + 0.101321x^3
+	function ASLsine(shape)
+		return loop { 
+			to((dyn{x1=0}:step(dyn{pw=1}):wrap(-3.14,3.14) + 0.101321 * dyn{x1=0} * dyn{x1=0} * dyn{x1=0}) * dyn{amp=2}, dyn{cyc=1}, shape)
+		}
+	end
+	
 	-- set crow output action to ASL then run action
     states[output_index].mdl = model
-	if model == 3 then
+	if model == 1 or model == 2 then 
+		output[output_index]( var_saw(shapes[shape]) )
+	elseif model == 3 then
 		output[output_index]( bytebeat(shapes[shape]) )
 	elseif model == 4 then
 		output[output_index]( noise(shapes[shape]) )
 	elseif model == 5 then
 		output[output_index]( FMstep(shapes[shape]) )
-	else
-		output[output_index]( var_saw(shapes[shape]) )
+	elseif model == 6 then
+		output[output_index]( ASLsine(shapes[shape]) )
 	end
 end
 
@@ -395,7 +405,7 @@ function update_synth(i)
 	local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw) + (ampenv * s.apw)
 	pw = math.min(math.max(pw, -1), 1)
 	pw = (pw + 1) / 2
-	if s.mdl == 3 then
+	if s.mdl == 3 or s.mdl == 6 then
 		output[i].dyn.pw = pw * s.pw2
 	elseif s.mdl == 4 then
 		output[i].dyn.pw = pw
