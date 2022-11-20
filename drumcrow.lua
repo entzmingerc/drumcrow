@@ -7,117 +7,124 @@ CROW.C2 X Y
 CROW.C3 X Y Z
 --]]
 local states = {}
+local ratios = {}
 local ch = 1
 local cmd = 11
 local c2 = {}
+local act = 0 -- 0 = set input, 3 = set ratio to channel 1 value
 local shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under','rebound'}
-
+local cmd_list = {}
 local bad_cmd = function (ch, value) 
     print("CAW! Bad command!")
 end
-
-c2[0] = function (ch, v5)
+-- Frees the input voltage from mapping anything
+cmd_list[00] = 'deselect'
+c2[00] = function (ch, v5)
 	-- deselect
 end
-
--- model pw timbre
-    -- there is a bug w/ model 1 when pw = 16250
-    -- detuned, undertones, sounds SICK
-    -- DO NOT FIX IT YET
-c2[1] = function (ch, v5)
+-- model pw timbre (bug w/ model 1 when pw = 16250 ?)
+cmd_list[01] = 'pw'
+c2[01] = function (ch, v5)
     set_state(ch, 'pw', v5 / 10)
 end
-
-c2[2] = function (ch, v5)
+-- extra pw2 param, varying use case
+cmd_list[02] = 'pw2'
+c2[02] = function (ch, v5)
     set_state(ch, 'pw2', v5)
 end
-
--- ENV 1XX
 -- ENV frequency (Hz*10) Hz*10 (-lp)
+cmd_list[11] = 'efr'
 c2[11] = function (ch, v5)
 	set_state(ch, 'efr', 
 	(v5 <= 9.5) and (2 ^ (0 - v5*0.7)) or
 	(v5 >  9.5) and 0.0000000002328)-- 2^-32 billions and billions
 end
 -- ENV symmetry (A:D)
+cmd_list[12] = 'esy'
 c2[12] = function (ch, v5)
     set_state(ch, 'esy', v5 / 5)
 end
 -- ENV curvature
+cmd_list[13] = 'ecr'
 c2[13] = function (ch, v5)
     set_state(ch, 'ecr', v5 / 2)
 end
 -- ENV pw timbre
+cmd_list[14] = 'epw'
 c2[14] = function (ch, v5)
     set_state(ch, 'epw', v5 / 5)
 end
 -- ENV depth
+cmd_list[15] = 'ent'
 c2[15] = function (ch, v5)
     set_state(ch, 'ent', v5)
 end
--- LFO 2XX
 -- LFO spd (Hz*10) Hz*10 (+rst)
+
+cmd_list[21] = 'lfr'
 c2[21] = function (ch, v5)
 	set_state(ch, 'lfr', 
 	(v5 >  -9.5) and (2 ^ v5) or
 	(v5 <= -9.5) and 0.0000000002328) -- 2^-32 billions and billions
 end
 -- LFO symmetry (R:F) 
+cmd_list[22] = 'lsy'
 c2[22] = function (ch, v5)
     set_state(ch, 'lsy', v5 / 5)
 end
 -- LFO curvature 
+cmd_list[23] = 'lcr'
 c2[23] = function (ch, v5)
     set_state(ch, 'lcr', v5 / 2)
 end
 -- LFO pulse width 
+cmd_list[24] = 'lpw'
 c2[24] = function (ch, v5)
     set_state(ch, 'lpw', v5)
 end
 -- LFO DEPTH
+cmd_list[25] = 'lnt'
 c2[25] = function (ch, v5)
     set_state(ch, 'lnt', v5)
 end
--- AMP ENV 1XX
 -- AMP ENV frequency (Hz*10) Hz*10 (-lp)
+cmd_list[31] = 'afr'
 c2[31] = function (ch, v5)
 	set_state(ch, 'afr', 
 	(v5 <= 9.5) and (2 ^ (0 - v5*0.7)) or
 	(v5 >  9.5) and 0.0000000002328) -- 2^-32 billions and billions
 end
 -- AMP ENV symmetry (A:D)
+cmd_list[32] = 'asy'
 c2[32] = function (ch, v5)
     set_state(ch, 'asy', v5 / 5)
 end
 -- AMP ENV curvature
+cmd_list[33] = 'acr'
 c2[33] = function (ch, v5)
     set_state(ch, 'acr', v5 / 2)
 end
 -- AMP ENV pw timbre
+cmd_list[34] = 'apw'
 c2[34] = function (ch, v5)
     set_state(ch, 'apw', v5 / 5)
 end
 -- AMP ENV depth
+cmd_list[35] = 'ant'
 c2[35] = function (ch, v5)
 	set_state(ch, 'ant', v5)
 end
 
-
 -- -32768 to +32767
-function u16_to_v10(u16)
-	return u16/16384*10;
-end
-
-function v10_to_u16(u16)
-	return u16/10*16384;
-end
-function v5_to_u16(u16)
-	return u16/5*16384;
-end
-function v8_to_freq(v8)
+function u16_to_v10(u16) return u16/16384*10 end
+function v10_to_u16(u16) return u16/10*16384 end
+function  v5_to_u16(u16) return u16/5*16384  end
     -- Tyler's Mordax said JF 0V = 261.61
     -- -5v - +5v = 8.17Hz - 8.37kHz.
-	return 261.61 * (2 ^ v8)
+function  v8_to_freq(v8) return 261.61 * (2 ^ v8) end
+function v10_to_ratio(v)
+	-- any number input, returns 1/(v integer), ..., 1/2, 1/1, 1, 1, 2, ..., v integer
+	return (v >= 2) and (v - v % 1) or (v <= -2) and 1/(-1*(v + (-1*v) % 1)) or 1
 end
 
 function get_digits(b1)
@@ -134,13 +141,23 @@ end
 function setup_input()
     print("INPUT OK.")
 	
-	-- read input voltage 1, map input 0..+10V to -10..+10 internally, update synths
+	-- read input voltage 1
     input[1].stream = function (v)
+		-- map input voltage 0..+10V to -10..+10 internally
 		v = math.min(math.max(v, -10), 10)
 		v = (v - 5) * 2
 		
-        ;(c2[cmd] or bad_cmd)(ch,v)--KEEP SEMICOLON!
-        for i = 1, 4 do
+		-- set state of channel, param, value
+		if act == 0 then
+			;(c2[cmd] or bad_cmd)(ch,v)--KEEP SEMICOLON!
+		
+		-- set ratio of channel, param, value
+		elseif act == 3 then
+			set_ratio(ch, cmd_list[cmd], v)
+		end
+		
+		-- update synths for all 4 channels
+		for i = 1, 4 do
             if i ~= nil then
                 update_synth(i)
             end
@@ -153,7 +170,7 @@ function setup_input()
 end
 
 -- initialize ASL table to loop as oscillator
-function setup_synth(output_index, model, shape)
+function setup_synth(channel, model, shape)
 
     -- variable 2-stage wave|\ to /\ to /|
 	function var_saw(shape) 
@@ -179,6 +196,7 @@ function setup_synth(output_index, model, shape)
 		} 
 	end
 	
+	-- use step() to frequency modulate the ASL stage time 
 	function FMstep(shape)
 		return loop { 
 			to(  dyn{amp=2}, dyn{x=1}:step(dyn{pw2=1}):wrap(1,2) * dyn{cyc=1} * dyn{pw=1}, shape),
@@ -190,22 +208,31 @@ function setup_synth(output_index, model, shape)
 	-- y = x + 0.101321x^3
 	function ASLsine(shape)
 		return loop { 
-			to((dyn{x1=0}:step(dyn{pw=1}):wrap(-3.14,3.14) + 0.101321 * dyn{x1=0} * dyn{x1=0} * dyn{x1=0}) * dyn{amp=2}, dyn{cyc=1}, shape)
+			to((dyn{x=0}:step(dyn{pw=0.314}):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)
+		}
+	end
+
+	-- similar to ASLsine but with a mul(-1) applied to x
+	function ASLharmonic(shape)
+		return loop { 
+			to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)
 		}
 	end
 	
 	-- set crow output action to ASL then run action
-    states[output_index].mdl = model
+    states[channel].mdl = model
 	if model == 1 or model == 2 then 
-		output[output_index]( var_saw(shapes[shape]) )
+		output[channel]( var_saw(shapes[shape]) )
 	elseif model == 3 then
-		output[output_index]( bytebeat(shapes[shape]) )
+		output[channel]( bytebeat(shapes[shape]) )
 	elseif model == 4 then
-		output[output_index]( noise(shapes[shape]) )
+		output[channel]( noise(shapes[shape]) )
 	elseif model == 5 then
-		output[output_index]( FMstep(shapes[shape]) )
+		output[channel]( FMstep(shapes[shape]) )
 	elseif model == 6 then
-		output[output_index]( ASLsine(shapes[shape]) )
+		output[channel]( ASLsine(shapes[shape]) )
+	elseif model == 7 then
+		output[channel]( ASLharmonic(shapes[shape]) )
 	end
 end
 
@@ -225,19 +252,32 @@ function setup_i2c()
 		end
 		print("action "..action.." param "..param.." channel "..channel)
 		
+		-- 86X: initialize outputs https://en.wikipedia.org/wiki/86_(term)
+		if param == 86 then
+			if digits[1] == 0 then
+				for i = 1, 4 do
+					setup_state(i)
+					setup_synth(i, 1, 1)
+				end	
+			else
+				setup_state(channel)
+				setup_synth(channel, 1, 1)
+			end
+			
 		-- 0: map input 1 voltage to (ch, cmd)
-		if action == 0 then
-            ch = channel
+		elseif action == 0 then
+            ch  = channel
             cmd = param
+			act = action
             print("input 1 mapping to ch "..ch.." command "..cmd)
 			
-		-- 1: set ch synth engine 
+		-- 1: set channel, synth engine, and shape
         elseif action == 1 then
             print("setting ch "..channel.." to eng "..digits[2].." to shape "..digits[3])
             setup_synth(channel, digits[2], digits[3])
 		
-		-- 2: set ch synth amplitude quantizing (bitcrushery?) 
-		-- 2121 = (2) command, (1) temperament, (2) scaling (1) channel
+		-- 2: set ch synth amplitude quantizing (bitcrushery?)
+		-- 2121 = (2) bitcrusher command, (1) temperament, (2) scaling (1) channel
         elseif action == 2 then
             print("setting ch "..channel.." to temperament "..digits[3].." with scaling "..digits[2])
 			if digits[3] == 0 or digits[2] == 0 then
@@ -245,7 +285,14 @@ function setup_i2c()
 			else
 				output[channel].scale( {}, digits[3], digits[2] )
 			end
-        else
+				
+		-- 3: set ch relation
+		-- 3213 = (3) relation command (21) chanel 1 parameter value (1) channel 0,2,3,4
+        elseif action == 3 then
+			print("setting ch "..channel.." parameter "..param.." to channel 1 ratio")
+			ch  = channel
+			cmd = param
+			act = action
         end
     end
 	
@@ -277,28 +324,48 @@ function setup_i2c()
 		end
     end
 	
-	-- CROW.C3 x y z -- play (freq, amp) or (preset, amp)
+	-- CROW.C3 (channel) (note) (volume)
     ii.self.call3 = function (ch, note, vol)
-    -- | play frq, amp      
         if ch == nil or note == nil or vol == nil or ch < 1 or ch > 4 then 
             return 
         end
-        states[ch].nte = u16_to_v10(note)
-        states[ch].amp = u16_to_v10(vol)
+		set_state(ch, 'nte', u16_to_v10(note))
+		set_state(ch, 'amp', u16_to_v10(vol))
         trigger_note(ch)
     end
 end
 
--- select channel, set value of a param in states array
 function set_state(ch, key, value)
-    if value ~= nil then
-        states[ch][key] = value
-    end
+	if ch == 1 then
+		states[1][key] = value 
+		for i = 2,4 do
+			-- ratio not 0 means ratio of channel 1
+			if ratios[i][key] ~= 0 then 
+				states[i][key] = states[1][key] * ratios[i][key]
+			end
+		end
+	-- ratio of 0 means independent of channel 1
+	elseif ratios[ch][key] == 0 then
+		states[ch][key] = value
+	else
+		states[ch][key] = states[1][key] * ratios[ch][key]
+	end
+end
+
+-- select channel, set value of a param in states array
+-- function set_state(ch, key, value)
+    -- if value ~= nil then
+		-- states[ch][key] = value
+    -- end
+-- end
+
+-- set ratio to channel 1
+function set_ratio(ch, key, value)
+	ratios[ch][key] = v10_to_ratio(value)
 end
 
 -- initialize state array for each output
 function setup_state(ch)
-    -- sy (symmetry) is like pulsewidth
     states[ch] = {
         nte = 0, -- note (for frequency calculation)
         amp = 2, -- amplitude of oscillator
@@ -313,8 +380,7 @@ function setup_state(ch)
 		apw = 0, -- pulse width
 		ant = 0, -- note
 		aph = 1, -- phase
-		
-        -- this crashes when I set it negative (or 0?)		
+			
 		-- ENVELOPE PITCH
         efr = 1, -- cycle length
 		esy = -1, -- pulse width or symmetry
@@ -333,6 +399,39 @@ function setup_state(ch)
     }
     print("setting up state ")
     print("state #"..ch..": "..states[ch].nte)
+	ratios[ch] = {
+        nte = 0, -- note (for frequency calculation)
+        amp = 0, -- amplitude of oscillator
+        pw  = 0, -- pulse width variable 1
+        pw2 = 0, -- extra parameter for affecting ASL oscillators
+        mdl = 0, -- model number
+		
+		-- ENVELOPE AMP
+		afr = 0, -- decay time
+		asy = 0, -- symmetry
+		acr = 0, -- exponent for peak function (curve)
+		apw = 0, -- pulse width
+		ant = 0, -- note
+		aph = 0, -- phase
+			
+		-- ENVELOPE PITCH
+        efr = 0, -- cycle length
+		esy = 0, -- pulse width or symmetry
+		ecr = 0, -- exponent for peak function (curve)
+		epw = 0, -- pulse width
+		ent = 0, -- note 
+		eph = 0, -- phase 
+        
+		-- LFO
+		lfr = 0, -- frequency 
+		lsy = 0, -- symmetry
+		lcr = 0, -- curvature
+		lpw = 0, -- pulse width
+		lnt = 0, -- note
+		lph = 0, -- phase
+    }
+    print("setting up ratios ")
+    print("ratio #"..ch..": "..ratios[ch].nte)
 end
 
 -- assume ph and pw between {-1..1} incl
@@ -405,7 +504,7 @@ function update_synth(i)
 	local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw) + (ampenv * s.apw)
 	pw = math.min(math.max(pw, -1), 1)
 	pw = (pw + 1) / 2
-	if s.mdl == 3 or s.mdl == 6 then
+	if s.mdl == 3 or s.mdl == 6 or s.mdl == 7 then
 		output[i].dyn.pw = pw * s.pw2
 	elseif s.mdl == 4 then
 		output[i].dyn.pw = pw
