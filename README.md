@@ -9,6 +9,14 @@ playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
 # Teletype Commands
 ## CROW.C1 X
 ### 2 digits 
+
+| TT Command | DIGIT 2 | DIGIT 1 | Description |
+| --- | --- | --- | --- |
+| `CROW.C1 0` | ~ | ~ | Deselect a parameter |
+| `CROW.C1 11` <br> `CROW.C1 12` <br> `CROW.C1 13` <br> `CROW.C1 14` | PW | Channel | Sets the pulse width (PW) for a channel |
+| `CROW.C1 21` <br> `CROW.C1 22` <br> `CROW.C1 23` <br> `CROW.C1 24` | PW2 | Channel | Sets a second pulse width (PW2) for a channel, varying purposes |
+| `CROW.C1 31` <br> `CROW.C1 32` <br> `CROW.C1 33` <br> `CROW.C1 34` | BIT | Channel | Sets a quantizer v/oct (BIT) for a channel <br> V <= 5 : OFF <br> 5 < V <= 10 Temperament at 2 and V/Oct Scaling from 0 to 20 |
+
 X = (1, channel)  
 Sets pulse width of a channel  
 `CROW.C1 14` sets input 1 value to pulse width on channel 4 (14, 1 pulse width, 4 channel)  
