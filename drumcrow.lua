@@ -19,100 +19,123 @@ local bad_cmd = function (ch, value)
 end
 -- Frees the input voltage from mapping anything
 cmd_list[00] = 'deselect'
-c2[00] = function (ch, v5)
+c2[00] = function (ch, v)
 	-- deselect
 end
 -- model pw timbre (bug w/ model 1 when pw = 16250 ?)
-cmd_list[01] = 'pw'
-c2[01] = function (ch, v5)
-    set_state(ch, 'pw', v5 / 10)
+cmd_list[1] = 'pw'
+c2[1] = function (ch, v)
+    set_state(ch, 'pw', v / 10)
 end
 -- extra pw2 param, varying use case
-cmd_list[02] = 'pw2'
-c2[02] = function (ch, v5)
-    set_state(ch, 'pw2', v5)
+cmd_list[2] = 'pw2'
+c2[2] = function (ch, v)
+    set_state(ch, 'pw2', v)
+end
+-- quantizer v/oct scaling amount
+cmd_list[3] = 'bit'
+c2[3] = function (ch, v)
+	if v <= 0 then v = 0 end
+    set_state(ch, 'bit', v)
 end
 -- ENV frequency (Hz*10) Hz*10 (-lp)
 cmd_list[11] = 'efr'
-c2[11] = function (ch, v5)
+c2[11] = function (ch, v)
 	set_state(ch, 'efr', 
-	(v5 <= 9.5) and (2 ^ (0 - v5*0.7)) or
-	(v5 >  9.5) and 0.0000000002328)-- 2^-32 billions and billions
+	(v <= 9.5) and (2 ^ (0 - v*0.7)) or
+	(v >  9.5) and 0.0000000002328)-- 2^-32 billions and billions
 end
 -- ENV symmetry (A:D)
 cmd_list[12] = 'esy'
-c2[12] = function (ch, v5)
-    set_state(ch, 'esy', v5 / 5)
+c2[12] = function (ch, v)
+    set_state(ch, 'esy', v / 5)
 end
 -- ENV curvature
 cmd_list[13] = 'ecr'
-c2[13] = function (ch, v5)
-    set_state(ch, 'ecr', v5 / 2)
+c2[13] = function (ch, v)
+    set_state(ch, 'ecr', v / 2)
 end
 -- ENV pw timbre
 cmd_list[14] = 'epw'
-c2[14] = function (ch, v5)
-    set_state(ch, 'epw', v5 / 5)
+c2[14] = function (ch, v)
+    set_state(ch, 'epw', v / 5)
 end
 -- ENV depth
 cmd_list[15] = 'ent'
-c2[15] = function (ch, v5)
-    set_state(ch, 'ent', v5)
+c2[15] = function (ch, v)
+    set_state(ch, 'ent', v)
+end
+-- ENV type
+cmd_list[16] = 'etype'
+c2[16] = function (ch, v)
+	local flag = (v <= 0) and false or (v > 0) and true
+	set_state(ch, 'etype', flag)
 end
 -- LFO spd (Hz*10) Hz*10 (+rst)
-
 cmd_list[21] = 'lfr'
-c2[21] = function (ch, v5)
+c2[21] = function (ch, v)
 	set_state(ch, 'lfr', 
-	(v5 >  -9.5) and (2 ^ v5) or
-	(v5 <= -9.5) and 0.0000000002328) -- 2^-32 billions and billions
+	(v >  -9.5) and (2 ^ v) or
+	(v <= -9.5) and 0.0000000002328) -- 2^-32 billions and billions
 end
 -- LFO symmetry (R:F) 
 cmd_list[22] = 'lsy'
-c2[22] = function (ch, v5)
-    set_state(ch, 'lsy', v5 / 5)
+c2[22] = function (ch, v)
+    set_state(ch, 'lsy', v / 5)
 end
 -- LFO curvature 
 cmd_list[23] = 'lcr'
-c2[23] = function (ch, v5)
-    set_state(ch, 'lcr', v5 / 2)
+c2[23] = function (ch, v)
+    set_state(ch, 'lcr', v / 2)
 end
 -- LFO pulse width 
 cmd_list[24] = 'lpw'
-c2[24] = function (ch, v5)
-    set_state(ch, 'lpw', v5)
+c2[24] = function (ch, v)
+    set_state(ch, 'lpw', v)
 end
 -- LFO DEPTH
 cmd_list[25] = 'lnt'
-c2[25] = function (ch, v5)
-    set_state(ch, 'lnt', v5)
+c2[25] = function (ch, v)
+    set_state(ch, 'lnt', v)
+end
+-- LFO type
+cmd_list[26] = 'ltype'
+c2[26] = function (ch, v)
+	local flag = (v <= 0) and false or (v > 0) and true
+	set_state(ch, 'ltype', flag)
 end
 -- AMP ENV frequency (Hz*10) Hz*10 (-lp)
 cmd_list[31] = 'afr'
-c2[31] = function (ch, v5)
+c2[31] = function (ch, v)
 	set_state(ch, 'afr', 
-	(v5 <= 9.5) and (2 ^ (0 - v5*0.7)) or
-	(v5 >  9.5) and 0.0000000002328) -- 2^-32 billions and billions
+	(v <= 9.5) and (2 ^ (0 - v*0.7)) or
+	(v >  9.5) and 0.0000000002328) -- 2^-32 billions and billions
 end
 -- AMP ENV symmetry (A:D)
 cmd_list[32] = 'asy'
-c2[32] = function (ch, v5)
-    set_state(ch, 'asy', v5 / 5)
+c2[32] = function (ch, v)
+    set_state(ch, 'asy', v / 5)
 end
 -- AMP ENV curvature
 cmd_list[33] = 'acr'
-c2[33] = function (ch, v5)
-    set_state(ch, 'acr', v5 / 2)
+c2[33] = function (ch, v)
+    set_state(ch, 'acr', v / 2)
 end
 -- AMP ENV pw timbre
 cmd_list[34] = 'apw'
-c2[34] = function (ch, v5)
-    set_state(ch, 'apw', v5 / 5)
+c2[34] = function (ch, v)
+    set_state(ch, 'apw', v / 5)
 end
 -- AMP ENV depth
 cmd_list[35] = 'ant'
-c2[35] = function (ch, v5)
-	set_state(ch, 'ant', v5)
+c2[35] = function (ch, v)
+	set_state(ch, 'ant', v)
+end
+-- AMP ENV type
+cmd_list[36] = 'atype'
+c2[36] = function (ch, v)
+	local flag = (v <= 1) and false or (v > 1) and true
+	set_state(ch, 'atype', flag)
 end
 
 -- -32768 to +32767
@@ -123,8 +146,8 @@ function  v5_to_u16(u16) return u16/5*16384  end
     -- -5v - +5v = 8.17Hz - 8.37kHz.
 function  v8_to_freq(v8) return 261.61 * (2 ^ v8) end
 function v10_to_ratio(v)
-	-- any number input, returns 1/(v integer), ..., 1/2, 1/1, 1, 1, 2, ..., v integer
-	return (v >= 2) and (v - v % 1) or (v <= -2) and 1/(-1*(v + (-1*v) % 1)) or 1
+	-- any number input, returns 1/(v integer), ..., 1/2, 1/1, 0, 1, 2, ..., v integer
+	return (v >= 1) and (v - v % 1) or (v <= -1) and 1/(-1*(v + (-1*v) % 1)) or 0
 end
 
 function get_digits(b1)
@@ -154,6 +177,7 @@ function setup_input()
 		-- set ratio of channel, param, value
 		elseif act == 3 then
 			set_ratio(ch, cmd_list[cmd], v)
+			;(c2[cmd] or bad_cmd)(ch,v)--KEEP SEMICOLON!
 		end
 		
 		-- update synths for all 4 channels
@@ -275,17 +299,7 @@ function setup_i2c()
         elseif action == 1 then
             print("setting ch "..channel.." to eng "..digits[2].." to shape "..digits[3])
             setup_synth(channel, digits[2], digits[3])
-		
-		-- 2: set ch synth amplitude quantizing (bitcrushery?)
-		-- 2121 = (2) bitcrusher command, (1) temperament, (2) scaling (1) channel
-        elseif action == 2 then
-            print("setting ch "..channel.." to temperament "..digits[3].." with scaling "..digits[2])
-			if digits[3] == 0 or digits[2] == 0 then
-				output[channel].scale( 'none' )
-			else
-				output[channel].scale( {}, digits[3], digits[2] )
-			end
-				
+					
 		-- 3: set ch relation
 		-- 3213 = (3) relation command (21) chanel 1 parameter value (1) channel 0,2,3,4
         elseif action == 3 then
@@ -324,7 +338,7 @@ function setup_i2c()
 		end
     end
 	
-	-- CROW.C3 (channel) (note) (volume)
+	-- CROW.C3 x y z -- (channel) (note) (volume)
     ii.self.call3 = function (ch, note, vol)
         if ch == nil or note == nil or vol == nil or ch < 1 or ch > 4 then 
             return 
@@ -340,28 +354,27 @@ function set_state(ch, key, value)
 		states[1][key] = value 
 		for i = 2,4 do
 			-- ratio not 0 means ratio of channel 1
-			if ratios[i][key] ~= 0 then 
+			if (ratios[i][key] ~= nil) and (ratios[i][key] ~= 0) then 
 				states[i][key] = states[1][key] * ratios[i][key]
 			end
 		end
 	-- ratio of 0 means independent of channel 1
-	elseif ratios[ch][key] == 0 then
-		states[ch][key] = value
+	elseif ratios[ch][key] ~= nil then
+		if ratios[ch][key] == 0 then
+			states[ch][key] = value
+		else
+			states[ch][key] = states[1][key] * ratios[ch][key]
+		end
 	else
-		states[ch][key] = states[1][key] * ratios[ch][key]
+		states[ch][key] = value
 	end
 end
 
--- select channel, set value of a param in states array
--- function set_state(ch, key, value)
-    -- if value ~= nil then
-		-- states[ch][key] = value
-    -- end
--- end
-
 -- set ratio to channel 1
 function set_ratio(ch, key, value)
-	ratios[ch][key] = v10_to_ratio(value)
+	if ratios[ch][key] ~= nil then
+		ratios[ch][key] = v10_to_ratio(value)
+	end
 end
 
 -- initialize state array for each output
@@ -371,6 +384,7 @@ function setup_state(ch)
         amp = 2, -- amplitude of oscillator
         pw  = 0, -- pulse width variable 1
         pw2 = 4, -- extra parameter for affecting ASL oscillators
+		bit = 0, -- quantizer v/oct scaling amount
         mdl = 1, -- model number
 		
 		-- ENVELOPE AMP
@@ -380,6 +394,7 @@ function setup_state(ch)
 		apw = 0, -- pulse width
 		ant = 0, -- note
 		aph = 1, -- phase
+		atype = false,
 			
 		-- ENVELOPE PITCH
         efr = 1, -- cycle length
@@ -388,6 +403,7 @@ function setup_state(ch)
 		epw = 0, -- pulse width
 		ent = 0, -- note 
 		eph = 1, -- phase 
+		etype = false,
         
 		-- LFO
 		lfr = 5, -- frequency 
@@ -396,6 +412,7 @@ function setup_state(ch)
 		lpw = 0, -- pulse width
 		lnt = 0, -- note
 		lph = -1, -- phase
+		ltype = true,
     }
     print("setting up state ")
     print("state #"..ch..": "..states[ch].nte)
@@ -404,6 +421,7 @@ function setup_state(ch)
         amp = 0, -- amplitude of oscillator
         pw  = 0, -- pulse width variable 1
         pw2 = 0, -- extra parameter for affecting ASL oscillators
+		bit = 0, -- quantizer v/oct scaling amount
         mdl = 0, -- model number
 		
 		-- ENVELOPE AMP
@@ -467,24 +485,22 @@ function update_synth(i)
     local s = states[i]
     local sec = input[1].time
 	
-	-- ENV AMPLITUDE
-	s.aph = acc(s.aph, s.afr, sec, false)
+	-- AMPLITUDE ENV 
+	s.aph = acc(s.aph, s.afr, sec, s.atype)
     local ampenv = peak(s.aph, s.asy, s.acr) 
 
-    -- ENV FREQUENCY
-    s.eph = acc(s.eph, s.efr, sec, false)
+    -- FREQUENCY ENV
+    s.eph = acc(s.eph, s.efr, sec, s.etype)
     local modenv = peak(s.eph, s.esy, s.ecr)
 
     -- LFO
-    s.lph = acc(s.lph, s.lfr, sec, true)
+    s.lph = acc(s.lph, s.lfr, sec, s.ltype)
     local lfo = peak(s.lph, s.lsy, s.lcr)
 
-    -- FREQ
+    -- FREQ & TIME for ASL stages
     local note = s.nte + (modenv * s.ent) + (lfo * s.lnt) + (ampenv * s.ant)
     local freq = v8_to_freq(note)
 	freq = math.min(math.max(freq, 0.0001), 20000)
-	
-	-- TIME for ASL stages
 	local cyc = 1/freq
 	if s.mdl == 2 then
 		norm_cyc = cyc/0.1
@@ -499,8 +515,15 @@ function update_synth(i)
 	
     -- AMP
 	output[i].dyn.amp = ampenv * s.amp
+	
+	-- BIT 
+	if s.bit <= 0 then
+		output[i].scale('none')
+	else
+		output[i].scale({}, 2, s.bit * 3)
+	end
 
-    -- TIMBRE, PW is -1..+1
+    -- PW
 	local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw) + (ampenv * s.apw)
 	pw = math.min(math.max(pw, -1), 1)
 	pw = (pw + 1) / 2
@@ -517,7 +540,7 @@ function update_synth(i)
     end	
 end
 
--- INIT
+-- INITIALIZE
 function init()
 	for i = 1, 4 do
 		setup_state(i)
