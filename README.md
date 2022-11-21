@@ -12,31 +12,51 @@ playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
 CROW.C1 X = (param, channel)  
 | TT Command | DIGIT 2 | DIGIT 1 | Description |
 | --- | --- | --- | --- |
-| `CROW.C1 0` | ~ | ~ | Deselect a parameter |
-| `CROW.C1 1X` | PW | Channel (1-4) | Sets the pulse width (PW) for a channel |
-| `CROW.C1 2X` | PW2 | Channel (1-4) | Sets a second pulse width (PW2) for a channel, varying purposes |
-| `CROW.C1 3X` | BIT | Channel (1-4) | Sets a quantizer v/oct (BIT) for a channel, bitcrush distortion <br> V <= 5 :: OFF <br> 5 < V <= 10 :: Temperament at 2 and V/Oct from 1 to 20 |
+| `CROW.C1 0` | ~ | ~ | Deselect a parameter, maps input voltage to nothing |
+| `CROW.C1 1X` | 1 Pulse Width | 1-4 Channel | Sets the pulse width for a channel |
+| `CROW.C1 2X` | 2 Pulse Width 2 | 1-4 Channel | Sets a second pulse width variable a channel <br> Used for varying purposes |
+| `CROW.C1 3X` | 3 Bitcrush Amount | 1-4 Channel | Sets a quantizer v/oct for a channel, bitcrush distortion <br> V <= 5 :: OFF <br> 5 < V <= 10 :: Temperament at 2 and V/Oct from 1 to 20 |
 
 ### 3 digits  
 CROW.C1 X = (mod source, mod parameter, channel)  
 | TT Command | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
 | --- | --- | --- | --- | --- |
-| `CROW.C1 11X` | FREQ ENV | EFR | Channel (1-4) | Select envelope cycle time (EFR) for a channel <br> 0 <= V <= 9.5 :: 0.006 sec - 100 sec <br> 9.5 < V <= 10 :: 2<sup>32</sup> seconds |
-| `CROW.C1 12X` | FREQ ENV | ECR | Channel (1-4) | Select envelope symmetry (ESY) for a channel <br> V = 0.0 :: 0% Attack 100% Decay Quieter <br> V = 2.5 :: 0% Attack 100% Decay <br>  V = 5.0 :: 50% Attack 50% Decay <br>  V = 7.5 :: 100% Attack 0% Decay <br> V = 10 :: 100% Attack 0% Decay Quieter Infinite Release|
-| `CROW.C1 13X` | FREQ ENV | ECR | Channel (1-4) | Select envelope curvature (ECR) for a channel <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
-| `CROW.C1 14X` | FREQ ENV | EPW | Channel (1-4) | Select modulation depth of PW with envelope (EPW) for a channel <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
-| `CROW.C1 15X` | FREQ ENV | ENT | Channel (1-4) | Select modulation depth of NOTE with envelope (ENT) for a channel <br> Basically multiplies the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `CROW.C1 11X` | 1 FREQ ENV | 1 Cycle Time | 1-4 Channel | Select enevelope cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds <br> [billions and billions](https://en.wikipedia.org/wiki/Carl_Sagan#%22Billions_and_billions%22)|
+| `CROW.C1 12X` | 1 FREQ ENV | 2 Attack / Decay | 1-4 Channel | Select envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
+| `CROW.C1 13X` | 1 FREQ ENV | 3 Curvature | 1-4 Channel | Select envelope curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `CROW.C1 14X` | 1 FREQ ENV | 4 Mod Depth PW | 1-4 Channel | Select envelope modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
+| `CROW.C1 15X` | 1 FREQ ENV | 5 Mod Depth NOTE | 1-4 Channel | Select envelope modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `CROW.C1 16X` | 1 FREQ ENV | 6 Looping | 1-4 Channel | V <= 1 :: Envelope looping OFF (default) <br> V > 1 :: Envelope looping ON | 
+| `CROW.C1 21X` | 2 LFO | 1 Cycle Time | 1-4 Channel | Select LFO cycle time <br> 0.25 <= V <= 10 :: 0.001 Hz - 1024 Hz :: 724 sec - 0.001 sec <br> 0 <= V <= 0.25 :: 2<sup>32</sup> seconds <br> Fastest update time is 0.002sec or 250Hz, aliasing above this|
+| `CROW.C1 22X` | 2 LFO | 2 Attack / Decay | 1-4 Channel | Select LFO attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
+| `CROW.C1 23X` | 2 LFO | 3 Curvature | 1-4 Channel | Select LFO curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `CROW.C1 24X` | 2 LFO | 4 Mod Depth PW | 1-4 Channel | Select LFO modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
+| `CROW.C1 25X` | 2 LFO | 5 Mod Depth NOTE | 1-4 Channel | Select LFO modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `CROW.C1 26X` | 2 LFO | 6 Looping | 1-4 Channel | V <= 1 :: LFO looping OFF <br> V > 1 :: LFO looping ON (default)| 
+| `CROW.C1 31X` | 3 AMP ENV | 1 Cycle Time | 1-4 Channel | Select enevelope cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds |
+| `CROW.C1 32X` | 3 AMP ENV | 2 Attack / Decay | 1-4 Channel | Select envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
+| `CROW.C1 33X` | 3 AMP ENV | 3 Curvature | 1-4 Channel | Select envelope curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `CROW.C1 34X` | 3 AMP ENV | 4 Mod Depth PW | 1-4 Channel | Select envelope modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
+| `CROW.C1 35X` | 3 AMP ENV | 5 Mod Depth NOTE | 1-4 Channel | Select envelope modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `CROW.C1 36X` | 3 AMP ENV | 6 Looping | 1-4 Channel | V <= 1 :: Envelope looping OFF (default) <br> V > 1 :: Envelope looping ON | 
+| `CROW.C1 86X` | 8 | 6 | 1-4 Channel | Set a channel to its initial value | 
+| `CROW.C1 86X` | 8 | 6 | 0 | Sets all channels to their initial values [86 Term](https://en.wikipedia.org/wiki/86_(term)) | 
 
-
-
-Sets the mod parameter value to the CV value at Crow input 1  
-`CROW.C1 252` sets input 1 value to LFO depth on channel 2 (2 LFO, 5 depth, 2 channel)  
 ### 4 digits  
-X = (command, shape, model, channel) 
-Changes synth model of a channel  
-`CROW.C1 1513` sets synth model on channel 3 to model 1 with shape 5 (1513, 1 command set, 5 shape, 1 model, 3 channel)  
+CROW.C1 X = (action, param 1, param 2, channel)
+| TT Command | DIGIT 4 | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
+| --- | --- | --- | --- | --- | --- |
+| `CROW.C1 1XYZ` | 1 SET MODEL | 1-9 Shape | 1-7 Model | 1-4 Channel | Set a channel to a synth model with a [shape](https://monome.org/docs/crow/reference/#shaping-cv) |
+| `CROW.C1 3XYZ` | 3 SET RATIO | 1-3 Mod Source | 1-5 Mod Parameter | 2-4 Channel | Set a channel parameter to a scaled value of channel 1's parameter value <br> 0 <= V <= 0 :: 1/10, 1/9, ..., 1/2, 1/1, 0, 1, 2, ..., 9, 10 <br> A value of 0 (V 5) disables the ratio setting|
+
+
 
 ## CROW.C2 X Y
+CROW.C2 X Y = (action, param 1, param 2, channe)
+| TT Command | DIGIT 4 | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
+| --- | --- | --- | --- | --- | --- |
+| `CROW.C1 1XYZ` | 1 SET MODEL | 1-9 Shape | 1-7 Model | 1-4 Channel | Set a channel to a synth model with a [shape](https://monome.org/docs/crow/reference/#shaping-cv) |
+
 X = 3 digit number only (mod source, mod parameter, channel)  
 Y = Teletype number  
 Directly sets the parameter at X to the value of Y  
