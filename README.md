@@ -117,19 +117,19 @@ Sequence notes using TT patterns, random values, and so on. Synth models change 
 Mix oscillators using volume parameter, sequence velocity, set to 0 to mute.
 
 ## Models
-1 = var_saw(amp, cyc, pw, shape) (Default)  
+1. var_saw(amp, cyc, pw, shape) (Default)  
 Up to a voltage, down to a negative voltage. Triangle shape with pulse width control. Time to travel between each voltage determined by cyc. Use shape to select 1 triangle, 2 sine, 5 square, or select any shape 1-9 to hear different tones.  
-2 = var_saw(amp, cyc, pw, shape)  
+2. var_saw(amp, cyc, pw, shape)  
 Same as 1 but with random noise added to cyc variable during the udpate loop, distinctive splashy noise.  
-3 = bytebeat(amp, cyc, pw, shape)  
+3. bytebeat(amp, cyc, pw, shape)  
 Output voltage is stepped by PW each loop and wrapped between -20 ... 20. The time to complete each voltage step is determined by cyc.  
-4 = LCG(amp, cyc, pw, pw2, shape)  
+4. LCG(amp, cyc, pw, pw2, shape)  
 Linear Congruential Generator is a pseudorandom number generator using the equation voltage(n+1) = (pw2 * voltage(n) + pw) mod 10. PW2 can be used to sweep through a large range of noisy sounds. PW2 is sensitive to decimal values as well, explore sweet spots. Note affects the sounds as well, higher pitches for higher frequency noise. Use short amplitude envelope cycle times for high hats and snares.  
-5 = FMstep(amp, cyc, pw, pw2, shape)  
+5. FMstep(amp, cyc, pw, pw2, shape)  
 This expands the var_saw model to multiply cyc by a dynamic variable x that sweeps between 1 and 2 at a speed set by PW2. Low PW values means a lower frequency is multiplied to the Note freq.  
-6 = ASLsine(amp, cyc, pw, shape)  
+6. ASLsine(amp, cyc, pw, shape)  
 This is a root-product sine wave approximation y = x + 0.101321(x)^3. The var_saw model can select two voltage points to move between, but ASL can't directly step through a waveshape unless we were to make 100 ASL stages and step through a waveshape manually. Instead, we can loop one ASL stage, step x by PW each loop, wrap it between -pi and +pi, and now each voltage step roughly traces out a sine wave. Sounds real good. Time it takes between each voltage step is determined by cyc.  
-7 = ASLharmonic(amp, cyc, pw, shape)  
+7. ASLharmonic(amp, cyc, pw, shape)  
 Same as ASLsine but we add a mul(-1) to x so that its polarity is negated each loop. This gives a frequency from the time it takes to step through the sine wave approximation and the frequency from the x variable flipping polarity back and forth. An attempt to generate harmonics.  
 
 ## Shapes  
