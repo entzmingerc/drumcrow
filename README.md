@@ -9,19 +9,26 @@ playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
 # Teletype Commands
 ## CROW.C1 X
 ### 2 digits 
-
+CROW.C1 X = (param, channel)  
 | TT Command | DIGIT 2 | DIGIT 1 | Description |
 | --- | --- | --- | --- |
 | `CROW.C1 0` | ~ | ~ | Deselect a parameter |
-| `CROW.C1 11` <br> `CROW.C1 12` <br> `CROW.C1 13` <br> `CROW.C1 14` | PW | Channel | Sets the pulse width (PW) for a channel |
-| `CROW.C1 21` <br> `CROW.C1 22` <br> `CROW.C1 23` <br> `CROW.C1 24` | PW2 | Channel | Sets a second pulse width (PW2) for a channel, varying purposes |
-| `CROW.C1 31` <br> `CROW.C1 32` <br> `CROW.C1 33` <br> `CROW.C1 34` | BIT | Channel | Sets a quantizer v/oct (BIT) for a channel <br> V <= 5 : OFF <br> 5 < V <= 10 Temperament at 2 and V/Oct Scaling from 0 to 20 |
+| `CROW.C1 1X` | PW | Channel (1-4) | Sets the pulse width (PW) for a channel |
+| `CROW.C1 2X` | PW2 | Channel (1-4) | Sets a second pulse width (PW2) for a channel, varying purposes |
+| `CROW.C1 3X` | BIT | Channel (1-4) | Sets a quantizer v/oct (BIT) for a channel, bitcrush distortion <br> V <= 5 :: OFF <br> 5 < V <= 10 :: Temperament at 2 and V/Oct from 1 to 20 |
 
-X = (1, channel)  
-Sets pulse width of a channel  
-`CROW.C1 14` sets input 1 value to pulse width on channel 4 (14, 1 pulse width, 4 channel)  
 ### 3 digits  
-X = (mod source, mod parameter, channel)  
+CROW.C1 X = (mod source, mod parameter, channel)  
+| TT Command | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
+| --- | --- | --- | --- | --- |
+| `CROW.C1 11X` | FREQ ENV | EFR | Channel (1-4) | Select envelope cycle time (EFR) for a channel <br> 0 <= V <= 9.5 :: 0.006 sec - 100 sec <br> 9.5 < V <= 10 :: 2<sup>32</sup> seconds |
+| `CROW.C1 12X` | FREQ ENV | ECR | Channel (1-4) | Select envelope symmetry (ESY) for a channel <br> V = 0.0 :: 0% Attack 100% Decay Quieter <br> V = 2.5 :: 0% Attack 100% Decay <br>  V = 5.0 :: 50% Attack 50% Decay <br>  V = 7.5 :: 100% Attack 0% Decay <br> V = 10 :: 100% Attack 0% Decay Quieter Infinite Release|
+| `CROW.C1 13X` | FREQ ENV | ECR | Channel (1-4) | Select envelope curvature (ECR) for a channel <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `CROW.C1 14X` | FREQ ENV | EPW | Channel (1-4) | Select modulation depth of PW with envelope (EPW) for a channel <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
+| `CROW.C1 15X` | FREQ ENV | ENT | Channel (1-4) | Select modulation depth of NOTE with envelope (ENT) for a channel <br> Basically multiplies the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+
+
+
 Sets the mod parameter value to the CV value at Crow input 1  
 `CROW.C1 252` sets input 1 value to LFO depth on channel 2 (2 LFO, 5 depth, 2 channel)  
 ### 4 digits  
