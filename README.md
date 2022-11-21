@@ -156,6 +156,7 @@ Try linking LFO speed, ENV cycle time, ENV pitch modulation. Experiment!
 0 - disables ratio for the parameter  
 
 # Future Development
+- Fix ratio ops, if change ratio, should hear state update too simultaneously
 - Get/set presets, sequence through presets, possibly using sequins table in Crow
 - Norns can call i2c funcitons on Crow and could be used to drive drumcrow in addition to Teletype
 - Ratio multiplier tuning for exponential parameters
