@@ -7,7 +7,9 @@ postsolarpunk Flash Crash performance [here](https://www.youtube.com/watch?v=_EK
 playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
 
 # What is this?
-Make an oscillator by pushing voltage up and down with ASL. Dyn variables update amplitude, frequency, and other parameters of the ASL oscillator. Teletype sends commands to Crow using i2c to set parameters and trigger envelopes. Teletype + drumcrow = Drum machine!  
+Upload this script to Crow using Druid. Connect Crow to Teletype using i2c connection.  
+
+ASL makes an oscillator by pushing voltage up and down. Dyn variables update amplitude, frequency, and other parameters of the ASL oscillator. Teletype sends commands to Crow using i2c to set parameters and trigger envelopes. Teletype + drumcrow = Drum machine!  
 
 First, patch a constant voltage with a range 0 - 10V into Crow input 1. You can use teletype to do this or something else. In M type `CV 4 PRM` to set CV 4 output to the Parameter knob. Then patch this to Crow's input 1. Next, patch each Crow output to a mixer so you can hear the audio.  
 `CROW.C3 X Y Z` Trigger the envelope on X (channel) Y (note) Z (volume)  
