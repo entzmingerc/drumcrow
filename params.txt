@@ -1,0 +1,70 @@
+states        
+    nte = 0, -- note (for frequency calculation)
+    amp = 2, -- amplitude of oscillator
+    pw  = 0, -- pulse width variable 1
+    pw2 = 4, -- extra parameter for affecting ASL oscillators
+    bit = 0, -- quantizer v/oct scaling amount
+    mdl = 1, -- model number
+    
+    -- ENVELOPE AMP
+    afr = 4, -- decay time
+    asy = -1, -- symmetry
+    acr = 3, -- exponent for peak function (curve)
+    apw = 0, -- pulse width
+    ant = 0, -- note
+    aph = 1, -- phase
+    atype = false,
+        
+    -- ENVELOPE PITCH
+    efr = 1, -- cycle length
+    esy = -1, -- pulse width or symmetry
+    ecr = 4, -- exponent for peak function (curve)
+    epw = 0, -- pulse width
+    ent = 0, -- note 
+    eph = 1, -- phase 
+    etype = false,
+    
+    -- LFO
+    lfr = 5, -- frequency 
+    lsy = 0, -- symmetry
+    lcr = 0, -- curvature
+    lpw = 0, -- pulse width
+    lnt = 0, -- note
+    lph = -1, -- phase
+    ltype = true,
+            
+    -- TRIG SEQUENCER
+    t_len = sq{1, 3},
+    t_rep = sq{3, 3},
+
+ratios
+    nte = 0, -- note (for frequency calculation)
+    amp = 0, -- amplitude of oscillator
+    pw  = 0, -- pulse width variable 1
+    pw2 = 0, -- extra parameter for affecting ASL oscillators
+    bit = 0, -- quantizer v/oct scaling amount
+    mdl = 0, -- model number
+    
+    -- ENVELOPE AMP
+    afr = 0, -- decay time
+    asy = 0, -- symmetry
+    acr = 0, -- exponent for peak function (curve)
+    apw = 0, -- pulse width
+    ant = 0, -- note
+    aph = 0, -- phase
+        
+    -- ENVELOPE PITCH
+    efr = 0, -- cycle length
+    esy = 0, -- pulse width or symmetry
+    ecr = 0, -- exponent for peak function (curve)
+    epw = 0, -- pulse width
+    ent = 0, -- note 
+    eph = 0, -- phase 
+    
+    -- LFO
+    lfr = 0, -- frequency 
+    lsy = 0, -- symmetry
+    lcr = 0, -- curvature
+    lpw = 0, -- pulse width
+    lnt = 0, -- note
+    lph = 0, -- phase
