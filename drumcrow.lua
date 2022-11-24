@@ -1,26 +1,22 @@
 --- drumcrow
---[[
-4 voice drum machine for monome crow
-Driven with i2c commands
-CROW.C1 X
-CROW.C2 X Y
-CROW.C3 X Y Z
---]]
 local states = {}
 local ratios = {}
 local ch = 1
 local cmd = 11
 local c2 = {}
-local act = 0 -- 0 = set input, 3 = set ratio to channel 1 value
+local act = 0
 local shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under','rebound'}
 local cmd_list = {}
+clock_enable = {0, 0, 0, 0}
+sq = sequins
+clock_ID = {}
+
 local bad_cmd = function (ch, value) 
     print("CAW! Bad command!")
 end
 -- Frees the input voltage from mapping anything
 cmd_list[00] = 'deselect'
 c2[00] = function (ch, v)
-	-- deselect
 end
 -- model pw timbre (bug w/ model 1 when pw = 16250 ?)
 cmd_list[1] = 'pw'
@@ -76,7 +72,7 @@ cmd_list[21] = 'lfr'
 c2[21] = function (ch, v)
 	set_state(ch, 'lfr', 
 	(v >  -9.5) and (2 ^ v) or
-	(v <= -9.5) and 0.0000000002328) -- 2^-32 billions and billions
+	(v <= -9.5) and 0.0000000002328)
 end
 -- LFO symmetry (R:F) 
 cmd_list[22] = 'lsy'
@@ -109,7 +105,7 @@ cmd_list[31] = 'afr'
 c2[31] = function (ch, v)
 	set_state(ch, 'afr', 
 	(v <= 9.5) and (2 ^ (0 - v*0.7)) or
-	(v >  9.5) and 0.0000000002328) -- 2^-32 billions and billions
+	(v >  9.5) and 0.0000000002328)
 end
 -- AMP ENV symmetry (A:D)
 cmd_list[32] = 'asy'
@@ -134,8 +130,26 @@ end
 -- AMP ENV type
 cmd_list[36] = 'atype'
 c2[36] = function (ch, v)
-	local flag = (v <= 1) and false or (v > 1) and true
+	local flag = (v <= 0) and false or (v > 0) and true
 	set_state(ch, 'atype', flag)
+end
+
+-- TRIG
+cmd_list[41] = 't_len'
+c2[41] = function (ch, v)
+	set_state(ch, 't_len', v10_to_ratio(v), 1)
+end
+cmd_list[42] = 't_rep'
+c2[42] = function (ch, v)
+	set_state(ch, 't_rep', v10_to_int(v), 1)
+end
+cmd_list[43] = 't_len'
+c2[43] = function (ch, v)
+	set_state(ch, 't_len', v10_to_ratio(v), 2)
+end
+cmd_list[44] = 't_rep'
+c2[44] = function (ch, v)
+	set_state(ch, 't_rep', v10_to_int(v), 2)
 end
 
 -- -32768 to +32767
@@ -145,6 +159,9 @@ function  v5_to_u16(u16) return u16/5*16384  end
     -- Tyler's Mordax said JF 0V = 261.61
     -- -5v - +5v = 8.17Hz - 8.37kHz.
 function  v8_to_freq(v8) return 261.61 * (2 ^ v8) end
+function v10_to_int(v)
+	return (v >= 1) and (v - v % 1) or (v <= -1) and (-1*(v + (-1*v) % 1)) or 0 
+end
 function v10_to_ratio(v)
 	-- any number input, returns 1/(v integer), ..., 1/2, 1/1, 0, 1, 2, ..., v integer
 	return (v >= 1) and (v - v % 1) or (v <= -1) and 1/(-1*(v + (-1*v) % 1)) or 0
@@ -162,25 +179,15 @@ end
 
 -- input 1 stream to update all the synths in a loop
 function setup_input()
-    print("INPUT OK.")
-	
-	-- read input voltage 1
     input[1].stream = function (v)
-		-- map input voltage 0..+10V to -10..+10 internally
 		v = math.min(math.max(v, -10), 10)
 		v = (v - 5) * 2
-		
-		-- set state of channel, param, value
 		if act == 0 then
 			;(c2[cmd] or bad_cmd)(ch,v)--KEEP SEMICOLON!
-		
-		-- set ratio of channel, param, value
 		elseif act == 3 then
 			set_ratio(ch, cmd_list[cmd], v)
 			;(c2[cmd] or bad_cmd)(ch,v)--KEEP SEMICOLON!
 		end
-		
-		-- update synths for all 4 channels
 		for i = 1, 4 do
             if i ~= nil then
                 update_synth(i)
@@ -193,7 +200,7 @@ function setup_input()
     input[2]{mode = 'stream', time = 10}
 end
 
--- initialize ASL table to loop as oscillator
+-- select ASL construct for a channel
 function setup_synth(channel, model, shape)
 
     -- variable 2-stage wave|\ to /\ to /|
@@ -204,16 +211,14 @@ function setup_synth(channel, model, shape)
 		} 
 	end	
 
-	-- adding pw to x every stage, wrapping around and incrementing, bytebeat inspired
+	-- adding pw to x every stage, wrapping around and incrementing
 	function bytebeat(shape)
 		return loop { 
 			to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape)
 		}
 	end
 	
-	-- linear congruential generator (LCG)
-	-- pseudo-random number generator
-	-- X[n+1] = (a*X[n] + c) mod m
+	-- linear congruential generator (LCG) pseudo-random number generator X[n+1] = (a*X[n] + c) mod m
 	function noise(shape) 
 		return loop {
 			to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}/2, shape)
@@ -228,22 +233,21 @@ function setup_synth(channel, model, shape)
 		}
 	end
 	
-	-- root-product sine approximation, less complex than 7th order taylor series, more error
-	-- y = x + 0.101321x^3
+	-- root-product sine approximation y = x + 0.101321x^3
 	function ASLsine(shape)
 		return loop { 
 			to((dyn{x=0}:step(dyn{pw=0.314}):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)
 		}
 	end
 
-	-- similar to ASLsine but with a mul(-1) applied to x
+	-- ASLsine with a mul(-1) applied to x
 	function ASLharmonic(shape)
 		return loop { 
 			to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)
 		}
 	end
 	
-	-- set crow output action to ASL then run action
+	-- set crow output action to ASL construct then run action
     states[channel].mdl = model
 	if model == 1 or model == 2 then 
 		output[channel]( var_saw(shapes[shape]) )
@@ -275,7 +279,7 @@ function setup_i2c()
 			print("digits"..digits[i])
 		end
 		print("action "..action.." param "..param.." channel "..channel)
-		
+
 		-- 86X: initialize outputs https://en.wikipedia.org/wiki/86_(term)
 		if param == 86 then
 			if digits[1] == 0 then
@@ -287,21 +291,30 @@ function setup_i2c()
 				setup_state(channel)
 				setup_synth(channel, 1, 1)
 			end
-			
+
+		-- turn on / off clock for a channel
+		elseif param == 40 then
+			if clock_enable[channel] == 0 then
+				clock_enable[channel] = 1
+				clock_ID[channel] = clock.run(trigger_seq, channel)
+			else
+				clock_enable[channel] = 0	
+				clock.cancel(clock_ID[channel])			
+			end
+
 		-- 0: map input 1 voltage to (ch, cmd)
 		elseif action == 0 then
             ch  = channel
             cmd = param
 			act = action
             print("input 1 mapping to ch "..ch.." command "..cmd)
-			
+
 		-- 1: set channel, synth engine, and shape
         elseif action == 1 then
             print("setting ch "..channel.." to eng "..digits[2].." to shape "..digits[3])
             setup_synth(channel, digits[2], digits[3])
-					
-		-- 3: set ch relation
-		-- 3213 = (3) relation command (21) chanel 1 parameter value (1) channel 0,2,3,4
+		
+		-- 3: set ch ratio
         elseif action == 3 then
 			print("setting ch "..channel.." parameter "..param.." to channel 1 ratio")
 			ch  = channel
@@ -349,13 +362,19 @@ function setup_i2c()
     end
 end
 
-function set_state(ch, key, value)
+function set_state(ch, key, value, step)
+	step = step or 0
 	if ch == 1 then
-		states[1][key] = value 
-		for i = 2,4 do
-			-- ratio not 0 means ratio of channel 1
-			if (ratios[i][key] ~= nil) and (ratios[i][key] ~= 0) then 
-				states[i][key] = states[1][key] * ratios[i][key]
+		if step ~= 0 then 
+			states[1][key][step] = value
+			-- to do ratio steps
+		else
+			states[1][key] = value 
+			for i = 2,4 do
+				-- ratio not 0 means ratio of channel 1
+				if (ratios[i][key] ~= nil) and (ratios[i][key] ~= 0) then 
+					states[i][key] = states[1][key] * ratios[i][key]
+				end
 			end
 		end
 	-- ratio of 0 means independent of channel 1
@@ -365,8 +384,12 @@ function set_state(ch, key, value)
 		else
 			states[ch][key] = states[1][key] * ratios[ch][key]
 		end
-	else
-		states[ch][key] = value
+	else -- ch 2-4 states
+		if step ~= 0 then 
+			states[ch][key][step] = value
+		else
+			states[ch][key] = value
+		end
 	end
 end
 
@@ -413,9 +436,11 @@ function setup_state(ch)
 		lnt = 0, -- note
 		lph = -1, -- phase
 		ltype = true,
+				
+		-- TRIG SEQUENCER
+		t_len = sq{1, 3},
+		t_rep = sq{3, 3},
     }
-    print("setting up state ")
-    print("state #"..ch..": "..states[ch].nte)
 	ratios[ch] = {
         nte = 0, -- note (for frequency calculation)
         amp = 0, -- amplitude of oscillator
@@ -448,8 +473,6 @@ function setup_state(ch)
 		lnt = 0, -- note
 		lph = 0, -- phase
     }
-    print("setting up ratios ")
-    print("ratio #"..ch..": "..ratios[ch].nte)
 end
 
 -- assume ph and pw between {-1..1} incl
@@ -461,17 +484,16 @@ function peak(ph, pw, curve)
     return value
 end
 
--- accumulates phase
+-- step through phase from -1 to +1
 function acc(phase, freq, sec, looping)
     phase = phase + (freq * sec)
     phase = looping and ((1 + phase) % 2 - 1) or math.min(1, phase)
     return phase
 end
 
--- select channel, trigger note on that channel
+-- reset phase of envelopes on a channel
 function trigger_note(ch)
-    -- print("triggered "..ch)
-    -- do not retrigger attack
+    -- do not retrigger if we're in attack
     if states[ch].eph >= states[ch].esy then
         states[ch].eph = -1
     end
@@ -540,12 +562,29 @@ function update_synth(i)
     end	
 end
 
--- INITIALIZE
+function trigger_seq(i)
+	local rep_count = 0
+	local t_len = states[i].t_len[1]
+	local t_rep = states[i].t_rep[1]
+	while clock_enable[i] == 1 do
+		if rep_count >= t_rep then
+			rep_count = 0;
+			t_len = states[i].t_len()
+			t_rep = states[i].t_rep()
+		end
+		trigger_note(i)
+		rep_count = rep_count + 1
+		clock.sync(t_len)
+	end
+end
+
 function init()
+	clock.tempo = 300
 	for i = 1, 4 do
 		setup_state(i)
 		setup_synth(i, 1, 1)
 	end	
 	setup_i2c()
 	setup_input()
+	print("setup complete!")
 end 
