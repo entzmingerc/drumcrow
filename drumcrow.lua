@@ -14,88 +14,50 @@ clock_ID = {}
 local bad_cmd = function (ch, value) 
     print("CAW! Bad command!")
 end
-local setup_dividing_param = function (index, param_name, divisor) 
+function setup_hof_param (index, param_name, fn, step) 
     cmd_list[index] = param_name
-    c2[index] = function (ch, v) set_state(ch, param_name, v / divisor) end
+    c2[index] = function (ch, v) set_state(ch, param_name, fn(v), step) end
 end
 cmd_list[00] = 'deselect' -- Frees the input voltage from mapping anything
 c2[00] = function (ch, v)
 end
-setup_dividing_param(1, 'pw', 10) -- model pw timbre (bug w/ model 1 when pw = 16250 ?)
-setup_dividing_param(2, 'pw2', 1) -- extra pw2 param, varying use case
+function make_divide (divisor) return function (x) return x / divisor end end
+function is_positive(v) return (v <= 0) and false or (v > 0) and true end
+setup_hof_param(1, 'pw', make_divide(10)) -- model pw timbre (bug w/ model 1 when pw = 16250 ?)
+setup_hof_param(2, 'pw2', make_divide(1)) -- extra pw2 param, varying use case
 cmd_list[3] = 'bit' -- quantizer v/oct scaling amount
 c2[3] = function (ch, v)
 	if v <= 0 then v = 0 end
     set_state(ch, 'bit', v)
 end
-cmd_list[11] = 'efr' -- ENV frequency (Hz*10) Hz*10 (-lp)
-c2[11] = function (ch, v)
-	set_state(ch, 'efr', 
-	(v <= 9.5) and (2 ^ (0 - v*0.7)) or
-	(v >  9.5) and 0.0000000002328)-- 2^-32 billions and billions
+function make_rectify(in_coeff, out_coeff, thresh, static)
+    return function (v) ((v*in_coeff) <= thresh) and (2 ^ (v*out_coeff)) or ((v*in_coeff) > thresh) and static end
 end
-setup_dividing_param(12, 'esy', 1) -- ENV symmetry (A:D)
-setup_dividing_param(13, 'ecr', 2) -- ENV curvature
-setup_dividing_param(14, 'epw', 5) -- ENV pw timbre
-setup_dividing_param(15, 'ent', 1) -- ENV depth
-cmd_list[16] = 'etype' -- ENV type
-c2[16] = function (ch, v)
-	local flag = (v <= 0) and false or (v > 0) and true
-	set_state(ch, 'etype', flag)
-end
-cmd_list[21] = 'lfr' -- LFO spd (Hz*10) Hz*10 (+rst)
-c2[21] = function (ch, v)
-	set_state(ch, 'lfr', 
-	(v >  -9.5) and (2 ^ v) or
-	(v <= -9.5) and 0.0000000002328)
-end
-setup_dividing_param(22, 'lsy', 5) -- LFO symmetry (R:F) 
-setup_dividing_param(23, 'lcr', 2) -- LFO curvature 
-setup_dividing_param(24, 'lpw', 1) -- LFO pulse width 
-setup_dividing_param(25, 'lnt', 1) -- LFO DEPTH
-cmd_list[26] = 'ltype' -- LFO type
-c2[26] = function (ch, v)
-	local flag = (v <= 0) and false or (v > 0) and true
-	set_state(ch, 'ltype', flag)
-end
-cmd_list[31] = 'afr' -- AMP ENV frequency (Hz*10) Hz*10 (-lp)
-c2[31] = function (ch, v)
-	set_state(ch, 'afr', 
-	(v <= 9.5) and (2 ^ (0 - v*0.7)) or
-	(v >  9.5) and 0.0000000002328)
-end
-setup_dividing_param(32, 'asy', 5) -- AMP ENV symmetry (A:D)
-setup_dividing_param(33, 'acr', 2) -- AMP ENV curvature
-setup_dividing_param(34, 'apw', 5) -- AMP ENV pw timbre
-setup_dividing_param(35, 'apw', 1) -- AMP ENV depth
-cmd_list[36] = 'atype' -- AMP ENV type
-c2[36] = function (ch, v)
-	local flag = (v <= 0) and false or (v > 0) and true
-	set_state(ch, 'atype', flag)
-end
-cmd_list[41] = 't_len' -- TRIG
-c2[41] = function (ch, v)
-	set_state(ch, 't_len', v10_to_ratio(v), 1)
-end
-cmd_list[42] = 't_rep'
-c2[42] = function (ch, v)
-	set_state(ch, 't_rep', v10_to_int(v), 1)
-end
-cmd_list[43] = 't_len'
-c2[43] = function (ch, v)
-	set_state(ch, 't_len', v10_to_ratio(v), 2)
-end
-cmd_list[44] = 't_rep'
-c2[44] = function (ch, v)
-	set_state(ch, 't_rep', v10_to_int(v), 2)
-end
--- -32768 to +32767
-function u16_to_v10(u16) return u16/16384*10 end
-function v10_to_u16(u16) return u16/10*16384 end
-function  v5_to_u16(u16) return u16/5*16384  end
-function  v8_to_freq(v8) return 261.61 * (2 ^ v8) end -- Tyler's Mordax said JF 0V = 261.61 : -5v - +5v = 8.17Hz - 8.37kHz.
 function v10_to_int(v) return (v >= 1) and (v - v % 1) or (v <= -1) and (-1*(v + (-1*v) % 1)) or 0 end
 function v10_to_ratio(v) return (v >= 1) and (v - v % 1) or (v <= -1) and 1/(-1*(v + (-1*v) % 1)) or 0 end -- any number input, returns 1/(v integer), ..., 1/2, 1/1, 0, 1, 2, ..., v integer
+setup_hof_param(11, 'efr', make_rectify(1, -0.7, 9.5, 0.0000000002328)) -- ENV frequency (Hz*10) Hz*10 (-lp)
+setup_hof_param(12, 'esy', make_divide(1)) -- ENV symmetry (A:D)
+setup_hof_param(13, 'ecr', make_divide(2)) -- ENV curvature
+setup_hof_param(14, 'epw', make_divide(5)) -- ENV pw timbre
+setup_hof_param(15, 'ent', make_divide(1)) -- ENV depth
+setup_hof_param(16, 'etype', is_positive) -- ENV type
+setup_hof_param(21, 'lfr', make_rectify(-1, 1, -9.5, 0.0000000002328)) -- LFO spd (Hz*10) Hz*10 (+rst)
+setup_hof_param(22, 'lsy', make_divide(5)) -- LFO symmetry (R:F) 
+setup_hof_param(23, 'lcr', make_divide(2)) -- LFO curvature 
+setup_hof_param(24, 'lpw', make_divide(1)) -- LFO pulse width 
+setup_hof_param(25, 'lnt', make_divide(1)) -- LFO DEPTH
+setup_hof_param(26, 'ltype', is_positive) -- LFO type
+setup_hof_param(31, 'afr', make_rectify(1, -0.7, 9.5, 0.0000000002328)) -- AMP ENV frequency (Hz*10) Hz*10 (-lp)
+setup_hof_param(32, 'asy', make_divide(5)) -- AMP ENV symmetry (A:D)
+setup_hof_param(33, 'acr', make_divide(2)) -- AMP ENV curvature
+setup_hof_param(34, 'apw', make_divide(5)) -- AMP ENV pw timbre
+setup_hof_param(35, 'apw', make_divide(1)) -- AMP ENV depth
+setup_hof_param(36, 'atype', is_positive) -- AMP ENV type
+setup_hof_param(41, 't_len', v10_to_ratio, 1) -- TRIG
+setup_hof_param(42, 't_rep', v10_to_int, 1)
+setup_hof_param(43, 't_len', v10_to_ratio, 2)
+setup_hof_param(44, 't_rep', v10_to_int, 2)
+function u16_to_v10(u16) return u16/16384*10 end -- -32768 to +32767
 function get_digits(b1) -- TT variables -32768..+32767 so 5 digit maximum
 	local digits = {}
 	for i = 1, 5 do digits[i] = b1 % 10; b1 = (b1 - digits[i]) / 10 end
@@ -120,20 +82,13 @@ end
 
 function setup_synth(channel, model, shape) -- select ASL construct for a channel
 	function var_saw(shape) -- variable 2-stage wave|\ to /\ to /|
-		return loop {
-			to(  dyn{amp=2}, dyn{cyc=1/440} *    dyn{pw=1/2} , shape),
-			to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape)
-		} 
+		return loop { to(  dyn{amp=2}, dyn{cyc=1/440} * dyn{pw=1/2}, shape), to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape) } 
 	end	
 	function bytebeat(shape) -- adding pw to x every stage, wrapping around and incrementing
-		return loop { 
-			to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape)
-		}
+		return loop { to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape) }
 	end
 	function noise(shape) -- linear congruential generator (LCG) pseudo-random number generator X[n+1] = (a*X[n] + c) mod m
-		return loop {
-			to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}/2, shape)
-		} 
+		return loop { to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}/2, shape) } 
 	end
 	function FMstep(shape) -- use step() to frequency modulate the ASL stage time 
 		return loop { 
@@ -142,14 +97,10 @@ function setup_synth(channel, model, shape) -- select ASL construct for a channe
 		}
 	end
 	function ASLsine(shape) -- root-product sine approximation y = x + 0.101321x^3
-		return loop { 
-			to((dyn{x=0}:step(dyn{pw=0.314}):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)
-		}
+		return loop { to((dyn{x=0}:step(dyn{pw=0.314}):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape) }
 	end
 	function ASLharmonic(shape) -- ASLsine with a mul(-1) applied to x
-		return loop { 
-			to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)
-		}
+		return loop { to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape) }
 	end
     states[channel].mdl = model -- set crow output action to ASL construct then run action
 	if model == 1 or model == 2 then output[channel]( var_saw(shapes[shape]) )
@@ -298,8 +249,7 @@ function update_synth(i) -- get state parameters, set output
     s.lph = acc(s.lph, s.lfr, sec, s.ltype) -- LFO
     local lfo = peak(s.lph, s.lsy, s.lcr)
     local note = s.nte + (modenv * s.ent) + (lfo * s.lnt) + (ampenv * s.ant) -- FREQ & TIME for ASL stages
-    local freq = v8_to_freq(note)
-	freq = math.min(math.max(freq, 0.0001), 20000)
+    local freq = math.min(math.max(261.61 * (2 ^ note), 0.0001), 20000) -- Tyler's Mordax said JF 0V = 261.61 : -5v - +5v = 8.17Hz - 8.37kHz.
 	local cyc = 1/freq
 	if s.mdl == 2 then
 		norm_cyc = cyc/0.1
