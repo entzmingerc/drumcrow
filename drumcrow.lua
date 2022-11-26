@@ -30,6 +30,8 @@ c2[3] = function (ch, v)
 	if v <= 0 then v = 0 end
     set_state(ch, 'bit', v)
 end
+cmd_list[9] = 'tempo'
+c2[9] = function (ch, v) clock.tempo = (v+10.1) * 100 end -- 10 to 2010 Tempo BPM
 function make_rectify(in_coeff, out_coeff, thresh, static)
     return function (v) return ((v*in_coeff) <= thresh) and (2 ^ (v*out_coeff)) or ((v*in_coeff) > thresh) and static end
 end
@@ -57,6 +59,7 @@ setup_hof_param(41, 't_len', v10_to_ratio, 1) -- TRIG
 setup_hof_param(42, 't_rep', v10_to_int, 1)
 setup_hof_param(43, 't_len', v10_to_ratio, 2)
 setup_hof_param(44, 't_rep', v10_to_int, 2)
+
 function u16_to_v10(u16) return u16/16384*10 end -- -32768 to +32767
 function get_digits(b1) -- TT variables -32768..+32767 so 5 digit maximum
 	local digits = {}
