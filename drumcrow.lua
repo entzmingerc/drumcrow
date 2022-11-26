@@ -31,7 +31,7 @@ c2[3] = function (ch, v)
     set_state(ch, 'bit', v)
 end
 function make_rectify(in_coeff, out_coeff, thresh, static)
-    return function (v) ((v*in_coeff) <= thresh) and (2 ^ (v*out_coeff)) or ((v*in_coeff) > thresh) and static end
+    return function (v) return ((v*in_coeff) <= thresh) and (2 ^ (v*out_coeff)) or ((v*in_coeff) > thresh) and static end
 end
 function v10_to_int(v) return (v >= 1) and (v - v % 1) or (v <= -1) and (-1*(v + (-1*v) % 1)) or 0 end
 function v10_to_ratio(v) return (v >= 1) and (v - v % 1) or (v <= -1) and 1/(-1*(v + (-1*v) % 1)) or 0 end -- any number input, returns 1/(v integer), ..., 1/2, 1/1, 0, 1, 2, ..., v integer
