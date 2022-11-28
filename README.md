@@ -59,34 +59,41 @@ CROW.C1 152
 Continue adding more voices, adjusting parameters, modulating sounds, sequencing drum patterns
 
 # Teletype Commands
+Channel = 0 is used to set a parameter on all channels simultaneously. Channel = 1-4 is used to set a parameter on a selected channel. 
+
 ## CROW.C1 X  
 Select a parameter to set Crow input 1 voltage to  
 | TT Command | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
 | --- | --- | --- | --- | --- |
 | `CROW.C1 0` | ~ | ~ |  0 | Deselect a parameter, maps input voltage to nothing |
-| `CROW.C1 1X` | ~ | 1 Pulse Width | 1-4 Channel | Sets the pulse width for a channel |
-| `CROW.C1 2X` | ~ | 2 Pulse Width 2 | 1-4 Channel | Sets a second pulse width variable a channel <br> Changes depending on the model |
-| `CROW.C1 3X` | ~ | 3 Bitcrush Amount | 1-4 Channel | Sets a quantizer v/oct for a channel, bitcrush distortion <br> V <= 5 :: OFF <br> 5 < V <= 10 :: Temperament at 2 and V/Oct from 1 to 20 |
-| `CROW.C1 11X` | 1 FREQ ENV | 1 Cycle Time | 1-4 Channel | Select enevelope cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds <br> [billions and billions](https://en.wikipedia.org/wiki/Carl_Sagan#%22Billions_and_billions%22)|
-| `CROW.C1 12X` | 1 FREQ ENV | 2 Attack / Decay | 1-4 Channel | Select envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
-| `CROW.C1 13X` | 1 FREQ ENV | 3 Curvature | 1-4 Channel | Select envelope curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
-| `CROW.C1 14X` | 1 FREQ ENV | 4 Mod Depth PW | 1-4 Channel | Select envelope modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
-| `CROW.C1 15X` | 1 FREQ ENV | 5 Mod Depth NOTE | 1-4 Channel | Select envelope modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
-| `CROW.C1 16X` | 1 FREQ ENV | 6 Looping | 1-4 Channel | V <= 1 :: Envelope looping OFF (default) <br> V > 1 :: Envelope looping ON | 
-| `CROW.C1 21X` | 2 LFO | 1 Cycle Time | 1-4 Channel | Select LFO cycle time <br> 0.25 <= V <= 10 :: 0.001 Hz - 1024 Hz :: 724 sec - 0.001 sec <br> 0 <= V <= 0.25 :: 2<sup>32</sup> seconds <br> Fastest update time is 0.002sec or 250Hz, aliasing above this|
-| `CROW.C1 22X` | 2 LFO | 2 Attack / Decay | 1-4 Channel | Select LFO attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
-| `CROW.C1 23X` | 2 LFO | 3 Curvature | 1-4 Channel | Select LFO curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
-| `CROW.C1 24X` | 2 LFO | 4 Mod Depth PW | 1-4 Channel | Select LFO modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
-| `CROW.C1 25X` | 2 LFO | 5 Mod Depth NOTE | 1-4 Channel | Select LFO modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
-| `CROW.C1 26X` | 2 LFO | 6 Looping | 1-4 Channel | V <= 1 :: LFO looping OFF <br> V > 1 :: LFO looping ON (default)| 
+| `CROW.C1 1X` | ~ | 1 Pulse Width | 0-4 Channel | Sets the pulse width for a channel |
+| `CROW.C1 2X` | ~ | 2 Pulse Width 2 | 0-4 Channel | Sets a second pulse width variable a channel <br> Changes depending on the model |
+| `CROW.C1 3X` | ~ | 3 Bitcrush Amount | 0-4 Channel | Sets a quantizer v/oct for a channel, bitcrush distortion <br> V <= 5 :: OFF <br> 5 < V <= 10 :: Temperament at 2 and V/Oct from 1 to 20 |
+| `CROW.C1 9X` | ~ | 9 Main Tempo | (any number) | Sets main tempo for trigger sequencer for all channels <br> 10 BPM <= V <= 2010 BPM |
+| `CROW.C1 11X` | 1 FREQ ENV | 1 Cycle Time | 0-4 Channel | Select enevelope cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds <br> [billions and billions](https://en.wikipedia.org/wiki/Carl_Sagan#%22Billions_and_billions%22)|
+| `CROW.C1 12X` | 1 FREQ ENV | 2 Attack / Decay | 0-4 Channel | Select envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
+| `CROW.C1 13X` | 1 FREQ ENV | 3 Curvature | 0-4 Channel | Select envelope curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `CROW.C1 14X` | 1 FREQ ENV | 4 Mod Depth PW | 0-4 Channel | Select envelope modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
+| `CROW.C1 15X` | 1 FREQ ENV | 5 Mod Depth NOTE | 0-4 Channel | Select envelope modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `CROW.C1 16X` | 1 FREQ ENV | 6 Looping | 0-4 Channel | V <= 1 :: Envelope looping OFF (default) <br> V > 1 :: Envelope looping ON | 
+| `CROW.C1 21X` | 2 LFO | 1 Cycle Time | 0-4 Channel | Select LFO cycle time <br> 0.25 <= V <= 10 :: 0.001 Hz - 1024 Hz :: 724 sec - 0.001 sec <br> 0 <= V <= 0.25 :: 2<sup>32</sup> seconds <br> Fastest update time is 0.002sec or 250Hz, aliasing above this|
+| `CROW.C1 22X` | 2 LFO | 2 Attack / Decay | 0-4 Channel | Select LFO attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
+| `CROW.C1 23X` | 2 LFO | 3 Curvature | 0-4 Channel | Select LFO curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `CROW.C1 24X` | 2 LFO | 4 Mod Depth PW | 0-4 Channel | Select LFO modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
+| `CROW.C1 25X` | 2 LFO | 5 Mod Depth NOTE | 0-4 Channel | Select LFO modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `CROW.C1 26X` | 2 LFO | 6 Looping | 0-4 Channel | V <= 1 :: LFO looping OFF <br> V > 1 :: LFO looping ON (default)| 
 | `CROW.C1 31X` | 3 AMP ENV | 1 Cycle Time | 1-4 Channel | Select enevelope cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds |
-| `CROW.C1 32X` | 3 AMP ENV | 2 Attack / Decay | 1-4 Channel | Select envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
-| `CROW.C1 33X` | 3 AMP ENV | 3 Curvature | 1-4 Channel | Select envelope curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
-| `CROW.C1 34X` | 3 AMP ENV | 4 Mod Depth PW | 1-4 Channel | Select envelope modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
-| `CROW.C1 35X` | 3 AMP ENV | 5 Mod Depth NOTE | 1-4 Channel | Select envelope modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
-| `CROW.C1 36X` | 3 AMP ENV | 6 Looping | 1-4 Channel | V <= 1 :: Envelope looping OFF (default) <br> V > 1 :: Envelope looping ON | 
-| `CROW.C1 86X` | 8 | 6 | 1-4 Channel | Set a channel to its initial value | 
-| `CROW.C1 86X` | 8 | 6 | 0 | Sets all channels to their initial values [86 Term](https://en.wikipedia.org/wiki/86_(term)) | 
+| `CROW.C1 32X` | 3 AMP ENV | 2 Attack / Decay | 0-4 Channel | Select envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
+| `CROW.C1 33X` | 3 AMP ENV | 3 Curvature | 0-4 Channel | Select envelope curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `CROW.C1 34X` | 3 AMP ENV | 4 Mod Depth PW | 0-4 Channel | Select envelope modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
+| `CROW.C1 35X` | 3 AMP ENV | 5 Mod Depth NOTE | 0-4 Channel | Select envelope modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `CROW.C1 36X` | 3 AMP ENV | 6 Looping | 0-4 Channel | V <= 1 :: Envelope looping OFF (default) <br> V > 1 :: Envelope looping ON | 
+| `CROW.C1 40X` | 4 TRIG SEQ | 0 ON/OFF | 0-4 Channel | Turn ON/OFF Trig Sequencer for channel |
+| `CROW.C1 41X` | 4 TRIG SEQ | 1 Length A | 0-4 Channel | Set length of time to wait between triggers in A <br> 0 <= V <= 10 :: 1/10, ..., 1/2, 1/1, 0, 1, 2, ..., 10 Beats |
+| `CROW.C1 42X` | 4 TRIG SEQ | 2 Repeats A | 0-4 Channel | Set number of times to repeat "Trigger then wait Length A" before moving to B <br> 0 <= V <= 10 :: 10, ..., 2, 1, 0, 1, 2, ..., 10 Repeats |
+| `CROW.C1 43X` | 4 TRIG SEQ | 3 Length B | 0-4 Channel | Set length of time to wait between triggers in B <br> 0 <= V <= 10 :: 1/10, ..., 1/2, 1/1, 0, 1, 2, ..., 10 Beats |
+| `CROW.C1 44X` | 4 TRIG SEQ | 4 Repeats B | 0-4 Channel | Set number of times to repeat "Trigger then wait Length B" before moving to A <br> 0 <= V <= 10 :: 10, ..., 2, 1, 0, 1, 2, ..., 10 Repeats |
+| `CROW.C1 86X` | 8 | 6 | 0-4 Channel | Set a channel to its initial value [86 Term](https://en.wikipedia.org/wiki/86_(term))| 
 
 ### 4 digits  
 | TT Command | DIGIT 4 | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
@@ -151,14 +158,39 @@ Shapes can be used to change the tone of the ASL oscillator.
 ## Ratios
 `CROW.C1 3XYZ` The action (3) sets the parameter (XY) on channel (Z) equal to a scaled value of the same parameter on channel 1. Select a multiplier using Crow input 1 voltage. Multipliers are quantized to integer scalings.  
 `CROW.C1 3312` turn up input voltage to V 6 ish, now Channel 2's amplitude envelope cycle time (31) is set to Channel 1's amplitude envelope cycle time x 2. When Channel 1's value is changed, Channel 2's value will be updated as well.  
-Try linking LFO speed, ENV cycle time, ENV pitch modulation. Experiment!  
+Try linking channel 2, 3, and 4's LFO speed, ENV cycle time, ENV pitch modulation to channel 1. Experiment!  
 0 <= V <= 10 :: 1/10, 1/9, ..., 1/2, 1/1, 0, 1, 2, ..., 9, 10  
 0 - disables ratio for the parameter  
 
+## Trigger Sequencer
+`CROW.C1 40X` turns on / turns off the trigger sequencer for a channel.  
+`CROW.C1 9X` can be used to set the main tempo on crow for all channels (X can be anything, just need it to be 9X) 10 BPM to 2010 BPM  
+When a trigger sequencer is turned on, it will trigger the channel immediately with the last set value of note and volume which are set using `CROW.C3 X Y Z`. Trigger sequencers start in stage A. At each stage, a trigger will occur then the clock will wait a certain amount of time. After the time is up, it will trigger again, then wait that length of time. `41X` sets how long of a time to wait and `42X` sets how many times to repeat this action before moving on to stage B. Stage B is exactly the same as stage A. `43X` sets how long of a time to wait and `44X` sets how many times to repeat this action before moving on to stage A.  
+```
+1 : A___A___A___B_B_A___A___A___B_B_A___A___A___B_B_A___A___A___B_B_  
+2 : A__A__A__B_____A__A__A__B_____A__A__A__B_____A__A__A__B_____A__A  
+3 : AAAAB___AAAAB___AAAAB___AAAAB___AAAAB___AAAAB___AAAAB___AAAAB___  
+4 : A___B___A___B___A___B___A___B___A___B___A___B___A___B___A___B___  
+```
+-Different trigger sequencer per channel. Each A or B represents a trigger.  
+
+The length of time between triggers is synced to clock divisions/multiplications of the main tempo set with `9X`. All channels are synced to the same main tempo. Varying rhythms can be created between channels with a small changes to length and repeats. Setting a length to 0 <= V <= 5 will result in a shorter beats whereas 5 < V <= 10 results in much widers spacing between triggers. For ratchet effects, set length to a smaller value and set the number of repeats very high. For a constant rhythm, set length of A using `41X` then immediately change to `43X` without adjusting the input voltage, both will be set to the same clock division. For phasing drum patterns, try setting the main tempo to a high value, the length and repeats of A to a high value, and the number of repeats of B to 1. A small value for length of B could then be used to slightly offset one channel from another. Notice how in the visual example above, sequence 2 phases slowly to the left when compared to sequence 1. 
+
+```
+LenA 1 RepA 1 LenB 2   RepB 1 : A_B__A_B__A_B__A_B__
+LenA 2 RepA 1 LenB 2   RepB 1 : A__B__A__B__A__B__A__B__
+LenA 2 RepA 1 LenB 2   RepB 2 : A__B__B__A__B__B__A__B__B__A__B__B__
+LenA 2 RepA 1 LenB 1   RepB 2 : A__B_B_A__B_B_A__B_B_A__B_B_
+LenA 3 RepA 1 LenB 1   RepB 2 : A___B_B_A___B_B_A___B_B_A___B_B_
+LenA 3 RepA 1 LenB 1/2 RepB 2 : A___BBA___BBA___BBA___BB
+LenA 3 RepA 1 LenB 1/2 RepB 5 : A___BBBBBA___BBBBBA___BBBBBA___BBBBB
+```
+-4 cycles of various trigger patterns. Each A or B represents a trigger.  
+
 # Future Development
-- Fix ratio ops, if change ratio, should hear state update too simultaneously
-- Get/set presets, sequence through presets, possibly using sequins table in Crow
-- Norns can call i2c funcitons on Crow and could be used to drive drumcrow in addition to Teletype
-- Ratio multiplier tuning for exponential parameters
+- Skip trigger sequencer stage if rep or len = 0? 
+- 49X should restart all trigger sequences 
+- Test ratio op fixes
+- Get/set presets, sequence through presets, possibly using norns app
 - Write up ASL oscillator theory
 - ByteBeat and Rungler oscillator possibly
