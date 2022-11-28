@@ -163,6 +163,7 @@ Try linking channel 2, 3, and 4's LFO speed, ENV cycle time, ENV pitch modulatio
 0 - disables ratio for the parameter  
 
 ## Trigger Sequencer
+drumcrow can be triggered externally regardless if the trigger sequencer is on or off. 
 `CROW.C1 40X` turns on / turns off the trigger sequencer for a channel.  
 `CROW.C1 9X` can be used to set the main tempo on crow for all channels (X can be anything, just need it to be 9X) 10 BPM to 2010 BPM  
 When a trigger sequencer is turned on, it will trigger the channel immediately with the last set value of note and volume which are set using `CROW.C3 X Y Z`. Trigger sequencers start in stage A. At each stage, a trigger will occur then the clock will wait a certain amount of time. After the time is up, it will trigger again, then wait that length of time. `41X` sets how long of a time to wait and `42X` sets how many times to repeat this action before moving on to stage B. Stage B is exactly the same as stage A. `43X` sets how long of a time to wait and `44X` sets how many times to repeat this action before moving on to stage A.  
