@@ -1,89 +1,90 @@
 --- drumcrow
-local states = {}
-local ratios = {}
-local ch = 1
-local cmd = 11
-local c2 = {}
-local act = 0
-local shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under','rebound'}
-local cmd_list = {}
+states = {}
+default_states = {}
+ratios = {}
+channel = 1
+cmd = 11
+c2 = {}
+act = 0
+shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under','rebound'}
+cmd_list = {}
 clock_enable = {0, 0, 0, 0}
-sq = sequins
 clock_ID = {}
 
-local bad_cmd = function (ch, value) 
-    print("CAW! Bad command!")
+function is_positive(v)  return (v > 0) and true or (v <= 0) and false end
+function v10_to_int(v)   return (v >= 1) and (v - v % 1) or (v <= -1) and   (-1*(v + (-1*v) % 1)) or 0 end --   v, ...,   2,   1, 0, 1, 2, ..., v 
+function v10_to_ratio(v) return (v >= 1) and (v - v % 1) or (v <= -1) and 1/(-1*(v + (-1*v) % 1)) or 0 end -- 1/v, ..., 1/2, 1/1, 0, 1, 2, ..., v 
+function make_divide(divisor) return function (x) return x / divisor end end
+function make_rectify_right(thresh, out_coeff, static) -- below or at threshold, return function, above threshold return value
+	return function (v) return (v <= thresh) and (2 ^ (v*out_coeff)) or (v > thresh) and static end
 end
-function setup_hof_param (index, param_name, fn, step) 
-    cmd_list[index] = param_name
-    c2[index] = function (ch, v) set_state(ch, param_name, fn(v), step) end
+function make_rectify_left(thresh, out_coeff, static) -- above or at threshold, return function, below threshold return value
+	return function (v) return (v >= thresh) and (2 ^ (v*out_coeff)) or (v < thresh) and static end
 end
-cmd_list[00] = 'deselect' -- Frees the input voltage from mapping anything
-c2[00] = function (ch, v)
+
+function setup_hof_param (index, param_name, fn) -- sets c2[index] to a function
+	cmd_list[index] = param_name
+	c2[index] = function (ch, v) set_state(ch, param_name, fn(v)) end
 end
-function make_divide (divisor) return function (x) return x / divisor end end
-function is_positive(v) return (v <= 0) and false or (v > 0) and true end
-setup_hof_param(1, 'pw', make_divide(10)) -- model pw timbre (bug w/ model 1 when pw = 16250 ?)
-setup_hof_param(2, 'pw2', make_divide(1)) -- extra pw2 param, varying use case
-cmd_list[3] = 'bit' -- quantizer v/oct scaling amount
-c2[3] = function (ch, v)
+local bad_cmd = function (ch, value) print("CAW! Bad command!") end
+cmd_list[0] = 'deselect' -- Frees up input 1
+c2[0] = function (ch, v) end
+setup_hof_param(1, 'pw', make_divide(10))
+setup_hof_param(2, 'pw2', make_divide(1)) 
+cmd_list[3] = 'bit'
+c2[3] = function (ch, v) 
 	if v <= 0 then v = 0 end
-    set_state(ch, 'bit', v)
+	set_state(ch, 'bit', v)
 end
-cmd_list[9] = 'tempo'
-c2[9] = function (ch, v) clock.tempo = (v+10.1) * 100 end -- 10 to 2010 Tempo BPM
-function make_rectify(in_coeff, out_coeff, thresh, static)
-    return function (v) return ((v*in_coeff) <= thresh) and (2 ^ (v*out_coeff)) or ((v*in_coeff) > thresh) and static end
-end
-function v10_to_int(v) return (v >= 1) and (v - v % 1) or (v <= -1) and (-1*(v + (-1*v) % 1)) or 0 end
-function v10_to_ratio(v) return (v >= 1) and (v - v % 1) or (v <= -1) and 1/(-1*(v + (-1*v) % 1)) or 0 end -- any number input, returns 1/(v integer), ..., 1/2, 1/1, 0, 1, 2, ..., v integer
-setup_hof_param(11, 'efr', make_rectify(1, -0.7, 9.5, 0.0000000002328)) -- ENV frequency (Hz*10) Hz*10 (-lp)
+cmd_list[9] = 'tempo' -- 10 to 2010 Tempo BPM
+c2[9] = function (ch, v) clock.tempo = (v+10.1) * 100 end 
+setup_hof_param(11, 'efr', make_rectify_right(9.5, -0.7, 0.0000000002328)) -- ENV frequency (Hz*10) Hz*10 (-lp)
 setup_hof_param(12, 'esy', make_divide(1)) -- ENV symmetry (A:D)
 setup_hof_param(13, 'ecr', make_divide(2)) -- ENV curvature
 setup_hof_param(14, 'epw', make_divide(5)) -- ENV pw timbre
 setup_hof_param(15, 'ent', make_divide(1)) -- ENV depth
-setup_hof_param(16, 'etype', is_positive) -- ENV type
-setup_hof_param(21, 'lfr', make_rectify(-1, 1, -9.5, 0.0000000002328)) -- LFO spd (Hz*10) Hz*10 (+rst)
+setup_hof_param(16, 'etype', make_divide(1)) -- ENV type
+setup_hof_param(21, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328)) -- LFO spd (Hz*10) Hz*10 (+rst)
 setup_hof_param(22, 'lsy', make_divide(5)) -- LFO symmetry (R:F) 
 setup_hof_param(23, 'lcr', make_divide(2)) -- LFO curvature 
 setup_hof_param(24, 'lpw', make_divide(1)) -- LFO pulse width 
 setup_hof_param(25, 'lnt', make_divide(1)) -- LFO DEPTH
-setup_hof_param(26, 'ltype', is_positive) -- LFO type
-setup_hof_param(31, 'afr', make_rectify(1, -0.7, 9.5, 0.0000000002328)) -- AMP ENV frequency (Hz*10) Hz*10 (-lp)
+setup_hof_param(26, 'ltype', make_divide(1)) -- LFO type
+setup_hof_param(31, 'afr', make_rectify_right(9.5, -0.7, 0.0000000002328)) -- AMP ENV frequency (Hz*10) Hz*10 (-lp)
 setup_hof_param(32, 'asy', make_divide(5)) -- AMP ENV symmetry (A:D)
 setup_hof_param(33, 'acr', make_divide(2)) -- AMP ENV curvature
 setup_hof_param(34, 'apw', make_divide(5)) -- AMP ENV pw timbre
-setup_hof_param(35, 'apw', make_divide(1)) -- AMP ENV depth
-setup_hof_param(36, 'atype', is_positive) -- AMP ENV type
-setup_hof_param(41, 't_len', v10_to_ratio, 1) -- TRIG
-setup_hof_param(42, 't_rep', v10_to_int, 1)
-setup_hof_param(43, 't_len', v10_to_ratio, 2)
-setup_hof_param(44, 't_rep', v10_to_int, 2)
+setup_hof_param(35, 'ant', make_divide(1)) -- AMP ENV depth
+setup_hof_param(36, 'atype', make_divide(1)) -- AMP ENV type
+setup_hof_param(41, 'tlenA', v10_to_ratio) -- TRIG
+setup_hof_param(42, 'trepA', v10_to_int)
+setup_hof_param(43, 'tlenB', v10_to_ratio)
+setup_hof_param(44, 'trepB', v10_to_int)
 
 function u16_to_v10(u16) return u16/16384*10 end -- -32768 to +32767
 function get_digits(b1) -- TT variables -32768..+32767 so 5 digit maximum
 	local digits = {}
-	for i = 1, 5 do digits[i] = b1 % 10; b1 = (b1 - digits[i]) / 10 end
+	for i = 1, 5 do digits[i] = b1 % 10; b1 = (b1 - digits[i]) / 10	end
 	return digits
 end
 function setup_input() -- input 1 stream to update all the synths in a loop
-    input[1].stream = function (v)
+	input[1].stream = function (v)
 		v = math.min(math.max(v, -10), 10)
 		v = (v - 5) * 2
 		if act == 0 then
-			;(c2[cmd] or bad_cmd)(ch,v)--KEEP SEMICOLON!
+			;(c2[cmd] or bad_cmd)(channel,v)--KEEP SEMICOLON!
 		elseif act == 3 then
-			set_ratio(ch, cmd_list[cmd], v)
-			;(c2[cmd] or bad_cmd)(ch,v)--KEEP SEMICOLON!
+			set_ratio(channel, cmd_list[cmd], v)
+			;(c2[cmd] or bad_cmd)(channel,v)--KEEP SEMICOLON!
 		end
 		for i = 1, 4 do if i ~= nil then update_synth(i) end end
-    end
-    input[1]{mode = 'stream', time = 0.003}
-    input[2].stream = function (v) collectgarbage("collect") end
-    input[2]{mode = 'stream', time = 10}
+	end
+	input[1]{mode = 'stream', time = 0.003}
+	input[2].stream = function (v) collectgarbage("collect") end
+	input[2]{mode = 'stream', time = 10}
 end
 
-function setup_synth(channel, model, shape) -- select ASL construct for a channel
+function setup_synth(ch, model, shape) -- select ASL construct for a channel
 	function var_saw(shape) -- variable 2-stage wave|\ to /\ to /|
 		return loop { to(  dyn{amp=2}, dyn{cyc=1/440} * dyn{pw=1/2}, shape), to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape) } 
 	end	
@@ -105,154 +106,191 @@ function setup_synth(channel, model, shape) -- select ASL construct for a channe
 	function ASLharmonic(shape) -- ASLsine with a mul(-1) applied to x
 		return loop { to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape) }
 	end
-    states[channel].mdl = model -- set crow output action to ASL construct then run action
-	if model == 1 or model == 2 then output[channel]( var_saw(shapes[shape]) )
-	elseif model == 3 then output[channel]( bytebeat(shapes[shape]) )
-	elseif model == 4 then output[channel]( noise(shapes[shape]) )
-	elseif model == 5 then output[channel]( FMstep(shapes[shape]) )
-	elseif model == 6 then output[channel]( ASLsine(shapes[shape]) )
-	elseif model == 7 then output[channel]( ASLharmonic(shapes[shape]) ) end
+	states[ch].mdl = model -- set crow output action to ASL construct then run action
+	if model == 1 or model == 2 then output[ch]( var_saw(shapes[shape]) )
+	elseif model == 3 then output[ch]( bytebeat(shapes[shape]) )
+	elseif model == 4 then output[ch]( noise(shapes[shape]) )
+	elseif model == 5 then output[ch]( FMstep(shapes[shape]) )
+	elseif model == 6 then output[ch]( ASLsine(shapes[shape]) )
+	elseif model == 7 then output[ch]( ASLharmonic(shapes[shape]) ) end
 end
-function setup_i2c() -- initialize i2c function calls for teletype
-	-- TT variables -32768..+32767 so 5 digit maximum
-	-- ABCDE digit number, AB action, CD param, E channel
-	-- set CV input 1 to <mod source, mod parameter, channel>
-    ii.self.call1 = function (b1)
+function setup_i2c()
+	ii.self.call1 = function (b1) -- CROW.C1 X, main input handler, b1 = ABCDE digits, AB action, CD param, E channel
 		digits = get_digits(b1)
 		local action  = (digits[5] * 10) + digits[4]
 		local param   = (digits[3] * 10) + digits[2]
-		local channel = (digits[1] % 10 % 4)
-        channel = (channel == 0 and 4) or channel
-		for i = 1,5 do
-			print("digits"..digits[i])
+		local ch = digits[1] % 5
+		if action == 1 then -- 1: set new ASL construct (shape, model) keep act the same
+			setup_synth(ch, digits[2], digits[3])
+			print("Setup Synth, Shape: "..digits[3].." Engine: "..digits[2].." Channel: "..ch)
+		elseif action == 3 then -- act = 3: set ratio 
+			channel = ch; cmd = param; act = action
+			print("Set Ratio to Ch1, Param: "..param.." Channel: "..ch)
+		elseif action == 0 then
+			if param == 86 then -- 86X: init channel https://en.wikipedia.org/wiki/86_(term)
+				if ch == 0 then
+					for i = 1, 4 do
+						setup_state(i)
+						setup_synth(i, 1, 1)
+						print("Initialize Channel: "..i)
+					end	
+				else
+					setup_state(ch)
+					setup_synth(ch, 1, 1)
+					print("Initialize Channel: "..ch)
+				end
+			elseif param == 40 then -- TRIG enable/disable clock for a ch
+				if ch == 0 then
+					for i = 1, 4 do
+						print("Clock ON/OFF: "..trig_enable(i).." Channel: "..ch)
+					end
+				else
+					print("Clock ON/OFF: "..trig_enable(ch).." Channel: "..ch)
+				end
+			else -- set state
+				channel = ch; cmd = param; act = action
+				print("Input 1 mapping to Param: "..cmd.." Channel: "..ch)
+			end
 		end
-		print("action "..action.." param "..param.." channel "..channel)
-		if param == 86 then -- 86X: initialize outputs https://en.wikipedia.org/wiki/86_(term)
-			if digits[1] == 0 then
-				for i = 1, 4 do
-					setup_state(i)
-					setup_synth(i, 1, 1)
-				end	
-			else
-				setup_state(channel)
-				setup_synth(channel, 1, 1)
-			end
-		elseif param == 40 then -- turn on / off clock for a channel
-			if clock_enable[channel] == 0 then
-				clock_enable[channel] = 1
-				clock_ID[channel] = clock.run(trigger_seq, channel)
-			else
-				clock_enable[channel] = 0	
-				clock.cancel(clock_ID[channel])			
-			end
-		elseif action == 0 then -- 0: map input 1 voltage to (ch, cmd)
-            ch  = channel
-            cmd = param
-			act = action
-            print("input 1 mapping to ch "..ch.." command "..cmd)
-        elseif action == 1 then -- 1: set channel, synth engine, and shape
-            print("setting ch "..channel.." to eng "..digits[2].." to shape "..digits[3])
-            setup_synth(channel, digits[2], digits[3])
-        elseif action == 3 then -- 3: set ch ratio
-			print("setting ch "..channel.." parameter "..param.." to channel 1 ratio")
-			ch  = channel
-			cmd = param
-			act = action
-        end
-    end
-    ii.self.call2 = function (b1, value) -- CROW.C2 x y -- set <mod source, mod parameter, channel> to <value>
-        digits = get_digits(b1)
+	end
+	ii.self.call2 = function (b1, value) -- CROW.C2 x y, set param to value
+		digits = get_digits(b1)
 		local action  = (digits[5] * 10) + digits[4]
 		local param   = (digits[3] * 10) + digits[2]
-		local channel = (digits[1] % 10 % 4)
-        channel = (channel == 0 and 4) or channel
-		if param < 36 then -- set a parameter value directly
+		local ch =  digits[1] % 5
+		if param <= 44 then -- set a parameter value directly
 			value = (u16_to_v10(value) - 5) * 2
 			value = math.min(math.max(value, -10), 10)
-			print("setting param "..param.." on channel "..channel.." to value "..value)
-			c2[param](channel, value) 
-			update_synth(channel)
+			print("Set Param: "..param.." Channel: "..ch.." Value "..value)
+			c2[param](ch, value) 
+			--update_synth(ch)
 		-- set global synth update time
 		elseif param == 99 then -- 0.002 - 0.1 sec time range from V -10 or V 10 in TT, initial is 0.003
 			value = (u16_to_v10(value) + 10) / 20 * (0.1 - 0.002) + 0.002
 			value = math.min(math.max(value, 0.002), 0.1)
-			print("setting input stream update time to "..value)
+			print("Set Input 1 Stream Time to update every: "..value.." sec")
 			input[1]{mode = 'stream', time = value}
 		else
-			bad_cmd(channel, value) 
+			bad_cmd(ch, value) 
 		end
-    end
-    ii.self.call3 = function (ch, note, vol) -- CROW.C3 x y z -- (channel) (note) (volume)
-        if ch == nil or note == nil or vol == nil or ch < 1 or ch > 4 then return end
-		set_state(ch, 'nte', u16_to_v10(note))
-		set_state(ch, 'amp', u16_to_v10(vol))
-        trigger_note(ch)
-    end
-end
-function set_state(ch, key, value, step)
-	step = step or 0
-	if ch == 1 then
-		if step ~= 0 then 
-			states[1][key][step] = value -- to do ratio steps
-		else
-			states[1][key] = value 
-			for i = 2,4 do -- ratio not 0 means ratio of channel 1
-				if (ratios[i][key] ~= nil) and (ratios[i][key] ~= 0) then states[i][key] = states[1][key] * ratios[i][key] end
-			end
-		end
-	elseif ratios[ch][key] ~= nil then -- ratio of 0 means independent of channel 1
-		if ratios[ch][key] == 0 then states[ch][key] = value
-		else states[ch][key] = states[1][key] * ratios[ch][key] end
-	else -- ch 2-4 states
-		if step ~= 0 then states[ch][key][step] = value
-		else states[ch][key] = value end
+	end
+	ii.self.call3 = function (ch, note, vol) -- CROW.C3 x y z -- (channel) (note) (volume)
+		if ch == nil or note == nil or vol == nil then return end
+		ch = ch % 5;
+		states[ch].nte = u16_to_v10(note)
+		states[ch].amp = u16_to_v10(vol)
+		-- set_state(ch, 'nte', u16_to_v10(note))
+		-- set_state(ch, 'amp', u16_to_v10(vol))
+		trigger_note(ch)
 	end
 end
-function set_ratio(ch, key, value) -- set ratio to channel 1
-	if ratios[ch][key] ~= nil then ratios[ch][key] = v10_to_ratio(value) end
+function set_state(ch, key, value)
+	if ch == 0 then -- set all
+		if act == 3 then -- setting all ratios, updating all states
+			for i = 2,4 do
+				--print("i: "..i.."channel: "..ch.." key: "..key.." value: "..value)
+				if ratios[i][key] == 0 then -- set all states with default or ratios 
+					states[i][key] = default_states[i][key]
+				else
+					states[i][key] = states[1][key] * ratios[i][key] -- update states
+				end
+			end
+		else -- setting all states
+			for i = 1,4 do
+				if i == 1 then
+					states[i][key] = value -- set channel 1
+				else
+					if ratios[i][key] == 0 then -- if ratio disabled, set value, otherwise ignore
+						states[i][key] = value
+					else
+						states[i][key] = states[1][key] * ratios[i][key] -- update states
+					end
+				end
+			end
+		end
+	elseif ch > 1 then -- set a single channel 2-4
+		if act == 3 then -- setting a ratio, updating a state
+			if ratios[ch][key] == 0 then -- set state with default or ratio
+				states[ch][key] = default_states[ch][key]
+			else
+				states[ch][key] = states[1][key] * ratios[ch][key] -- set ratio
+			end
+		else -- setting a state
+			if ratios[ch][key] == 0 then -- if ratio disabled, set value, otherwise ignore
+				states[ch][key] = value
+			else
+				states[ch][key] = states[1][key] * ratios[ch][key] -- update states
+			end
+		end
+	elseif ch == 1 then
+		states[ch][key] = value
+		for i = 2,4 do
+			if ratios[i][key] ~= 0 then -- if ratio enabled, update value, otherwise ignore
+				states[i][key] = states[1][key] * ratios[i][key]
+			end
+		end
+	end
+end	
+
+function set_ratio(ch, key, value)
+	if ch == 0 then
+		for i = 2,4 do 
+			ratios[i][key] = v10_to_ratio(value)
+		end
+	elseif ch > 1 then	
+		ratios[ch][key] = v10_to_ratio(value)
+	end
 end
-function setup_state(ch) -- initialize state array for each output
-    states[ch] = {
-        nte = 0, amp = 2, pw  = 0, pw2 = 4, bit = 0, mdl = 1,
-		afr = 4, asy = -1, acr = 3, apw = 0, ant = 0, aph = 1, atype = false, -- ENVELOPE AMP
-        efr = 1, esy = -1, ecr = 4, epw = 0, ent = 0, eph = 1, etype = false, -- ENVELOPE PITCH
-		lfr = 5, lsy = 0, lcr = 0, lpw = 0, lnt = 0, lph = -1, ltype = true, -- LFO
-		t_len = sq{1, 3}, t_rep = sq{3, 3}, -- TRIG SEQUENCER
-    }
+function setup_state(ch)
+	states[ch] = {
+		nte = 0, amp = 2,  pw = 0,  pw2 = 4, bit = 0, mdl = 1,
+		afr = 4, asy = -1, acr = 3, apw = 0, ant = 0, aph = 1,  atype = 0, -- ENVELOPE AMP
+		efr = 1, esy = -1, ecr = 4, epw = 0, ent = 0, eph = 1,  etype = 0, -- ENVELOPE PITCH
+		lfr = 5, lsy = 0,  lcr = 0, lpw = 0, lnt = 0, lph = -1, ltype = 1, -- LFO
+		tlenA = 1, trepA = 3, tlenB = 3, trepB = 3, -- TRIG SEQUENCER
+	}
+	default_states[ch] = { -- copy of states
+		nte = 0, amp = 2,  pw = 0,  pw2 = 4, bit = 0, mdl = 1,
+		afr = 4, asy = -1, acr = 3, apw = 0, ant = 0, aph = 1,  atype = 0, 
+		efr = 1, esy = -1, ecr = 4, epw = 0, ent = 0, eph = 1,  etype = 0, 
+		lfr = 5, lsy = 0,  lcr = 0, lpw = 0, lnt = 0, lph = -1, ltype = 1, 
+		tlenA = 1, trepA = 3, tlenB = 3, trepB = 3, 
+	}
 	ratios[ch] = {
-        nte = 0, amp = 0, pw  = 0, pw2 = 0, bit = 0, mdl = 0,
-		afr = 0, asy = 0, acr = 0, apw = 0, ant = 0, aph = 0, -- ENVELOPE AMP
-        efr = 0, esy = 0, ecr = 0, epw = 0, ent = 0, eph = 0, -- ENVELOPE PITCH
-		lfr = 0, lsy = 0, lcr = 0, lpw = 0, lnt = 0, lph = 0, -- LFO
-    }
-end
-function peak(ph, pw, curve) -- assume ph and pw between {-1..1} incl
-    local value = (ph < pw) and ((1 + ph) / (1 + pw))
-        or (ph > pw) and ((1 - ph) / (1 - pw))
-        or 1
-    value = value ^ (2 ^ curve)
-    return value
+		nte = 0, amp = 0,  pw = 0, pw2 = 0, bit = 0, mdl = 0,
+		afr = 0, asy = 0, acr = 0, apw = 0, ant = 0, aph = 0, atype = 0, 
+		efr = 0, esy = 0, ecr = 0, epw = 0, ent = 0, eph = 0, etype = 0, 
+		lfr = 0, lsy = 0, lcr = 0, lpw = 0, lnt = 0, lph = 0, ltype = 0, 
+		tlenA = 0, trepA = 0, tlenB = 0, trepB = 0,
+	}
 end
 function acc(phase, freq, sec, looping) -- step through phase from -1 to +1
-    phase = phase + (freq * sec)
-    phase = looping and ((1 + phase) % 2 - 1) or math.min(1, phase)
-    return phase
+	phase = phase + (freq * sec)
+	phase = looping and ((1 + phase) % 2 - 1) or math.min(1, phase)
+	return phase
+end
+function peak(ph, pw, curve) -- assume ph and pw between {-1..1} incl
+	local value = (ph < pw) and ((1 + ph) / (1 + pw))
+		or (ph > pw) and ((1 - ph) / (1 - pw))
+		or 1
+	value = value ^ (2 ^ curve)
+	return value
 end
 function trigger_note(ch) -- reset phase of envelopes on a channel
-    if states[ch].eph >= states[ch].esy then states[ch].eph = -1 end -- do not retrigger if we're in attack
+	if states[ch].eph >= states[ch].esy then states[ch].eph = -1 end -- do not retrigger if we're in attack
 	if states[ch].aph >= states[ch].asy then states[ch].aph = -1 end
 end
 function update_synth(i) -- get state parameters, set output
-    local s = states[i]
-    local sec = input[1].time
-	s.aph = acc(s.aph, s.afr, sec, s.atype) -- AMPLITUDE ENV 
-    local ampenv = peak(s.aph, s.asy, s.acr) 
-    s.eph = acc(s.eph, s.efr, sec, s.etype) -- FREQUENCY ENV
-    local modenv = peak(s.eph, s.esy, s.ecr)
-    s.lph = acc(s.lph, s.lfr, sec, s.ltype) -- LFO
-    local lfo = peak(s.lph, s.lsy, s.lcr)
-    local note = s.nte + (modenv * s.ent) + (lfo * s.lnt) + (ampenv * s.ant) -- FREQ & TIME for ASL stages
-    local freq = math.min(math.max(261.61 * (2 ^ note), 0.0001), 20000) -- Tyler's Mordax said JF 0V = 261.61 : -5v - +5v = 8.17Hz - 8.37kHz.
+	local s = states[i]
+	local sec = input[1].time
+	s.aph = acc(s.aph, s.afr, sec, is_positive(s.atype)) -- AMPLITUDE ENV 
+	local ampenv = peak(s.aph, s.asy, s.acr)
+	s.eph = acc(s.eph, s.efr, sec, is_positive(s.etype)) -- FREQUENCY ENV
+	local modenv = peak(s.eph, s.esy, s.ecr)
+	s.lph = acc(s.lph, s.lfr, sec, is_positive(s.ltype)) -- LFO
+	local lfo = peak(s.lph, s.lsy, s.lcr)
+	local note = s.nte + (modenv * s.ent) + (lfo * s.lnt) + (ampenv * s.ant) -- FREQ & TIME for ASL stages
+	local freq = math.min(math.max(261.61 * (2 ^ note), 0.0001), 20000) -- Tyler's Mordax said JF 0V = 261.61 : -5v - +5v = 8.17Hz - 8.37kHz.
 	local cyc = 1/freq
 	if s.mdl == 2 then
 		norm_cyc = cyc/0.1
@@ -271,22 +309,41 @@ function update_synth(i) -- get state parameters, set output
 		output[i].dyn.pw2 = s.pw2
 	elseif s.mdl == 5 then
 		output[i].dyn.pw = pw
-		output[i].dyn.pw2 = s.pw2 / 50		
+		output[i].dyn.pw2 = s.pw2 / 50
 	else output[i].dyn.pw = pw end	
 end
 function trigger_seq(i)
 	local rep_count = 0
-	local t_len = states[i].t_len[1]
-	local t_rep = states[i].t_rep[1]
+	local len_count = 1
+	local tlen = states[i].tlenA
+	local trep = states[i].trepA
 	while clock_enable[i] == 1 do
-		if rep_count >= t_rep then
+		if rep_count >= trep then
 			rep_count = 0;
-			t_len = states[i].t_len()
-			t_rep = states[i].t_rep()
+			if len_count == 1 then
+				tlen = states[i].tlenB
+				trep = states[i].trepB
+				len_count = 2;
+			else
+				tlen = states[i].tlenA
+				trep = states[i].trepA
+				len_count = 1;
+			end
 		end
 		trigger_note(i)
 		rep_count = rep_count + 1
-		clock.sync(t_len)
+		clock.sync(tlen)
+	end
+end
+function trig_enable(ch)
+	if clock_enable[ch] == 0 then
+		clock_enable[ch] = 1
+		clock_ID[ch] = clock.run(trigger_seq, ch)
+		return 'on'
+	else
+		clock_enable[ch] = 0	
+		clock.cancel(clock_ID[ch])	
+		return 'off'
 	end
 end
 function init()
