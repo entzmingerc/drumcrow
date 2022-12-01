@@ -1,16 +1,14 @@
 --- drumcrow
 states = {}
-default_states = {}
 ratios = {}
 channel = 1
-cmd = 11
+parameter = 11
 c2 = {}
 act = 0
 shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under','rebound'}
-cmd_list = {}
+param_list = {}
 clock_enable = {0, 0, 0, 0}
 clock_ID = {}
-
 function is_positive(v)  return (v > 0) and true or (v <= 0) and false end
 function v10_to_int(v)   return (v >= 1) and (v - v % 1) or (v <= -1) and   (-1*(v + (-1*v) % 1)) or 0 end --   v, ...,   2,   1, 0, 1, 2, ..., v 
 function v10_to_ratio(v) return (v >= 1) and (v - v % 1) or (v <= -1) and 1/(-1*(v + (-1*v) % 1)) or 0 end -- 1/v, ..., 1/2, 1/1, 0, 1, 2, ..., v 
@@ -21,45 +19,50 @@ end
 function make_rectify_left(thresh, out_coeff, static) -- above or at threshold, return function, below threshold return value
 	return function (v) return (v >= thresh) and (2 ^ (v*out_coeff)) or (v < thresh) and static end
 end
-
 function setup_hof_param (index, param_name, fn) -- sets c2[index] to a function
-	cmd_list[index] = param_name
+	param_list[index] = param_name
 	c2[index] = function (ch, v) set_state(ch, param_name, fn(v)) end
 end
-local bad_cmd = function (ch, value) print("CAW! Bad command!") end
-cmd_list[0] = 'deselect' -- Frees up input 1
-c2[0] = function (ch, v) end
+local bad_param = function (ch, v) end 
 setup_hof_param(1, 'pw', make_divide(10))
 setup_hof_param(2, 'pw2', make_divide(1)) 
-cmd_list[3] = 'bit'
+param_list[3] = 'bit'
 c2[3] = function (ch, v) 
 	if v <= 0 then v = 0 end
 	set_state(ch, 'bit', v)
 end
-cmd_list[9] = 'tempo' -- 10 to 2010 Tempo BPM
+param_list[9] = 'tempo' -- 10 to 2010 Tempo BPM
 c2[9] = function (ch, v) clock.tempo = (v+10.1) * 100 end 
-setup_hof_param(11, 'efr', make_rectify_right(9.5, -0.7, 0.0000000002328)) -- ENV frequency (Hz*10) Hz*10 (-lp)
-setup_hof_param(12, 'esy', make_divide(1)) -- ENV symmetry (A:D)
-setup_hof_param(13, 'ecr', make_divide(2)) -- ENV curvature
-setup_hof_param(14, 'epw', make_divide(5)) -- ENV pw timbre
-setup_hof_param(15, 'ent', make_divide(1)) -- ENV depth
-setup_hof_param(16, 'etype', make_divide(1)) -- ENV type
-setup_hof_param(21, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328)) -- LFO spd (Hz*10) Hz*10 (+rst)
-setup_hof_param(22, 'lsy', make_divide(5)) -- LFO symmetry (R:F) 
-setup_hof_param(23, 'lcr', make_divide(2)) -- LFO curvature 
-setup_hof_param(24, 'lpw', make_divide(1)) -- LFO pulse width 
-setup_hof_param(25, 'lnt', make_divide(1)) -- LFO DEPTH
-setup_hof_param(26, 'ltype', make_divide(1)) -- LFO type
-setup_hof_param(31, 'afr', make_rectify_right(9.5, -0.7, 0.0000000002328)) -- AMP ENV frequency (Hz*10) Hz*10 (-lp)
-setup_hof_param(32, 'asy', make_divide(5)) -- AMP ENV symmetry (A:D)
-setup_hof_param(33, 'acr', make_divide(2)) -- AMP ENV curvature
-setup_hof_param(34, 'apw', make_divide(5)) -- AMP ENV pw timbre
-setup_hof_param(35, 'ant', make_divide(1)) -- AMP ENV depth
-setup_hof_param(36, 'atype', make_divide(1)) -- AMP ENV type
-setup_hof_param(41, 'tlenA', v10_to_ratio) -- TRIG
-setup_hof_param(42, 'trepA', v10_to_int)
-setup_hof_param(43, 'tlenB', v10_to_ratio)
+setup_hof_param(11, 'efr', make_rectify_right(9.5, -0.7, 0.0000000002328))
+setup_hof_param(12, 'esy', make_divide(1))
+setup_hof_param(13, 'ecr', make_divide(2))
+setup_hof_param(14, 'ent', make_divide(1))
+setup_hof_param(15, 'eamp', make_divide(1))
+setup_hof_param(16, 'epw', make_divide(5))
+setup_hof_param(17, 'epw2', make_divide(1))
+setup_hof_param(18, 'ebit', make_divide(1)) 
+setup_hof_param(19, 'etype', make_divide(1))
+setup_hof_param(21, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328)) 
+setup_hof_param(22, 'lsy', make_divide(5)) 
+setup_hof_param(23, 'lcr', make_divide(2))  
+setup_hof_param(24, 'lpw', make_divide(1)) 
+setup_hof_param(25, 'lnt', make_divide(1)) 
+setup_hof_param(26, 'ltype', make_divide(1)) 
+setup_hof_param(31, 'afr', make_rectify_right(9.5, -0.7, 0.0000000002328))
+setup_hof_param(32, 'asy', make_divide(5))
+setup_hof_param(33, 'acr', make_divide(2)) 
+setup_hof_param(34, 'apw', make_divide(5))
+setup_hof_param(35, 'ant', make_divide(1)) 
+setup_hof_param(36, 'atype', make_divide(1))
+setup_hof_param(41, 'tlenA', v10_to_ratio) 
+setup_hof_param(42, 'tlenB', v10_to_ratio)
+setup_hof_param(43, 'trepA', v10_to_int)
 setup_hof_param(44, 'trepB', v10_to_int)
+setup_hof_param(45, 'hlenA', v10_to_ratio)
+setup_hof_param(46, 'hlenB', v10_to_ratio)
+setup_hof_param(47, 'hrepA', v10_to_int)
+setup_hof_param(48, 'hrepB', v10_to_int)
+setup_hof_param(49, 'ttype', make_divide(1))
 
 function u16_to_v10(u16) return u16/16384*10 end -- -32768 to +32767
 function get_digits(b1) -- TT variables -32768..+32767 so 5 digit maximum
@@ -69,13 +72,12 @@ function get_digits(b1) -- TT variables -32768..+32767 so 5 digit maximum
 end
 function setup_input() -- input 1 stream to update all the synths in a loop
 	input[1].stream = function (v)
-		v = math.min(math.max(v, -10), 10)
-		v = (v - 5) * 2
+		v = (math.min(math.max(v, -10), 10) - 5) * 2
 		if act == 0 then
-			;(c2[cmd] or bad_cmd)(channel,v)--KEEP SEMICOLON!
-		elseif act == 3 then
-			set_ratio(channel, cmd_list[cmd], v)
-			;(c2[cmd] or bad_cmd)(channel,v)--KEEP SEMICOLON!
+			;(c2[parameter] or bad_param)(channel,v)--KEEP SEMICOLON!
+		elseif act == 1 then
+			set_ratio(channel, param_list[parameter], v)
+			;(c2[parameter] or bad_param)(channel,v)--KEEP SEMICOLON!
 		end
 		for i = 1, 4 do if i ~= nil then update_synth(i) end end
 	end
@@ -117,17 +119,23 @@ end
 function setup_i2c()
 	ii.self.call1 = function (b1) -- CROW.C1 X, main input handler, b1 = ABCDE digits, AB action, CD param, E channel
 		digits = get_digits(b1)
-		local action  = (digits[5] * 10) + digits[4]
-		local param   = (digits[3] * 10) + digits[2]
+		local action = (digits[5] * 10) + digits[4]
+		local param = (digits[3] * 10) + digits[2]
 		local ch = digits[1] % 5
-		if action == 1 then -- 1: set new ASL construct (shape, model) keep act the same
+		if action == 2 then -- 2: set new ASL construct (shape, model) keep act the same
 			setup_synth(ch, digits[2], digits[3])
 			print("Setup Synth, Shape: "..digits[3].." Engine: "..digits[2].." Channel: "..ch)
-		elseif action == 3 then -- act = 3: set ratio 
-			channel = ch; cmd = param; act = action
-			print("Set Ratio to Ch1, Param: "..param.." Channel: "..ch)
+		elseif action == 1 then -- act = 1: set ratio 
+			if ch ~= 1 then
+				channel = ch; parameter = param; act = action
+				print("Set Ratio to Ch1, Param: "..param.." Channel: "..ch)
+			else
+				channel = 1; parameter = 0; act = 0
+				print("Bad Channel - Act: 0 Parameter: 0 Channel: 1")
+			end
 		elseif action == 0 then
-			if param == 86 then -- 86X: init channel https://en.wikipedia.org/wiki/86_(term)
+			-- check special commands first, else set state
+			if param == 86 then
 				if ch == 0 then
 					for i = 1, 4 do
 						setup_state(i)
@@ -147,50 +155,59 @@ function setup_i2c()
 				else
 					print("Clock ON/OFF: "..trig_enable(ch).." Channel: "..ch)
 				end
-			else -- set state
-				channel = ch; cmd = param; act = action
-				print("Input 1 mapping to Param: "..cmd.." Channel: "..ch)
+			else -- set state 
+				channel = ch; parameter = param; act = action
+				print("Input mapping to Param: "..param.." Channel: "..ch)
 			end
-		end
-	end
-	ii.self.call2 = function (b1, value) -- CROW.C2 x y, set param to value
-		digits = get_digits(b1)
-		local action  = (digits[5] * 10) + digits[4]
-		local param   = (digits[3] * 10) + digits[2]
-		local ch =  digits[1] % 5
-		if param <= 44 then -- set a parameter value directly
-			value = (u16_to_v10(value) - 5) * 2
-			value = math.min(math.max(value, -10), 10)
-			print("Set Param: "..param.." Channel: "..ch.." Value "..value)
-			c2[param](ch, value) 
-			--update_synth(ch)
-		-- set global synth update time
-		elseif param == 99 then -- 0.002 - 0.1 sec time range from V -10 or V 10 in TT, initial is 0.003
-			value = (u16_to_v10(value) + 10) / 20 * (0.1 - 0.002) + 0.002
-			value = math.min(math.max(value, 0.002), 0.1)
-			print("Set Input 1 Stream Time to update every: "..value.." sec")
-			input[1]{mode = 'stream', time = value}
 		else
-			bad_cmd(ch, value) 
+			channel = 1; parameter = 0; act = 0
+			print("Deselect - Act: 0 Parameter: 0 Channel: 1")
 		end
 	end
-	ii.self.call3 = function (ch, note, vol) -- CROW.C3 x y z -- (channel) (note) (volume)
-		if ch == nil or note == nil or vol == nil then return end
+	ii.self.call2 = function (b1, v) -- CROW.C2 x y, set param to value
+		digits = get_digits(b1)
+		local action = (digits[5] * 10) + digits[4]
+		local param = (digits[3] * 10) + digits[2]
+		local ch = digits[1] % 5
+		if param_list[param] ~= nil then
+			v = (u16_to_v10(v) - 5) * 2
+			v = math.min(math.max(v, -10), 10)
+			print("Set Param: "..param.." Channel: "..ch.." Value "..v)
+			if action == 1 then
+				set_ratio(ch, param_list[param], v)
+			end
+			c2[param](ch, v)
+		elseif param == 99 then
+			v = (u16_to_v10(v) + 10) / 20 * (0.1 - 0.002) + 0.002
+			v = math.min(math.max(v, 0.002), 0.1)
+			print("Set Input Stream Time to update every: "..v.." sec")
+			input[1]{mode = 'stream', time = v}
+		else
+			print("Bad param, no change")
+		end
+	end
+	ii.self.call3 = function (ch, note, amp) -- CROW.C3 x y z, channel, note, amplitude
+		if ch == nil or note == nil or amp == nil then return end
 		ch = ch % 5;
-		states[ch].nte = u16_to_v10(note)
-		states[ch].amp = u16_to_v10(vol)
-		-- set_state(ch, 'nte', u16_to_v10(note))
-		-- set_state(ch, 'amp', u16_to_v10(vol))
-		trigger_note(ch)
+		if ch == 0 then
+			for i = 1,4 do
+				states[i].nte = u16_to_v10(note)
+				states[i].amp = u16_to_v10(amp)
+				trigger_note(i)
+			end
+		else
+			states[ch].nte = u16_to_v10(note)
+			states[ch].amp = u16_to_v10(amp)
+			trigger_note(ch)
+		end
 	end
 end
 function set_state(ch, key, value)
 	if ch == 0 then -- set all
-		if act == 3 then -- setting all ratios, updating all states
+		if act == 1 then -- setting all ratios, updating all states
 			for i = 2,4 do
-				--print("i: "..i.."channel: "..ch.." key: "..key.." value: "..value)
-				if ratios[i][key] == 0 then -- set all states with default or ratios 
-					states[i][key] = default_states[i][key]
+				if ratios[i][key] == 0 then
+					states[i][key] = 0
 				else
 					states[i][key] = states[1][key] * ratios[i][key] -- update states
 				end
@@ -208,10 +225,10 @@ function set_state(ch, key, value)
 				end
 			end
 		end
-	elseif ch > 1 then -- set a single channel 2-4
-		if act == 3 then -- setting a ratio, updating a state
-			if ratios[ch][key] == 0 then -- set state with default or ratio
-				states[ch][key] = default_states[ch][key]
+	elseif ch ~= 1 then -- set a single channel 2-4
+		if act == 1 then -- setting a ratio, updating a state
+			if ratios[ch][key] == 0 then
+				states[ch][key] = 0
 			else
 				states[ch][key] = states[1][key] * ratios[ch][key] -- set ratio
 			end
@@ -232,41 +249,43 @@ function set_state(ch, key, value)
 	end
 end	
 
-function set_ratio(ch, key, value)
+function set_ratio(ch, key, v)
+	local function check_ratio(chan, key)
+		if ratios[chan][key] ~= nil then 
+			if key == 'efr' or key == 'afr' or key == 'lfr' or key == 'tlenA' or key == 'tlenB' then
+				ratios[chan][key] = v10_to_ratio(v)
+			else
+				ratios[chan][key] = math.floor(5*v)/10
+			end
+		end
+	end
 	if ch == 0 then
 		for i = 2,4 do 
-			ratios[i][key] = v10_to_ratio(value)
+			check_ratio(i, key)
 		end
-	elseif ch > 1 then	
-		ratios[ch][key] = v10_to_ratio(value)
+	elseif ch ~= 1 then	
+		check_ratio(ch, key)
 	end
 end
 function setup_state(ch)
 	states[ch] = {
 		nte = 0, amp = 2,  pw = 0,  pw2 = 4, bit = 0, mdl = 1,
-		afr = 4, asy = -1, acr = 3, apw = 0, ant = 0, aph = 1,  atype = 0, -- ENVELOPE AMP
-		efr = 1, esy = -1, ecr = 4, epw = 0, ent = 0, eph = 1,  etype = 0, -- ENVELOPE PITCH
-		lfr = 5, lsy = 0,  lcr = 0, lpw = 0, lnt = 0, lph = -1, ltype = 1, -- LFO
-		tlenA = 1, trepA = 3, tlenB = 3, trepB = 3, -- TRIG SEQUENCER
-	}
-	default_states[ch] = { -- copy of states
-		nte = 0, amp = 2,  pw = 0,  pw2 = 4, bit = 0, mdl = 1,
-		afr = 4, asy = -1, acr = 3, apw = 0, ant = 0, aph = 1,  atype = 0, 
-		efr = 1, esy = -1, ecr = 4, epw = 0, ent = 0, eph = 1,  etype = 0, 
+		efr = 1, esy = -1, ecr = 4, ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, etype = 0, eph = 1,
+		afr = 4, asy = -1, acr = 3, apw = 0, ant = 0, aph = 1, atype = 0, 
 		lfr = 5, lsy = 0,  lcr = 0, lpw = 0, lnt = 0, lph = -1, ltype = 1, 
-		tlenA = 1, trepA = 3, tlenB = 3, trepB = 3, 
+		tlenA = 1, tlenB = 3, trepA = 3, trepB = 3, hlenA = 1, hlenB = 1, hrepA = 1, hrepB = 1, ttype = 0,
 	}
 	ratios[ch] = {
 		nte = 0, amp = 0,  pw = 0, pw2 = 0, bit = 0, mdl = 0,
-		afr = 0, asy = 0, acr = 0, apw = 0, ant = 0, aph = 0, atype = 0, 
-		efr = 0, esy = 0, ecr = 0, epw = 0, ent = 0, eph = 0, etype = 0, 
-		lfr = 0, lsy = 0, lcr = 0, lpw = 0, lnt = 0, lph = 0, ltype = 0, 
-		tlenA = 0, trepA = 0, tlenB = 0, trepB = 0,
+		efr = 0, esy = 0, ecr = 0, ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, etype = 0, eph = 0,
+		afr = 0, asy = 0, acr = 0, apw = 0, ant = 0, aph = 0, atype = 0,
+		lfr = 0, lsy = 0, lcr = 0, lpw = 0, lnt = 0, lph = 0, ltype = 0,
+		tlenA = 0, trepA = 0, tlenB = 0, trepB = 0, hlenA = 0, hlenB = 0, hrepA = 0, hrepB = 0, ttype = 0,
 	}
 end
 function acc(phase, freq, sec, looping) -- step through phase from -1 to +1
 	phase = phase + (freq * sec)
-	phase = looping and ((1 + phase) % 2 - 1) or math.min(1, phase)
+	phase = looping and ((1 + phase) % 2 - 1) or math.max(math.min(1, phase), -1)
 	return phase
 end
 function peak(ph, pw, curve) -- assume ph and pw between {-1..1} incl
@@ -290,7 +309,15 @@ function update_synth(i) -- get state parameters, set output
 	s.lph = acc(s.lph, s.lfr, sec, is_positive(s.ltype)) -- LFO
 	local lfo = peak(s.lph, s.lsy, s.lcr)
 	local note = s.nte + (modenv * s.ent) + (lfo * s.lnt) + (ampenv * s.ant) -- FREQ & TIME for ASL stages
-	local freq = math.min(math.max(261.61 * (2 ^ note), 0.0001), 20000) -- Tyler's Mordax said JF 0V = 261.61 : -5v - +5v = 8.17Hz - 8.37kHz.
+	local freq = 440
+	if note > -8.03127 and note < 6.25643 then
+		freq = math.min(math.max(261.61 * (2 ^ note), 1), 20000)
+	elseif note >= 6.25643 then
+		freq = 20000
+	else
+		freq = 1
+	end
+	-- local freq = math.min(math.max(261.61 * (2 ^ note), 1), 20000) -- Tyler's Mordax said JF 0V = 261.61 : -5v - +5v = 8.17Hz - 8.37kHz.
 	local cyc = 1/freq
 	if s.mdl == 2 then
 		norm_cyc = cyc/0.1
@@ -347,10 +374,13 @@ function trig_enable(ch)
 	end
 end
 function init()
+	print("init!")
 	clock.tempo = 300
 	for i = 1, 4 do
 		setup_state(i)
+		print("state done for "..i)
 		setup_synth(i, 1, 1)
+		print("synth done for "..i)
 	end	
 	setup_i2c()
 	setup_input()
