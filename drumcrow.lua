@@ -31,8 +31,6 @@ c2[3] = function (ch, v)
 	if v <= 0 then v = 0 end
 	set_state(ch, 'bit', v)
 end
-param_list[9] = 'tempo' -- 10 to 2010 Tempo BPM
-c2[9] = function (ch, v) clock.tempo = (v+10.1) * 100 end 
 setup_hof_param(11, 'efr', make_rectify_right(9.5, -0.7, 0.0000000002328))
 setup_hof_param(12, 'esy', make_divide(1))
 setup_hof_param(13, 'ecr', make_divide(2))
@@ -63,7 +61,13 @@ setup_hof_param(46, 'hlenB', v10_to_ratio)
 setup_hof_param(47, 'hrepA', v10_to_int)
 setup_hof_param(48, 'hrepB', v10_to_int)
 setup_hof_param(49, 'ttype', make_divide(1))
-
+param_list[81] = 'tempo' -- 10 to 2010 Tempo BPM
+c2[81] = function (ch, v) clock.tempo = (v+10.1) * 100 end
+param_list[82] = 'update_time' -- 0.002 to 0.1 sec
+c2[82] = function (ch, v) 
+	v = (v + 10) / 20 * (0.1 - 0.002) + 0.002 
+	input[1]{mode = 'stream', time = v} 
+end
 function u16_to_v10(u16) return u16/16384*10 end -- -32768 to +32767
 function get_digits(b1) -- TT variables -32768..+32767 so 5 digit maximum
 	local digits = {}
@@ -73,12 +77,10 @@ end
 function setup_input() -- input 1 stream to update all the synths in a loop
 	input[1].stream = function (v)
 		v = (math.min(math.max(v, -10), 10) - 5) * 2
-		if act == 0 then
-			;(c2[parameter] or bad_param)(channel,v)--KEEP SEMICOLON!
-		elseif act == 1 then
+		if act == 1 then
 			set_ratio(channel, param_list[parameter], v)
-			;(c2[parameter] or bad_param)(channel,v)--KEEP SEMICOLON!
 		end
+		;(c2[parameter] or bad_param)(channel,v)--KEEP SEMICOLON!
 		for i = 1, 4 do if i ~= nil then update_synth(i) end end
 	end
 	input[1]{mode = 'stream', time = 0.003}
@@ -123,7 +125,13 @@ function setup_i2c()
 		local param = (digits[3] * 10) + digits[2]
 		local ch = digits[1] % 5
 		if action == 2 then -- 2: set new ASL construct (shape, model) keep act the same
-			setup_synth(ch, digits[2], digits[3])
+			if ch == 0 then
+				for i = 1, 4 do
+					setup_synth(i, digits[2], digits[3])
+				end
+			else
+				setup_synth(ch, digits[2], digits[3])
+			end
 			print("Setup Synth, Shape: "..digits[3].." Engine: "..digits[2].." Channel: "..ch)
 		elseif action == 1 then -- act = 1: set ratio 
 			if ch ~= 1 then
@@ -147,7 +155,7 @@ function setup_i2c()
 					setup_synth(ch, 1, 1)
 					print("Initialize Channel: "..ch)
 				end
-			elseif param == 40 then -- TRIG enable/disable clock for a ch
+			elseif param == 84 then -- TRIG enable/disable clock for a ch
 				if ch == 0 then
 					for i = 1, 4 do
 						print("Clock ON/OFF: "..trig_enable(i).." Channel: "..ch)
@@ -174,10 +182,14 @@ function setup_i2c()
 			v = math.min(math.max(v, -10), 10)
 			print("Set Param: "..param.." Channel: "..ch.." Value "..v)
 			if action == 1 then
-				set_ratio(ch, param_list[param], v)
+				if ch == 0 then	
+					for i = 1, 4 do	set_ratio(i, param_list[param], v) end
+				else set_ratio(ch, param_list[param], v) end
 			end
-			c2[param](ch, v)
-		elseif param == 99 then
+			if ch == 0 then	
+				for i = 1, 4 do c2[param](i, v) end
+			else c2[param](ch, v) end
+		elseif param == 82 then
 			v = (u16_to_v10(v) + 10) / 20 * (0.1 - 0.002) + 0.002
 			v = math.min(math.max(v, 0.002), 0.1)
 			print("Set Input Stream Time to update every: "..v.." sec")
