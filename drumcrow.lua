@@ -19,47 +19,52 @@ end
 function make_rectify_left(thresh, out_coeff, static)
 	return function (v) return (v >= thresh) and (2 ^ (v*out_coeff)) or (v < thresh) and static end
 end
-function setup_hof_param (index, param_name, fn) -- sets c2[index] to a function
+function setup_hof_param (index, param_name, fn)
 	param_list[index] = param_name
 	c2[index] = function (ch, v) set_state(ch, param_name, fn(v)) end
 end
 local bad_param = function (ch, v) end 
-setup_hof_param(1, 'pw', make_divide(10))
-setup_hof_param(2, 'pw2', make_divide(1)) 
-param_list[3] = 'bit'
-c2[3] = function (ch, v) 
-	if v <= 0 then v = 0 end
-	set_state(ch, 'bit', v)
-end
-setup_hof_param(11, 'efr', make_rectify_right(9.5, -0.7, 0.0000000002328))
-setup_hof_param(12, 'esy', make_divide(1))
-setup_hof_param(13, 'ecr', make_divide(2))
-setup_hof_param(14, 'ent', make_divide(1))
-setup_hof_param(15, 'eamp', make_divide(1))
-setup_hof_param(16, 'epw', make_divide(5))
-setup_hof_param(17, 'epw2', make_divide(1))
-setup_hof_param(18, 'ebit', make_divide(1))
+setup_hof_param(1, 'nte', make_divide(1))
+setup_hof_param(2, 'amp', make_divide(2)) -- negative a problem?
+setup_hof_param(3, 'pw', make_divide(10))
+setup_hof_param(4, 'pw2', make_divide(1)) 
+param_list[5] = 'bit'
+c2[5] = function (ch, v) if v <= 0 then v = 0 end; set_state(ch, 'bit', v) end
+setup_hof_param(11, 'ent', make_divide(1))
+setup_hof_param(12, 'eamp', make_divide(1))
+setup_hof_param(13, 'epw', make_divide(5))
+setup_hof_param(14, 'epw2', make_divide(1))
+setup_hof_param(15, 'ebit', make_divide(1))
+setup_hof_param(16, 'efr', make_rectify_right(9.5, -0.7, 0.0000000002328))
+setup_hof_param(17, 'esy', make_divide(1))
+setup_hof_param(18, 'ecr', make_divide(2))
 setup_hof_param(19, 'etype', make_divide(1))
-setup_hof_param(21, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328))
-setup_hof_param(22, 'lsy', make_divide(5))
-setup_hof_param(23, 'lcr', make_divide(2))
-setup_hof_param(24, 'lpw', make_divide(1))
-setup_hof_param(25, 'lnt', make_divide(1))
-setup_hof_param(26, 'ltype', make_divide(1))
-setup_hof_param(31, 'afr', make_rectify_right(9.5, -0.7, 0.0000000002328))
-setup_hof_param(32, 'asy', make_divide(5))
-setup_hof_param(33, 'acr', make_divide(2))
-setup_hof_param(34, 'apw', make_divide(5))
-setup_hof_param(35, 'ant', make_divide(1))
-setup_hof_param(36, 'atype', make_divide(1))
+setup_hof_param(21, 'lnt', make_divide(1))
+setup_hof_param(22, 'lamp', make_divide(1))
+setup_hof_param(23, 'lpw', make_divide(1))
+setup_hof_param(24, 'lpw2', make_divide(1))
+setup_hof_param(25, 'lbit', make_divide(1))
+setup_hof_param(26, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328))
+setup_hof_param(27, 'lsy', make_divide(5))
+setup_hof_param(28, 'lcr', make_divide(2))
+setup_hof_param(29, 'ltype', make_divide(1))
+setup_hof_param(31, 'ant', make_divide(1))
+setup_hof_param(32, 'aamp', make_divide(1))
+setup_hof_param(33, 'apw', make_divide(5))
+setup_hof_param(34, 'apw2', make_divide(1))
+setup_hof_param(35, 'abit', make_divide(1))
+setup_hof_param(36, 'afr', make_rectify_right(9.5, -0.7, 0.0000000002328))
+setup_hof_param(37, 'asy', make_divide(5))
+setup_hof_param(38, 'acr', make_divide(2))
+setup_hof_param(39, 'atype', make_divide(1))
 setup_hof_param(41, 'tlenA', v10_to_ratio)
 setup_hof_param(42, 'trepA', v10_to_int)
 setup_hof_param(43, 'tlenB', v10_to_ratio)
 setup_hof_param(44, 'trepB', v10_to_int)
-setup_hof_param(45, 'hlenA', v10_to_ratio)
-setup_hof_param(46, 'hrepA', v10_to_int)
-setup_hof_param(47, 'hlenB', v10_to_ratio)
-setup_hof_param(48, 'hrepB', v10_to_int)
+-- setup_hof_param(45, 'hlenA', v10_to_ratio)
+-- setup_hof_param(46, 'hrepA', v10_to_int)
+-- setup_hof_param(47, 'hlenB', v10_to_ratio)
+-- setup_hof_param(48, 'hrepB', v10_to_int)
 setup_hof_param(49, 'ttype', make_divide(1))
 param_list[81] = 'tempo' -- 10 to 2010 Tempo BPM
 c2[81] = function (ch, v) clock.tempo = (v+10.1) * 100 end
@@ -80,7 +85,7 @@ function get_digits(b1) -- TT variables -32768..+32767 so 5 digit maximum
 	local ch = digits[1] % 5
 	return digits, action, param, ch
 end
-function setup_input() -- input 1 stream to update all the synths in a loop
+function setup_input()
 	input[1].stream = function (v)
 		v = (math.min(math.max(v, -10), 10) - 5) * 2
 		if act == 1 then
@@ -90,8 +95,6 @@ function setup_input() -- input 1 stream to update all the synths in a loop
 		for i = 1, 4 do if i ~= nil then update_synth(i) end end
 	end
 	input[1]{mode = 'stream', time = 0.003}
-	-- input[2].stream = function (v) collectgarbage("collect") end
-	-- input[2]{mode = 'stream', time = 10}
 end
 
 function setup_synth(ch, model, shape) -- select ASL construct for a channel
@@ -164,7 +167,17 @@ function process_action(digits, action, param, ch, cmd, v)
 		end
 		print("Setup Synth, Shape: "..digits[3].." Engine: "..digits[2].." Channel: "..ch)
 	elseif action == 1 then -- 1: set ratio 
-		if ch ~= 1 then
+		if param == 86 then -- init
+			if ch == 0 then
+				for i = 1, 4 do
+					setup_ratio(i)
+					print("Init ratio: "..i)
+				end	
+			else
+				setup_ratio(ch)
+				print("Init ratio: "..ch)
+			end
+		elseif ch ~= 1 then
 			if cmd == 1 then
 				channel = ch; parameter = param; act = action
 				print("Ratio to Ch1, Param: "..param.." Channel: "..ch)
@@ -180,13 +193,11 @@ function process_action(digits, action, param, ch, cmd, v)
 		if param == 86 then -- init
 			if ch == 0 then
 				for i = 1, 4 do
-					setup_state(i)
-					setup_synth(i, 1, 1)
+					setup_state(i); setup_ratio(i); setup_synth(i, 1, 1)
 					print("Init Channel: "..i)
 				end	
 			else
-				setup_state(ch)
-				setup_synth(ch, 1, 1)
+				setup_state(ch); setup_ratio(ch); setup_synth(ch, 1, 1)
 				print("Init Channel: "..ch)
 			end
 		elseif param == 40 then -- TRIG enable/disable
@@ -199,7 +210,7 @@ function process_action(digits, action, param, ch, cmd, v)
 				trig_enable(ch, false)
 				print("CLK ON/OFF Channel: "..ch)
 			end
-		elseif param == 85 then -- reset hseq
+		-- elseif param == 85 then -- reset hseq
 		elseif param == 84 then -- reset tseq
 			if ch == 0 then
 				for i = 1, 4 do
@@ -221,8 +232,7 @@ function process_action(digits, action, param, ch, cmd, v)
 		channel = 1; parameter = 0; act = 0
 		print("Deselect")
 	end
-end
-
+end 
 function set_state(ch, key, value)
 	if ch == 0 then
 		if act == 1 then -- setting all ratios
@@ -269,7 +279,6 @@ function set_state(ch, key, value)
 		end
 	end
 end	
-
 function set_ratio(ch, key, v)
 	local function check_ratio(chan, key)
 		if ratios[chan][key] ~= nil then 
@@ -290,18 +299,22 @@ function set_ratio(ch, key, v)
 end
 function setup_state(ch)
 	states[ch] = {
-		nte = 0, amp = 2,  pw = 0,  pw2 = 4, bit = 0, mdl = 1,
-		efr = 1, esy = -1, ecr = 4, ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, etype = 0, eph = 1,
-		afr = 4, asy = -1, acr = 3, apw = 0, ant = 0, aph = 1, atype = 0, 
-		lfr = 5, lsy = 0,  lcr = 0, lpw = 0, lnt = 0, lph = -1, ltype = 1, 
-		tlenA = 1, tlenB = 2, trepA = 2, trepB = 2, hlenA = 1, hlenB = 1, hrepA = 1, hrepB = 1, ttype = 0,
+		-- hlenA = 1, hlenB = 1, hrepA = 1, hrepB = 1, ttype = 0,
+		tlenA = 1, tlenB = 2, trepA = 2, trepB = 2, 
+		ant = 0, aamp = 1, apw = 0, apw2 = 0, abit = 0, afr = 4, asy = -1, acr = 3, atype = 0, aph = 1, 
+		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 5, lsy = 0,  lcr = 0, ltype = 1, lph = -1, 
+		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 1, esy = -1, ecr = 4, etype = 0, eph = 1, 
+		nte = 0, amp = 2,  pw = 0,  pw2 = 4,  bit = 0,  mdl = 1,
 	}
+end
+function setup_ratio(ch)
 	ratios[ch] = {
-		nte = 0, amp = 0,  pw = 0, pw2 = 0, bit = 0, mdl = 0,
-		efr = 0, esy = 0, ecr = 0, ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, etype = 0, eph = 0,
-		afr = 0, asy = 0, acr = 0, apw = 0, ant = 0, aph = 0, atype = 0,
-		lfr = 0, lsy = 0, lcr = 0, lpw = 0, lnt = 0, lph = 0, ltype = 0,
-		tlenA = 0, trepA = 0, tlenB = 0, trepB = 0, hlenA = 0, hlenB = 0, hrepA = 0, hrepB = 0, ttype = 0,
+		-- hlenA = 0, hlenB = 0, hrepA = 0, hrepB = 0, ttype = 0,
+		tlenA = 0, tlenB = 0, trepA = 0, trepB = 0, 
+		ant = 0, aamp = 0, apw = 0, apw2 = 0, abit = 0, afr = 0, asy = 0, acr = 0, atype = 0, aph = 0, 
+		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 0, lsy = 0, lcr = 0, ltype = 0, lph = 0, 
+		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 0, esy = 0, ecr = 0, etype = 0, eph = 0, 
+		nte = 0, amp = 0,  pw = 0,  pw2 = 0,  bit = 0,  mdl = 0,
 	}
 end
 function acc(phase, freq, sec, looping) -- step through phase from -1 to +1
@@ -329,9 +342,13 @@ function update_synth(i) -- get state parameters, set output
 	local modenv = peak(s.eph, s.esy, s.ecr)
 	s.lph = acc(s.lph, s.lfr, sec, is_positive(s.ltype)) -- LFO
 	local lfo = peak(s.lph, s.lsy, s.lcr)
-	local note = s.nte + (modenv * s.ent) + (lfo * s.lnt) + (ampenv * s.ant) -- FREQ & TIME for ASL stages
+	local note   = s.nte + (modenv * s.ent)  + (lfo * s.lnt)  + (ampenv * s.ant)
+	local volume = (modenv * s.eamp * s.amp) + (lfo * s.lamp * s.amp) + (ampenv * s.aamp * s.amp)
+	local pw     = s.pw  + (modenv * s.epw)  + (lfo * s.lpw)  + (ampenv * s.apw) 
+	local pw2    = s.pw2 + (modenv * s.epw2) + (lfo * s.lpw2) + (ampenv * s.apw2) 
+	local bitz   = s.bit + (modenv * s.ebit) + (lfo * s.lbit) + (ampenv * s.abit)
 	local freq = 440
-	if note > -8.03127 and note < 6.25643 then
+	if note > -8.03127 and note < 6.25643 then -- FREQ & TIME
 		freq = math.min(math.max(261.61 * (2 ^ note), 1), 20000)
 	elseif note >= 6.25643 then
 		freq = 20000
@@ -345,19 +362,18 @@ function update_synth(i) -- get state parameters, set output
 		if math.random()*0.1 < norm_cyc then output[i].dyn.cyc = cyc + (cyc * 0.2 * math.random())
 		else output[i].dyn.cyc = cyc + math.random()*0.002 end
 	else output[i].dyn.cyc = cyc end
-	output[i].dyn.amp = ampenv * s.amp -- AMP
-	if s.bit <= 0 then output[i].scale('none') -- BIT 
-	else output[i].scale({}, 2, s.bit * 3) end
-	local pw = s.pw + (modenv * s.epw) + (lfo * s.lpw) + (ampenv * s.apw) -- PW
-	pw = math.min(math.max(pw, -1), 1)
+	output[i].dyn.amp = volume -- AMP
+	if bitz <= 0 then output[i].scale('none') -- BIT 
+	else output[i].scale({}, 2, bitz * 3) end
+	pw = math.min(math.max(pw, -1), 1) -- PW
 	pw = (pw + 1) / 2
-	if s.mdl == 3 or s.mdl == 6 or s.mdl == 7 then output[i].dyn.pw = pw * s.pw2
+	if s.mdl == 3 or s.mdl == 6 or s.mdl == 7 then output[i].dyn.pw = pw * pw2
 	elseif s.mdl == 4 then
 		output[i].dyn.pw = pw
-		output[i].dyn.pw2 = s.pw2
+		output[i].dyn.pw2 = pw2
 	elseif s.mdl == 5 then
 		output[i].dyn.pw = pw
-		output[i].dyn.pw2 = s.pw2 / 50
+		output[i].dyn.pw2 = pw2 / 50
 	else output[i].dyn.pw = pw end	
 end
 function trigger_seq(i)
@@ -402,8 +418,7 @@ function init()
 	print("init!")
 	clock.tempo = 300
 	for i = 1, 4 do
-		setup_state(i)
-		setup_synth(i, 1, 1)
+		setup_state(i); setup_ratio(i); setup_synth(i, 1, 1)
 	end	
 	setup_i2c()
 	setup_input()
