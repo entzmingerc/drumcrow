@@ -1,4 +1,5 @@
 # drumcrow
+Warning: Dated documentation, need to update with new instructions. 
 This script turns Crow into a 4-channel drum machine driven with Monome Teletype.  
 
 **Demos**  
