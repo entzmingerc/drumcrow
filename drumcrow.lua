@@ -2,7 +2,7 @@
 states = {}
 ratios = {}
 channel = 1
-parameter = 11
+parameter = 0
 c2 = {}
 act = 0
 shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under','rebound'}
@@ -13,10 +13,10 @@ function is_positive(v)  return (v > 0) and true or (v <= 0) and false end
 function v10_to_int(v)   return (v >= 1) and (v - v % 1) or (v <= -1) and   (-1*(v + (-1*v) % 1)) or 0 end --   v, ...,   2,   1, 0, 1, 2, ..., v 
 function v10_to_ratio(v) return (v >= 1) and (v - v % 1) or (v <= -1) and 1/(-1*(v + (-1*v) % 1)) or 0 end -- 1/v, ..., 1/2, 1/1, 0, 1, 2, ..., v 
 function make_divide(divisor) return function (x) return x / divisor end end
-function make_rectify_right(thresh, out_coeff, static) -- below or at threshold, return function, above threshold return value
+function make_rectify_right(thresh, out_coeff, static)
 	return function (v) return (v <= thresh) and (2 ^ (v*out_coeff)) or (v > thresh) and static end
 end
-function make_rectify_left(thresh, out_coeff, static) -- above or at threshold, return function, below threshold return value
+function make_rectify_left(thresh, out_coeff, static)
 	return function (v) return (v >= thresh) and (2 ^ (v*out_coeff)) or (v < thresh) and static end
 end
 function setup_hof_param (index, param_name, fn) -- sets c2[index] to a function
@@ -38,27 +38,27 @@ setup_hof_param(14, 'ent', make_divide(1))
 setup_hof_param(15, 'eamp', make_divide(1))
 setup_hof_param(16, 'epw', make_divide(5))
 setup_hof_param(17, 'epw2', make_divide(1))
-setup_hof_param(18, 'ebit', make_divide(1)) 
+setup_hof_param(18, 'ebit', make_divide(1))
 setup_hof_param(19, 'etype', make_divide(1))
-setup_hof_param(21, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328)) 
-setup_hof_param(22, 'lsy', make_divide(5)) 
-setup_hof_param(23, 'lcr', make_divide(2))  
-setup_hof_param(24, 'lpw', make_divide(1)) 
-setup_hof_param(25, 'lnt', make_divide(1)) 
-setup_hof_param(26, 'ltype', make_divide(1)) 
+setup_hof_param(21, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328))
+setup_hof_param(22, 'lsy', make_divide(5))
+setup_hof_param(23, 'lcr', make_divide(2))
+setup_hof_param(24, 'lpw', make_divide(1))
+setup_hof_param(25, 'lnt', make_divide(1))
+setup_hof_param(26, 'ltype', make_divide(1))
 setup_hof_param(31, 'afr', make_rectify_right(9.5, -0.7, 0.0000000002328))
 setup_hof_param(32, 'asy', make_divide(5))
-setup_hof_param(33, 'acr', make_divide(2)) 
+setup_hof_param(33, 'acr', make_divide(2))
 setup_hof_param(34, 'apw', make_divide(5))
-setup_hof_param(35, 'ant', make_divide(1)) 
+setup_hof_param(35, 'ant', make_divide(1))
 setup_hof_param(36, 'atype', make_divide(1))
-setup_hof_param(41, 'tlenA', v10_to_ratio) 
-setup_hof_param(42, 'tlenB', v10_to_ratio)
-setup_hof_param(43, 'trepA', v10_to_int)
+setup_hof_param(41, 'tlenA', v10_to_ratio)
+setup_hof_param(42, 'trepA', v10_to_int)
+setup_hof_param(43, 'tlenB', v10_to_ratio)
 setup_hof_param(44, 'trepB', v10_to_int)
 setup_hof_param(45, 'hlenA', v10_to_ratio)
-setup_hof_param(46, 'hlenB', v10_to_ratio)
-setup_hof_param(47, 'hrepA', v10_to_int)
+setup_hof_param(46, 'hrepA', v10_to_int)
+setup_hof_param(47, 'hlenB', v10_to_ratio)
 setup_hof_param(48, 'hrepB', v10_to_int)
 setup_hof_param(49, 'ttype', make_divide(1))
 param_list[81] = 'tempo' -- 10 to 2010 Tempo BPM
@@ -71,8 +71,14 @@ end
 function u16_to_v10(u16) return u16/16384*10 end -- -32768 to +32767
 function get_digits(b1) -- TT variables -32768..+32767 so 5 digit maximum
 	local digits = {}
-	for i = 1, 5 do digits[i] = b1 % 10; b1 = (b1 - digits[i]) / 10	end
-	return digits
+	for i = 1, 5 do 
+		digits[i] = b1 % 10
+		b1 = (b1 - digits[i]) / 10
+	end
+	local action = (digits[5] * 10) + digits[4]
+	local param = (digits[3] * 10) + digits[2]
+	local ch = digits[1] % 5
+	return digits, action, param, ch
 end
 function setup_input() -- input 1 stream to update all the synths in a loop
 	input[1].stream = function (v)
@@ -84,8 +90,8 @@ function setup_input() -- input 1 stream to update all the synths in a loop
 		for i = 1, 4 do if i ~= nil then update_synth(i) end end
 	end
 	input[1]{mode = 'stream', time = 0.003}
-	input[2].stream = function (v) collectgarbage("collect") end
-	input[2]{mode = 'stream', time = 10}
+	-- input[2].stream = function (v) collectgarbage("collect") end
+	-- input[2]{mode = 'stream', time = 10}
 end
 
 function setup_synth(ch, model, shape) -- select ASL construct for a channel
@@ -120,83 +126,14 @@ function setup_synth(ch, model, shape) -- select ASL construct for a channel
 end
 function setup_i2c()
 	ii.self.call1 = function (b1) -- CROW.C1 X, main input handler, b1 = ABCDE digits, AB action, CD param, E channel
-		digits = get_digits(b1)
-		local action = (digits[5] * 10) + digits[4]
-		local param = (digits[3] * 10) + digits[2]
-		local ch = digits[1] % 5
-		if action == 2 then -- 2: set new ASL construct (shape, model) keep act the same
-			if ch == 0 then
-				for i = 1, 4 do
-					setup_synth(i, digits[2], digits[3])
-				end
-			else
-				setup_synth(ch, digits[2], digits[3])
-			end
-			print("Setup Synth, Shape: "..digits[3].." Engine: "..digits[2].." Channel: "..ch)
-		elseif action == 1 then -- act = 1: set ratio 
-			if ch ~= 1 then
-				channel = ch; parameter = param; act = action
-				print("Set Ratio to Ch1, Param: "..param.." Channel: "..ch)
-			else
-				channel = 1; parameter = 0; act = 0
-				print("Bad Channel - Act: 0 Parameter: 0 Channel: 1")
-			end
-		elseif action == 0 then
-			-- check special commands first, else set state
-			if param == 86 then
-				if ch == 0 then
-					for i = 1, 4 do
-						setup_state(i)
-						setup_synth(i, 1, 1)
-						print("Initialize Channel: "..i)
-					end	
-				else
-					setup_state(ch)
-					setup_synth(ch, 1, 1)
-					print("Initialize Channel: "..ch)
-				end
-			elseif param == 84 then -- TRIG enable/disable clock for a ch
-				if ch == 0 then
-					for i = 1, 4 do
-						print("Clock ON/OFF: "..trig_enable(i).." Channel: "..ch)
-					end
-				else
-					print("Clock ON/OFF: "..trig_enable(ch).." Channel: "..ch)
-				end
-			else -- set state 
-				channel = ch; parameter = param; act = action
-				print("Input mapping to Param: "..param.." Channel: "..ch)
-			end
-		else
-			channel = 1; parameter = 0; act = 0
-			print("Deselect - Act: 0 Parameter: 0 Channel: 1")
-		end
+		digits, action, param, ch = get_digits(b1)
+		process_action(digits, action, param, ch, 1)
 	end
 	ii.self.call2 = function (b1, v) -- CROW.C2 x y, set param to value
-		digits = get_digits(b1)
-		local action = (digits[5] * 10) + digits[4]
-		local param = (digits[3] * 10) + digits[2]
-		local ch = digits[1] % 5
-		if param_list[param] ~= nil then
-			v = (u16_to_v10(v) - 5) * 2
-			v = math.min(math.max(v, -10), 10)
-			print("Set Param: "..param.." Channel: "..ch.." Value "..v)
-			if action == 1 then
-				if ch == 0 then	
-					for i = 1, 4 do	set_ratio(i, param_list[param], v) end
-				else set_ratio(ch, param_list[param], v) end
-			end
-			if ch == 0 then	
-				for i = 1, 4 do c2[param](i, v) end
-			else c2[param](ch, v) end
-		elseif param == 82 then
-			v = (u16_to_v10(v) + 10) / 20 * (0.1 - 0.002) + 0.002
-			v = math.min(math.max(v, 0.002), 0.1)
-			print("Set Input Stream Time to update every: "..v.." sec")
-			input[1]{mode = 'stream', time = v}
-		else
-			print("Bad param, no change")
-		end
+		digits, action, param, ch = get_digits(b1)
+		v = (u16_to_v10(v) - 5) * 2
+		v = math.min(math.max(v, -10), 10)
+		process_action(digits, action, param, ch, 2, v)
 	end
 	ii.self.call3 = function (ch, note, amp) -- CROW.C3 x y z, channel, note, amplitude
 		if ch == nil or note == nil or amp == nil then return end
@@ -214,25 +151,97 @@ function setup_i2c()
 		end
 	end
 end
+
+function process_action(digits, action, param, ch, cmd, v)
+	v = v or 0
+	if action == 2 then -- 2: set new ASL construct (shape, model) keep act the same
+		if ch == 0 then
+			for i = 1, 4 do
+				setup_synth(i, digits[2], digits[3])
+			end
+		else
+			setup_synth(ch, digits[2], digits[3])
+		end
+		print("Setup Synth, Shape: "..digits[3].." Engine: "..digits[2].." Channel: "..ch)
+	elseif action == 1 then -- 1: set ratio 
+		if ch ~= 1 then
+			if cmd == 1 then
+				channel = ch; parameter = param; act = action
+				print("Ratio to Ch1, Param: "..param.." Channel: "..ch)
+			else
+				set_ratio(ch, param_list[param], v)
+				print("Ratio to Ch1, Param: "..param.." Channel: "..ch)
+			end
+		else
+			channel = 1; parameter = 0; act = 0
+			print("Bad Channel - Deselect")
+		end
+	elseif action == 0 then -- 0: set state
+		if param == 86 then -- init
+			if ch == 0 then
+				for i = 1, 4 do
+					setup_state(i)
+					setup_synth(i, 1, 1)
+					print("Init Channel: "..i)
+				end	
+			else
+				setup_state(ch)
+				setup_synth(ch, 1, 1)
+				print("Init Channel: "..ch)
+			end
+		elseif param == 40 then -- TRIG enable/disable
+			if ch == 0 then
+				for i = 1, 4 do
+					trig_enable(i, false)
+					print("CLK ON/OFF Channel: "..ch)
+				end
+			else
+				trig_enable(ch, false)
+				print("CLK ON/OFF Channel: "..ch)
+			end
+		elseif param == 85 then -- reset hseq
+		elseif param == 84 then -- reset tseq
+			if ch == 0 then
+				for i = 1, 4 do
+					trig_enable(i, true)
+					print("CLK Reset Channel: "..ch)
+				end
+			else
+				trig_enable(ch, true)
+				print("CLK Reset Channel: "..ch)
+			end
+		elseif param_list[param] ~= nil then -- set state 
+			channel = ch; parameter = param; act = action
+			print("INPUT to Param: "..param.." Channel: "..ch)
+		else
+			channel = 1; parameter = 0; act = 0
+			print("Deselect")
+		end
+	else
+		channel = 1; parameter = 0; act = 0
+		print("Deselect")
+	end
+end
+
 function set_state(ch, key, value)
-	if ch == 0 then -- set all
-		if act == 1 then -- setting all ratios, updating all states
+	if ch == 0 then
+		if act == 1 then -- setting all ratios
 			for i = 2,4 do
 				if ratios[i][key] == 0 then
 					states[i][key] = 0
 				else
-					states[i][key] = states[1][key] * ratios[i][key] -- update states
+					states[i][key] = states[1][key] * ratios[i][key]
 				end
 			end
 		else -- setting all states
 			for i = 1,4 do
 				if i == 1 then
-					states[i][key] = value -- set channel 1
+					states[i][key] = value
 				else
-					if ratios[i][key] == 0 then -- if ratio disabled, set value, otherwise ignore
+					if ratios[i][key] == 0 then
 						states[i][key] = value
 					else
-						states[i][key] = states[1][key] * ratios[i][key] -- update states
+						states[i][key] = states[1][key] * ratios[i][key]
 					end
 				end
 			end
@@ -242,19 +251,19 @@ function set_state(ch, key, value)
 			if ratios[ch][key] == 0 then
 				states[ch][key] = 0
 			else
-				states[ch][key] = states[1][key] * ratios[ch][key] -- set ratio
+				states[ch][key] = states[1][key] * ratios[ch][key]
 			end
 		else -- setting a state
-			if ratios[ch][key] == 0 then -- if ratio disabled, set value, otherwise ignore
+			if ratios[ch][key] == 0 then
 				states[ch][key] = value
 			else
-				states[ch][key] = states[1][key] * ratios[ch][key] -- update states
+				states[ch][key] = states[1][key] * ratios[ch][key]
 			end
 		end
 	elseif ch == 1 then
 		states[ch][key] = value
 		for i = 2,4 do
-			if ratios[i][key] ~= 0 then -- if ratio enabled, update value, otherwise ignore
+			if ratios[i][key] ~= 0 then
 				states[i][key] = states[1][key] * ratios[i][key]
 			end
 		end
@@ -285,7 +294,7 @@ function setup_state(ch)
 		efr = 1, esy = -1, ecr = 4, ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, etype = 0, eph = 1,
 		afr = 4, asy = -1, acr = 3, apw = 0, ant = 0, aph = 1, atype = 0, 
 		lfr = 5, lsy = 0,  lcr = 0, lpw = 0, lnt = 0, lph = -1, ltype = 1, 
-		tlenA = 1, tlenB = 3, trepA = 3, trepB = 3, hlenA = 1, hlenB = 1, hrepA = 1, hrepB = 1, ttype = 0,
+		tlenA = 1, tlenB = 2, trepA = 2, trepB = 2, hlenA = 1, hlenB = 1, hrepA = 1, hrepB = 1, ttype = 0,
 	}
 	ratios[ch] = {
 		nte = 0, amp = 0,  pw = 0, pw2 = 0, bit = 0, mdl = 0,
@@ -374,15 +383,19 @@ function trigger_seq(i)
 		clock.sync(tlen)
 	end
 end
-function trig_enable(ch)
-	if clock_enable[ch] == 0 then
+function trig_enable(ch, reset)
+	if reset == false then -- on off
+		if clock_enable[ch] == 0 then
+			clock_enable[ch] = 1
+			clock_ID[ch] = clock.run(trigger_seq, ch)
+		else
+			clock_enable[ch] = 0	
+			clock.cancel(clock_ID[ch])
+		end
+	else -- reset
 		clock_enable[ch] = 1
-		clock_ID[ch] = clock.run(trigger_seq, ch)
-		return 'on'
-	else
-		clock_enable[ch] = 0	
 		clock.cancel(clock_ID[ch])	
-		return 'off'
+		clock_ID[ch] = clock.run(trigger_seq, ch)
 	end
 end
 function init()
@@ -390,9 +403,7 @@ function init()
 	clock.tempo = 300
 	for i = 1, 4 do
 		setup_state(i)
-		print("state done for "..i)
 		setup_synth(i, 1, 1)
-		print("synth done for "..i)
 	end	
 	setup_i2c()
 	setup_input()
