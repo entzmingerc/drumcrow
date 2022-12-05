@@ -1,3 +1,48 @@
+Deleting comments to save script space, moving here
+function v10_to_int(v) --   v, ...,   2,   1, 0, 1, 2, ..., v
+function v10_to_ratio(v)-- 0, 1/10, 1/9, ... 1/2, 1, 2, ... 10
+param_list[81] = 'tempo' -- 10 to 2010 Tempo BPM
+param_list[82] = 'update_time' -- 0.002 to 0.1 sec
+
+var_saw(shape) -- variable 2-stage wave|\ to /\ to /|
+bytebeat(shape) -- adding pw to x every stage, wrapping around and incrementing
+noise(shape) -- linear congruential generator (LCG) pseudo-random number generator X[n+1] = (a*X[n] + c) mod m
+FMstep(shape) -- use step() to frequency modulate the ASL stage time 
+ ASLsine(shape) -- root-product sine approximation y = x + 0.101321x^3
+ASLharmonic(shape) -- ASLsine with a mul(-1) applied to x
+
+crow.c1 X is a 5 digit command ABCDE AB action CD param E channel
+crow.c2 X Y sets crow.c1 parameters to the value Y
+crow.c3 X Y Z is specifically for triggering a channel X at a pitch Y and volume Z
+these get fed into process_action() to take care of the appropriate settings
+action (2 set ASL construct, 1 set ratio, 0 set param)
+	special params (init, start/stop seq, etc...)
+		channel (0, ~=1, or 1)
+			do the thing
+
+set_ratio should be called first before set_state
+checks channel (0, ~=1) - - there is no ratio matrix for ch1
+	do either a ratio 0, 1/10, 1/9, ... 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+	or -5.0, -4.9 -4.8, ..., 0, ... 4.9, 5.0
+	depends on if you want a ratio or if you want something that goes negative
+
+in set_state it takes channel, key, and value (and optionally the command where it came from)
+checks channel (0, ~=1, 1)
+	checks action (ratio or state)
+		do the thing
+		if we set a param on ch1, we gotta check if it's ratio'd to other channels
+		if we try to set a param on ch2,3,4, we gotta first check if it's being ratio'd
+			if we try to set all, we gotta do the above
+
+function acc(phase, freq, sec, looping) -- step through phase from -1 to +1
+function peak(ph, pw, curve) -- assume ph and pw between {-1..1} incl
+function update_synth(i) -- get state parameters, set output WHERE THE MAGIC HAPPENS
+freq = math.min(math.max(267.9 * (2 ^ note), 1), 20000) -- magic 267.9 tunes V 0 to C2 using Ableton Tuner old: 261.61
+
+function trigger_note(ch) -- reset phase of envelopes on a channel
+				 -- do not retrigger if we're in attack
+
+
 states        
     nte = 0, -- note (for frequency calculation)
     amp = 2, -- amplitude of oscillator
