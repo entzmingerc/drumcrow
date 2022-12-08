@@ -68,7 +68,11 @@ setup_hof_param(46, 'caw2', v10_to_ratio)
 setup_hof_param(47, 'caw3', v10_to_ratio)
 setup_hof_param(48, 'caw4', v10_to_ratio)
 param_list[49] = 'feet'
-c2[49] = function (ch, v) feet[ch] = math.floor((((v+10)/20)*3.9+1)) end
+c2[49] = function (ch, v)
+	v = math.floor((((v+10)/20)*3.9+1))
+	if ch == 0 then for i = 1,4 do feet[i] = v end 
+	else feet[ch] = v end 
+end
 param_list[81] = 'tempo'
 c2[81] = function (ch, v) clock.tempo = (v+10.1) * 100 end
 param_list[82] = 'update_time'
@@ -139,25 +143,27 @@ function setup_i2c()
 		process_action(digits, action, param, ch, 2, v)
 	end
 	ii.self.call3 = function (ch, note, amp)
+		local function trig_234(ch, note, amp)
+			if ratios[ch].nte == 0 then set_state(ch, 'nte', u16_to_v10(note), 3) end
+			if ratios[ch].amp == 0 then set_state(ch, 'amp', u16_to_v10(amp), 3) end
+			trigger_note(ch)
+		end
+		local function trig_1(ch, note, amp)
+			set_state(ch, 'nte', u16_to_v10(note), 3)
+			set_state(ch, 'amp', u16_to_v10(amp), 3)
+			trigger_note(ch)
+		end
 		if ch == nil or note == nil or amp == nil then return end
 		ch = ch % 5;
 		if ch == 0 then
-			set_state(1, 'nte', u16_to_v10(note), 3)
-			set_state(1, 'amp', u16_to_v10(amp),  3)
-			for i = 2,4 do
-				if ratios[i].nte == 0 then set_state(i, 'nte', u16_to_v10(note), 3) end
-				if ratios[i].amp == 0 then set_state(i, 'amp', u16_to_v10(amp),  3) end
-				trigger_note(i)
+			trig_1(1, note, amp)
+			for i = 2,4 do 
+				trig_234(i, note, amp) 
 			end
-		else
-			if ch ~= 1 then
-				if ratios[ch].nte == 0 then set_state(ch, 'nte', u16_to_v10(note), 3) end
-				if ratios[ch].amp == 0 then set_state(ch, 'amp', u16_to_v10(amp),  3) end
-			else
-				set_state(ch, 'nte', u16_to_v10(note), 3)
-				set_state(ch, 'amp', u16_to_v10(amp),  3)
-			end
-			trigger_note(ch)
+		elseif ch ~= 1 then	
+			trig_234(ch, note, amp) 
+		else 
+			trig_1(ch, note, amp)
 		end
 	end
 end
@@ -245,10 +251,10 @@ function set_state(ch, key, v, cmd)
 	local function check_ratio_zero(ch, key, value)
 		if ratios[ch][key] == 0 then
 			states[ch][key] = value
+		elseif key ~= 'nte' then
+			states[ch][key] = states[1][key] * ratios[ch][key]
 		else
-			if key ~= 'nte' then
-				states[ch][key] = states[1][key] * ratios[ch][key]
-			end
+			states[ch][key] = states[1][key]
 		end
 	end
 	local cmd = cmd or 0
@@ -280,16 +286,20 @@ function set_state(ch, key, v, cmd)
 		states[ch][key] = v
 		for i = 2,4 do
 			if ratios[i][key] ~= 0 then
-				states[i][key] = states[1][key] * ratios[i][key]
+				if key ~= 'nte' then
+					states[i][key] = states[1][key] * ratios[i][key]
+				else
+					states[i][key] = states[1][key]
+				end
 			end
 		end
 	end
 end	
 function set_ratio(ch, key, v)
-	ratio_keys = { efr = true, afr = true, lfr = true, tlenA = true, trepA = true, tlenB = true, trepB = true, caw1 = true, caw2 = true, caw3 = true, caw4 = true } 
+	ratio_keys = { nte = true, efr = true, afr = true, lfr = true, tlenA = true, trepA = true, tlenB = true, trepB = true, caw1 = true, caw2 = true, caw3 = true, caw4 = true } 
 	local function check_ratio(chan, key)
 		if ratios[chan][key] ~= nil then 
-			ratios[chan][key] = ratio_keys[key] and v10_to_ratio(v) or key == 'nte' and v10_to_ratio(v)/2 or math.floor(5*v)/10
+			ratios[chan][key] = ratio_keys[key] and v10_to_ratio(v) or math.floor(5*v)/10
 		end
 	end
 	if ch == 0 then for i = 2,4 do check_ratio(i, key) end
@@ -315,13 +325,11 @@ function setup_ratio(ch)
 end
 function acc(phase, freq, sec, looping)
 	phase = phase + (freq * sec)
-	phase = looping and ((1 + phase) % 2 - 1) or math.max(math.min(1, phase), -1)
+	phase = looping and (1 + phase) % 2 - 1 or math.max(math.min(1, phase), -1)
 	return phase
 end
 function peak(ph, pw, curve)
-	local value = (ph < pw) and ((1 + ph) / (1 + pw))
-		or (ph > pw) and ((1 - ph) / (1 - pw))
-		or 1
+	local value = ph < pw and (1 + ph) / (1 + pw) or ph > pw and (1 - ph) / (1 - pw) or 1
 	value = value ^ (2 ^ curve)
 	return value
 end
