@@ -2,7 +2,7 @@
 states = {}
 ratios = {}
 caw_mult = {1, 1, 1, 1}
-feet = {1, 1, 1, 1}
+flaps = {1, 1, 1, 1}
 channel = 1
 parameter = 0
 c2 = {}
@@ -11,7 +11,6 @@ shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under
 param_list = {}
 clock_ID = {}
 clock_on = {0,0,0,0}
-function is_positive(v) return (v > 0) and true or (v <= 0) and false end
 function v10_to_int(v) return (v >= 1) and (v - v % 1) or (v <= -1) and (-1*(v + (-1*v) % 1)) or 1 end
 function v10_to_ratio(v) return (v >= 1) and math.floor(v) or (v >= -9) and 1/(-1*(math.floor(v)-1)) or 0 end
 function make_divide(divisor) return function (x) return x / divisor end end
@@ -26,53 +25,52 @@ function setup_hof_param (index, param_name, fn)
 	c2[index] = function (ch, v) set_state(ch, param_name, fn(v)) end
 end
 local bad_param = function (ch, v) end 
-setup_hof_param(1, 'nte', make_divide(1))
-setup_hof_param(2, 'amp', make_divide(2))
-setup_hof_param(3, 'pw', make_divide(10))
-setup_hof_param(4, 'pw2', make_divide(1)) 
-param_list[5] = 'bit'
-c2[5] = function (ch, v) if v <= 0 then v = 0 end; set_state(ch, 'bit', v) end
-setup_hof_param(11, 'ent', make_divide(1))
-setup_hof_param(12, 'eamp', make_divide(1))
-setup_hof_param(13, 'epw', make_divide(5))
-setup_hof_param(14, 'epw2', make_divide(1))
-setup_hof_param(15, 'ebit', make_divide(1))
-setup_hof_param(16, 'efr', make_rectify_right(9.5, -0.7, 0.0000000002328))
-setup_hof_param(17, 'esy', make_divide(1))
-setup_hof_param(18, 'ecr', make_divide(2))
-setup_hof_param(19, 'etype', make_divide(1))
-setup_hof_param(21, 'lnt', make_divide(1))
-setup_hof_param(22, 'lamp', make_divide(1))
-setup_hof_param(23, 'lpw', make_divide(1))
-setup_hof_param(24, 'lpw2', make_divide(1))
-setup_hof_param(25, 'lbit', make_divide(1))
-setup_hof_param(26, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328))
-setup_hof_param(27, 'lsy', make_divide(5))
-setup_hof_param(28, 'lcr', make_divide(2))
-setup_hof_param(29, 'ltype', make_divide(1))
-setup_hof_param(31, 'ant', make_divide(1))
-setup_hof_param(32, 'aamp', make_divide(1))
-setup_hof_param(33, 'apw', make_divide(5))
-setup_hof_param(34, 'apw2', make_divide(1))
-setup_hof_param(35, 'abit', make_divide(1))
-setup_hof_param(36, 'afr', make_rectify_right(9.5, -0.7, 0.0000000002328))
-setup_hof_param(37, 'asy', make_divide(5))
-setup_hof_param(38, 'acr', make_divide(2))
-setup_hof_param(39, 'atype', make_divide(1))
-setup_hof_param(41, 'tlenA', v10_to_ratio)
-setup_hof_param(42, 'trepA', v10_to_int)
-setup_hof_param(43, 'tlenB', v10_to_ratio)
-setup_hof_param(44, 'trepB', v10_to_int)
-setup_hof_param(45, 'caw1', v10_to_ratio)
-setup_hof_param(46, 'caw2', v10_to_ratio)
-setup_hof_param(47, 'caw3', v10_to_ratio)
-setup_hof_param(48, 'caw4', v10_to_ratio)
-param_list[49] = 'feet'
-c2[49] = function (ch, v)
+setup_hof_param(11, 'nte', make_divide(1))
+setup_hof_param(12, 'amp', make_divide(2))
+setup_hof_param(13, 'pw', make_divide(10))
+setup_hof_param(14, 'pw2', make_divide(1)) 
+setup_hof_param(15, 'bit', make_divide(1))
+setup_hof_param(19, 'splash', make_divide(2))
+setup_hof_param(21, 'ent', make_divide(1))
+setup_hof_param(22, 'eamp', make_divide(2))
+setup_hof_param(23, 'epw', make_divide(5))
+setup_hof_param(24, 'epw2', make_divide(1))
+setup_hof_param(25, 'ebit', make_divide(1))
+setup_hof_param(26, 'efr', make_rectify_right(9.5, -0.7, 0.0000000002328))
+setup_hof_param(27, 'esy', make_divide(1))
+setup_hof_param(28, 'ecr', make_divide(2))
+setup_hof_param(29, 'etype', make_divide(1))
+setup_hof_param(31, 'lnt', make_divide(1))
+setup_hof_param(32, 'lamp', make_divide(2))
+setup_hof_param(33, 'lpw', make_divide(1))
+setup_hof_param(34, 'lpw2', make_divide(1))
+setup_hof_param(35, 'lbit', make_divide(1))
+setup_hof_param(36, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328))
+setup_hof_param(37, 'lsy', make_divide(5))
+setup_hof_param(38, 'lcr', make_divide(2))
+setup_hof_param(39, 'ltype', make_divide(1))
+setup_hof_param(41, 'ant', make_divide(1))
+setup_hof_param(42, 'aamp', make_divide(2))
+setup_hof_param(43, 'apw', make_divide(5))
+setup_hof_param(44, 'apw2', make_divide(1))
+setup_hof_param(45, 'abit', make_divide(1))
+setup_hof_param(46, 'afr', make_rectify_right(9.5, -0.7, 0.0000000002328))
+setup_hof_param(47, 'asy', make_divide(5))
+setup_hof_param(48, 'acr', make_divide(2))
+setup_hof_param(49, 'atype', make_divide(1))
+setup_hof_param(51, 'tlenA', v10_to_ratio)
+setup_hof_param(52, 'trepA', v10_to_int)
+setup_hof_param(53, 'tlenB', v10_to_ratio)
+setup_hof_param(54, 'trepB', v10_to_int)
+param_list[55] = 'flaps'
+c2[55] = function (ch, v)
 	v = math.floor((((v+10)/20)*3.9+1))
-	if ch == 0 then for i = 1,4 do feet[i] = v end 
-	else feet[ch] = v end 
+	set_state(ch, 'flaps', v)
 end
+setup_hof_param(56, 'caw1', v10_to_ratio)
+setup_hof_param(57, 'caw2', v10_to_ratio)
+setup_hof_param(58, 'caw3', v10_to_ratio)
+setup_hof_param(59, 'caw4', v10_to_ratio)
 param_list[81] = 'tempo'
 c2[81] = function (ch, v) clock.tempo = (v+10.1) * 100 end
 param_list[82] = 'update_time'
@@ -80,7 +78,6 @@ c2[82] = function (ch, v)
 	v = (v + 10) / 20 * (0.1 - 0.002) + 0.002 
 	input[1]{mode = 'stream', time = v} 
 end
-setup_hof_param(83, 'splash', make_divide(1))
 function u16_to_v10(u16) return u16/16384*10 end
 function get_digits(b1)
 	local digits = {}
@@ -211,7 +208,7 @@ function process_action(digits, action, param, ch, cmd, v)
 				setup_state(ch); setup_synth(ch, 1, 1)
 				print("Init Channel: "..ch)
 			end
-		elseif param == 84 then -- reset tseq
+		elseif param == 85 then -- reset tseq
 			if ch == 0 then
 				for i = 1, 4 do
 					trig_enable(i, true)
@@ -221,7 +218,7 @@ function process_action(digits, action, param, ch, cmd, v)
 				trig_enable(ch, true)
 				print("CLK Reset Channel: "..ch)
 			end
-		elseif param == 40 then -- TRIG enable/disable
+		elseif param == 50 then -- TRIG enable/disable
 			if ch == 0 then
 				for i = 1, 4 do
 					trig_enable(i, false)
@@ -311,7 +308,7 @@ function setup_state(ch)
 		ant = 0, aamp = 1, apw = 0, apw2 = 0, abit = 0, afr = 4, asy = -1, acr = 3, atype = 0, aph = 1, 
 		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 5, lsy = 0,  lcr = 0, ltype = 1, lph = -1, 
 		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 1, esy = -1, ecr = 4, etype = 0, eph = 1, 
-		nte = 0, amp = 4,  pw = 0,  pw2 = 4,  bit = 0, mdl = 1, splash = 0,
+		nte = 0, amp = 4,  pw = 0,  pw2 = 4,  bit = 0, mdl = 1, splash = 0, flaps = 4, 
 	}
 end
 function setup_ratio(ch)
@@ -320,7 +317,7 @@ function setup_ratio(ch)
 		ant = 0, aamp = 0, apw = 0, apw2 = 0, abit = 0, afr = 0, asy = 0, acr = 0, atype = 0, aph = 0, 
 		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 0, lsy = 0, lcr = 0, ltype = 0, lph = 0, 
 		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 0, esy = 0, ecr = 0, etype = 0, eph = 0, 
-		nte = 0, amp = 0,  pw = 0,  pw2 = 0,  bit = 0, mdl = 0, splash = 0, 
+		nte = 0, amp = 0,  pw = 0,  pw2 = 0,  bit = 0, mdl = 0, splash = 0, flaps = 0,
 	}
 end
 function acc(phase, freq, sec, looping)
@@ -336,11 +333,11 @@ end
 function update_synth(i)
 	local s = states[i]
 	local sec = input[1].time
-	s.aph = acc(s.aph, s.afr, sec, is_positive(s.atype))
+	s.aph = acc(s.aph, s.afr, sec, s.atype > 0)
 	local ampenv = peak(s.aph, s.asy, s.acr)
-	s.eph = acc(s.eph, s.efr, sec, is_positive(s.etype))
+	s.eph = acc(s.eph, s.efr, sec, s.etype > 0)
 	local modenv = peak(s.eph, s.esy, s.ecr)
-	s.lph = acc(s.lph, s.lfr, sec, is_positive(s.ltype))
+	s.lph = acc(s.lph, s.lfr, sec, s.ltype > 0)
 	local lfo = peak(s.lph, s.lsy, s.lcr)
 	local note   = s.nte + (modenv * s.ent)  + (lfo * s.lnt)  + (ampenv * s.ant)
 	local volume = (modenv * s.eamp * s.amp) + (lfo * s.lamp * s.amp) + (ampenv * s.aamp * s.amp)
@@ -351,9 +348,9 @@ function update_synth(i)
 	if i ~= 1 and ratios[i].nte ~= 0 then freq = freq * ratios[i].nte end
 	local cyc = 1/(freq * caw_mult[i])
 	output[i].dyn.cyc = s.splash > 0 and (math.random()*0.1 < cyc/0.1 and cyc + (cyc * 0.2 * math.random()*s.splash) or cyc + math.random()*0.002*s.splash) or cyc
-	output[i].dyn.amp = volume
-	if bitz <= 0 then output[i].scale('none')
-	else output[i].scale({}, 2, bitz * 3) end
+	volume = volume > 10 and 20 - volume or volume
+	output[i].dyn.amp = math.min(math.max(volume, -10), 10)
+	if bitz > 0 then output[i].scale({}, 2, bitz * 3) else output[i].scale('none') end
 	pw = (math.min(math.max(pw, -1), 1) + 1) / 2
 	if s.mdl == 2 or s.mdl == 5 or s.mdl == 6 then output[i].dyn.pw = pw * pw2
 	elseif s.mdl == 3 then
@@ -369,9 +366,9 @@ function trigger_note(ch)
 	if states[ch].aph >= states[ch].asy then states[ch].aph = -1 end
 end
 function trigger_seq(ch)
-	local sq_caw  = sequins{45,46,47,48}
-	local sq_time = sequins{41,43}
-	local sq_reps = sequins{42,44}
+	local sq_caw  = sequins{56,57,58,59}
+	local sq_time = sequins{51,53}
+	local sq_reps = sequins{52,54}
 	local _time = states[ch][param_list[sq_time()]]
 	local _reps = states[ch][param_list[sq_reps()]]
 	local rep_ct = 0;
@@ -380,7 +377,7 @@ function trigger_seq(ch)
 			rep_ct = 0;
 			_time = states[ch][param_list[sq_time()]]
 			_reps = states[ch][param_list[sq_reps()]]
-			sq_caw:step(feet[ch])
+			sq_caw:step(math.floor(states[ch].flaps)%4+1)
 		end
 		rep_ct = rep_ct + 1
 		cmult = states[ch][param_list[sq_caw()]]
