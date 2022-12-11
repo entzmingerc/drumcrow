@@ -30,9 +30,12 @@ setup_hof_param(12, 'amp', make_divide(2))
 setup_hof_param(13, 'pw', make_divide(10))
 setup_hof_param(14, 'pw2', make_divide(1)) 
 setup_hof_param(15, 'bit', make_divide(1))
+setup_hof_param(16, 'cawfr4', make_divide(5))
+setup_hof_param(17, 'cawfr3', make_divide(5))
+setup_hof_param(18, 'cawnte', make_divide(1))
 setup_hof_param(19, 'splash', make_divide(2))
 setup_hof_param(21, 'ent', make_divide(1))
-setup_hof_param(22, 'eamp', make_divide(2))
+setup_hof_param(22, 'eamp', make_divide(3))
 setup_hof_param(23, 'epw', make_divide(5))
 setup_hof_param(24, 'epw2', make_divide(1))
 setup_hof_param(25, 'ebit', make_divide(1))
@@ -41,7 +44,7 @@ setup_hof_param(27, 'esy', make_divide(1))
 setup_hof_param(28, 'ecr', make_divide(2))
 setup_hof_param(29, 'etype', make_divide(1))
 setup_hof_param(31, 'lnt', make_divide(1))
-setup_hof_param(32, 'lamp', make_divide(2))
+setup_hof_param(32, 'lamp', make_divide(3))
 setup_hof_param(33, 'lpw', make_divide(1))
 setup_hof_param(34, 'lpw2', make_divide(1))
 setup_hof_param(35, 'lbit', make_divide(1))
@@ -50,7 +53,7 @@ setup_hof_param(37, 'lsy', make_divide(5))
 setup_hof_param(38, 'lcr', make_divide(2))
 setup_hof_param(39, 'ltype', make_divide(1))
 setup_hof_param(41, 'ant', make_divide(1))
-setup_hof_param(42, 'aamp', make_divide(2))
+setup_hof_param(42, 'aamp', make_divide(3))
 setup_hof_param(43, 'apw', make_divide(5))
 setup_hof_param(44, 'apw2', make_divide(1))
 setup_hof_param(45, 'abit', make_divide(1))
@@ -304,20 +307,20 @@ function set_ratio(ch, key, v)
 end
 function setup_state(ch)
 	states[ch] = {
-		tlenA = 1, trepA = 2, tlenB = 2, trepB = 2, caw1 = 1, caw2 = 1, caw3 = 1, caw4 = 1, 
+		tlenA = 1, trepA = 2, tlenB = 2, trepB = 2, flaps = 4, caw1 = 1, caw2 = 1, caw3 = 1, caw4 = 1, 
 		ant = 0, aamp = 1, apw = 0, apw2 = 0, abit = 0, afr = 4, asy = -1, acr = 3, atype = 0, aph = 1, 
 		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 5, lsy = 0,  lcr = 0, ltype = 1, lph = -1, 
 		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 1, esy = -1, ecr = 4, etype = 0, eph = 1, 
-		nte = 0, amp = 4,  pw = 0,  pw2 = 4,  bit = 0, mdl = 1, splash = 0, flaps = 4, 
+		nte = 0, amp = 4,  pw = 0,  pw2 = 4,  bit = 0, cawfr3 = 0, cawfr4 = 0, cawnte = 1, splash = 0, mdl = 1,  
 	}
 end
 function setup_ratio(ch)
 	ratios[ch] = {
-		tlenA = 0, trepA = 0, tlenB = 0, trepB = 0, caw1 = 0, caw2 = 0, caw3 = 0, caw4 = 0, 
+		tlenA = 0, trepA = 0, tlenB = 0, trepB = 0, flaps = 0, caw1 = 0, caw2 = 0, caw3 = 0, caw4 = 0, 
 		ant = 0, aamp = 0, apw = 0, apw2 = 0, abit = 0, afr = 0, asy = 0, acr = 0, atype = 0, aph = 0, 
 		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 0, lsy = 0, lcr = 0, ltype = 0, lph = 0, 
 		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 0, esy = 0, ecr = 0, etype = 0, eph = 0, 
-		nte = 0, amp = 0,  pw = 0,  pw2 = 0,  bit = 0, mdl = 0, splash = 0, flaps = 0,
+		nte = 0, amp = 0,  pw = 0,  pw2 = 0,  bit = 0, cawfr3 = 0, cawfr4 = 0, cawnte = 0, splash = 0, mdl = 0,
 	}
 end
 function acc(phase, freq, sec, looping)
@@ -333,12 +336,12 @@ end
 function update_synth(i)
 	local s = states[i]
 	local sec = input[1].time
-	s.aph = acc(s.aph, s.afr, sec, s.atype > 0)
+	s.aph = acc(s.aph, s.cawfr4 > 0 and s.afr * caw_mult[i] / s.cawfr4 or s.afr, sec, s.atype > 0)
 	local ampenv = peak(s.aph, s.asy, s.acr)
+	s.lph = acc(s.lph, s.cawfr3 > 0 and s.lfr * caw_mult[i] * s.cawfr3 or s.lfr, sec, s.ltype > 0)
+	local lfo = peak(s.lph, s.lsy, s.lcr)
 	s.eph = acc(s.eph, s.efr, sec, s.etype > 0)
 	local modenv = peak(s.eph, s.esy, s.ecr)
-	s.lph = acc(s.lph, s.lfr, sec, s.ltype > 0)
-	local lfo = peak(s.lph, s.lsy, s.lcr)
 	local note   = s.nte + (modenv * s.ent)  + (lfo * s.lnt)  + (ampenv * s.ant)
 	local volume = (modenv * s.eamp * s.amp) + (lfo * s.lamp * s.amp) + (ampenv * s.aamp * s.amp)
 	local pw     = s.pw  + (modenv * s.epw)  + (lfo * s.lpw)  + (ampenv * s.apw) 
@@ -346,9 +349,8 @@ function update_synth(i)
 	local bitz   = s.bit + (modenv * s.ebit) + (lfo * s.lbit) + (ampenv * s.abit)
 	local freq = note > -8.03127 and note < 6.25643 and math.min(math.max(267.9 * (2 ^ note), 1), 20000) or (note >= 6.25643 and 20000 or 1)
 	if i ~= 1 and ratios[i].nte ~= 0 then freq = freq * ratios[i].nte end
-	local cyc = 1/(freq * caw_mult[i])
+	local cyc = 1/(freq * (s.cawnte > 0 and caw_mult[i] or 1))
 	output[i].dyn.cyc = s.splash > 0 and (math.random()*0.1 < cyc/0.1 and cyc + (cyc * 0.2 * math.random()*s.splash) or cyc + math.random()*0.002*s.splash) or cyc
-	volume = volume > 10 and 20 - volume or volume
 	output[i].dyn.amp = math.min(math.max(volume, -10), 10)
 	if bitz > 0 then output[i].scale({}, 2, bitz * 3) else output[i].scale('none') end
 	pw = (math.min(math.max(pw, -1), 1) + 1) / 2
@@ -362,8 +364,8 @@ function update_synth(i)
 	else output[i].dyn.pw = pw end
 end
 function trigger_note(ch)
-	if states[ch].eph >= states[ch].esy then states[ch].eph = -1 end
 	if states[ch].aph >= states[ch].asy then states[ch].aph = -1 end
+	if states[ch].eph >= states[ch].esy then states[ch].eph = -1 end
 end
 function trigger_seq(ch)
 	local sq_caw  = sequins{56,57,58,59}
