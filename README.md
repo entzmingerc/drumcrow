@@ -1,8 +1,8 @@
-# drumcrow
-Warning: Dated documentation, need to update with new instructions. 
-This script turns Crow into a 4-channel drum machine driven with Monome Teletype.  
+# drumcrow 
+This script turns monome crow into a 4-channel drum machine synth driven with monome teletype or druid.  
 
 **Demos**  
+Drumcrow sound compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)
 Originally adapted from License's Flash Crash performance [here](https://www.youtube.com/watch?v=SYfeBtJjQ-M)  
 postsolarpunk Flash Crash performance [here](https://www.youtube.com/watch?v=_EKpT1tO02o)  
 playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
@@ -37,46 +37,62 @@ LIVE INPUT:
 // Set M to your favorite tempo
 M 172
 
-// Set Channel 1 to sine wave kick drum
-// 1 set model, 2 sine shape, 1 oscillator model, 1 channel
-CROW.C1 1211
+// Make Channel 1 a sine wave kick drum
+// Set Model (2) Shape sine (2) Model var_saw (1) Channel 1 (1) = 2211
+CROW.C1 2211
 
 // Adjust Kick drum 
-// ENV cycle time (111) ENV pitch depth (151)
+// Pitch ENV (2) Decay time (6) Channel 1 (1) = 261, turn it down to a shorter time
+// Pitch ENV (2) Pitch mod depth (1) Channel 1 (1) = 211, turn it up to go high freq to low
 // Use PARAM knob to set the value each time
-CROW.C1 111
-CROW.C1 151
+CROW.C1 261
+CROW.C1 211
 
-// Change Snare drum to LCG (noise)
-// 1 set model, 1 linear shape, 4 LGG model, 2 channel
-CROW.C1 1142
+// Make Channel 2 a snare drum using noise model
+// Set Model (2) Shape linear (1) Model noise (3) Channel 2 (2) = 2132
+CROW.C1 2132
 
-// Adjust Snare drum parameters PW2, decay time, pitch envelope of Channel 2
+// Adjust Snare drum parameters 
+// Oscillator (1) PW2 (4) Channel 2 (2) = 142, BRING THE NOISE
+// Pitch ENV (2) Decay time (6) Channel 2 (2) = 262, SHORTEN the noise
+// Pitch ENV (2) Pitch mod depth (1) Channel 2 (2) = 212, pitch the noise if you want
 // Use PARAM knob to set the value each time
-CROW.C1 22
-CROW.C1 112
-CROW.C1 152
+CROW.C1 142
+CROW.C1 262
+CROW.C1 212
 ```
-Continue adding more voices, adjusting parameters, modulating sounds, sequencing drum patterns
+Continue adding more voices, adjusting parameters, modulating sounds, sequencing drum patterns  
 
 # Teletype Commands
-Channel = 0 is used to set a parameter on all channels simultaneously. Channel = 1-4 is used to set a parameter on a selected channel. 
+Channel = 0 is used to set a parameter on all channels simultaneously. Channel = 1-4 is used to set a parameter on a selected channel. All parameters do slightly different things depending on what ASL oscillator model is being used. For example, both the note and pulse width control the resulting frequency of the oscillator in the bytebeat inspired synth model.  
 
 ## CROW.C1 X  
-Select a parameter to set Crow input 1 voltage to  
+Selects a parameter. Voltage at crow input 1 sets the parameter value.  
 | TT Command | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
 | --- | --- | --- | --- | --- |
-| `CROW.C1 0` | ~ | ~ |  0 | Deselect a parameter, maps input voltage to nothing |
-| `CROW.C1 1X` | ~ | 1 Pulse Width | 0-4 Channel | Sets the pulse width for a channel |
-| `CROW.C1 2X` | ~ | 2 Pulse Width 2 | 0-4 Channel | Sets a second pulse width variable a channel <br> Changes depending on the model |
-| `CROW.C1 3X` | ~ | 3 Bitcrush Amount | 0-4 Channel | Sets a quantizer v/oct for a channel, bitcrush distortion <br> V <= 5 :: OFF <br> 5 < V <= 10 :: Temperament at 2 and V/Oct from 1 to 20 |
-| `CROW.C1 9X` | ~ | 9 Main Tempo | (any number) | Sets main tempo for trigger sequencer for all channels <br> 10 BPM <= V <= 2010 BPM |
-| `CROW.C1 11X` | 1 FREQ ENV | 1 Cycle Time | 0-4 Channel | Select enevelope cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds <br> [billions and billions](https://en.wikipedia.org/wiki/Carl_Sagan#%22Billions_and_billions%22)|
-| `CROW.C1 12X` | 1 FREQ ENV | 2 Attack / Decay | 0-4 Channel | Select envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
-| `CROW.C1 13X` | 1 FREQ ENV | 3 Curvature | 0-4 Channel | Select envelope curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
-| `CROW.C1 14X` | 1 FREQ ENV | 4 Mod Depth PW | 0-4 Channel | Select envelope modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
-| `CROW.C1 15X` | 1 FREQ ENV | 5 Mod Depth NOTE | 0-4 Channel | Select envelope modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
-| `CROW.C1 16X` | 1 FREQ ENV | 6 Looping | 0-4 Channel | V <= 1 :: Envelope looping OFF (default) <br> V > 1 :: Envelope looping ON | 
+| `0` | ~ | ~ |  ~ | Deselect a parameter, maps input voltage to nothing <br> Any unused number deselects a parameter |
+| `11X` | 1 Osc | 1 Note | 0-4 Channel | Sets oscillator frequency of a channel <br> Minimum set to 1Hz but can be set lower for LFOs <br> 0 <= V <= 10 :: 1Hz ... 20kHz|
+| `12X` | 1 Osc | 2 Amplitude | 0-4 Channel | Sets oscillator amplitude of a channel <br> Can be overdriven using modulation sources |
+| `13X` | 1 Osc | 3 Pulse Width | 0-4 Channel | Sets pulse width of a channel |
+| `14X` | 1 Osc | 4 PW2 | 0-4 Channel | Sets PW2 which is an optional extra parameter <br> Changes depending on the model |
+| `15X` | 1 Osc | 5 Bitcrush Amount | 0-4 Channel | Sets a quantizer v/oct for a channel, bitcrush distortion <br> 0 <= V <= 5 :: OFF <br> 5 < V <= 10 :: Temperament at 2 and V/Oct from 1 to 20 |
+| `16X` | 1 Osc | 6 Caw to Fr4 | 0-4 Channel | Scales amount CAW sequencer modulates mod 4 cycle time (46X) <br> 0 <= V <= 5 :: OFF <br> 5 < V <= 10 :: 0 ... 2 |
+| `17X` | 1 Osc | 7 Caw to Fr4 | 0-4 Channel | Scales amount CAW sequencer modulates mod 3 cycle time (36X) <br> 0 <= V <= 5 :: OFF <br> 5 < V <= 10 :: 0 ... 2 |
+| `18X` | 1 Osc | 8 Caw to Note | 0-4 Channel | Sets if CAW sequences Note <br> 0 <= V <= 5 :: OFF <br> 5 < V <= 10 :: ON |
+| `19X` | 1 Osc | 9 Splash | 0-4 Channel | Sets amount of noise applied to Note <br> 0 <= V <= 5 :: OFF <br> 5 < V <= 10 :: 0 ... 5 |
+| `21X` | 2 FREQ ENV | 1 Mod Depth NOTE | 0-4 Channel | ENV mod depth of frequency <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `22X` | 2 FREQ ENV | 2 Mod Depth AMP | 0-4 Channel | ENV mod depth of amplitude <br> 0 <= V <= 10 :: -3.3 ... 0 ... +3.3|
+| `23X` | 2 FREQ ENV | 3 Mod Depth PW | 0-4 Channel | ENV mod depth of pulse width <br> 0 <= V <= 10 :: -2 ... 0 ... +2|
+| `24X` | 2 FREQ ENV | 4 Mod Depth PW2 | 0-4 Channel | ENV mod depth of PW2 (misc) <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `25X` | 2 FREQ ENV | 5 Mod Depth BIT | 0-4 Channel | ENV mod depth of bitcrush amount <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `26X` | 2 FREQ ENV | 6 Cycle Time | 0-4 Channel | Select enevelope cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds <br> [billions and billions](https://en.wikipedia.org/wiki/Carl_Sagan#%22Billions_and_billions%22)|
+| `27X` | 2 FREQ ENV | 7 Attack / Decay | 0-4 Channel | Select envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
+| `28X` | 2 FREQ ENV | 8 Curvature | 0-4 Channel | Select envelope curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `29X` | 2 FREQ ENV | 9 Looping | 0-4 Channel | V <= 1 :: Envelope looping OFF (default) <br> V > 1 :: Envelope looping ON | 
+
+
+
+
 | `CROW.C1 21X` | 2 LFO | 1 Cycle Time | 0-4 Channel | Select LFO cycle time <br> 0.25 <= V <= 10 :: 0.001 Hz - 1024 Hz :: 724 sec - 0.001 sec <br> 0 <= V <= 0.25 :: 2<sup>32</sup> seconds <br> Fastest update time is 0.002sec or 250Hz, aliasing above this|
 | `CROW.C1 22X` | 2 LFO | 2 Attack / Decay | 0-4 Channel | Select LFO attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
 | `CROW.C1 23X` | 2 LFO | 3 Curvature | 0-4 Channel | Select LFO curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
