@@ -1,4 +1,5 @@
 # drumcrow 
+![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20discord%20emote.png?raw=true)  
 This script turns monome crow into a 4-channel drum machine synth driven with monome teletype or druid.  
 
 **Demos**  
@@ -74,6 +75,8 @@ CROW.C1 262
 CROW.C1 212
 ```
 Continue adding more voices, adjusting parameters, modulating sounds, sequencing drum patterns  
+
+![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20parameter%20matrix.png?raw=true)
 
 # Teletype Commands
 Channel = 0 set parameter on all channels simultaneously  
