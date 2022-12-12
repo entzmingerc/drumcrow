@@ -1,4 +1,5 @@
 --- drumcrow
+note_min = -8.03127 -- (-8.03127, 1Hz, 1sec) (-11.3532, 0.1Hz, 10sec) (-14.67513, 0.01Hz, 100sec) (-17.997, 0.001Hz, 1000sec)
 states = {}
 ratios = {}
 caw_mult = {1, 1, 1, 1}
@@ -11,6 +12,24 @@ shapes = {'linear','sine','logarithmic','exponential','now','wait','over','under
 param_list = {}
 clock_ID = {}
 clock_on = {0,0,0,0}
+function setup_state(ch)
+	states[ch] = {
+		tlenA = 1, trepA = 2, tlenB = 2, trepB = 2, flaps = 4, caw1 = 1, caw2 = 1, caw3 = 1, caw4 = 1, 
+		ant = 0, aamp = 1, apw = 0, apw2 = 0, abit = 0, afr = 4, asy = -1, acr = 3, atype = 0, aph = 1, 
+		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 5, lsy = 0,  lcr = 0, ltype = 1, lph = -1, 
+		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 1, esy = -1, ecr = 4, etype = 0, eph = 1, 
+		nte = 0, amp = 4,  pw = 0,  pw2 = 4,  bit = 0, cawfr3 = 0, cawfr4 = 0, cawnte = 1, splash = 0, mdl = 1,  
+	}
+end
+function setup_ratio(ch)
+	ratios[ch] = {
+		tlenA = 0, trepA = 0, tlenB = 0, trepB = 0, flaps = 0, caw1 = 0, caw2 = 0, caw3 = 0, caw4 = 0, 
+		ant = 0, aamp = 0, apw = 0, apw2 = 0, abit = 0, afr = 0, asy = 0, acr = 0, atype = 0, aph = 0, 
+		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 0, lsy = 0, lcr = 0, ltype = 0, lph = 0, 
+		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 0, esy = 0, ecr = 0, etype = 0, eph = 0, 
+		nte = 0, amp = 0,  pw = 0,  pw2 = 0,  bit = 0, cawfr3 = 0, cawfr4 = 0, cawnte = 0, splash = 0, mdl = 0,
+	}
+end
 function v10_to_int(v) return (v >= 1) and (v - v % 1) or (v <= -1) and (-1*(v + (-1*v) % 1)) or 1 end
 function v10_to_ratio(v) return (v >= 1) and math.floor(v) or (v >= -9) and 1/(-1*(math.floor(v)-1)) or 0 end
 function make_divide(divisor) return function (x) return x / divisor end end
@@ -305,24 +324,6 @@ function set_ratio(ch, key, v)
 	if ch == 0 then for i = 2,4 do check_ratio(i, key) end
 	elseif ch ~= 1 then check_ratio(ch, key) end
 end
-function setup_state(ch)
-	states[ch] = {
-		tlenA = 1, trepA = 2, tlenB = 2, trepB = 2, flaps = 4, caw1 = 1, caw2 = 1, caw3 = 1, caw4 = 1, 
-		ant = 0, aamp = 1, apw = 0, apw2 = 0, abit = 0, afr = 4, asy = -1, acr = 3, atype = 0, aph = 1, 
-		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 5, lsy = 0,  lcr = 0, ltype = 1, lph = -1, 
-		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 1, esy = -1, ecr = 4, etype = 0, eph = 1, 
-		nte = 0, amp = 4,  pw = 0,  pw2 = 4,  bit = 0, cawfr3 = 0, cawfr4 = 0, cawnte = 1, splash = 0, mdl = 1,  
-	}
-end
-function setup_ratio(ch)
-	ratios[ch] = {
-		tlenA = 0, trepA = 0, tlenB = 0, trepB = 0, flaps = 0, caw1 = 0, caw2 = 0, caw3 = 0, caw4 = 0, 
-		ant = 0, aamp = 0, apw = 0, apw2 = 0, abit = 0, afr = 0, asy = 0, acr = 0, atype = 0, aph = 0, 
-		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 0, lsy = 0, lcr = 0, ltype = 0, lph = 0, 
-		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 0, esy = 0, ecr = 0, etype = 0, eph = 0, 
-		nte = 0, amp = 0,  pw = 0,  pw2 = 0,  bit = 0, cawfr3 = 0, cawfr4 = 0, cawnte = 0, splash = 0, mdl = 0,
-	}
-end
 function acc(phase, freq, sec, looping)
 	phase = phase + (freq * sec)
 	phase = looping and (1 + phase) % 2 - 1 or math.max(math.min(1, phase), -1)
@@ -347,7 +348,7 @@ function update_synth(i)
 	local pw     = s.pw  + (modenv * s.epw)  + (lfo * s.lpw)  + (ampenv * s.apw) 
 	local pw2    = s.pw2 + (modenv * s.epw2) + (lfo * s.lpw2) + (ampenv * s.apw2) 
 	local bitz   = s.bit + (modenv * s.ebit) + (lfo * s.lbit) + (ampenv * s.abit)
-	local freq = note > -8.03127 and note < 6.25643 and math.min(math.max(267.9 * (2 ^ note), 1), 20000) or (note >= 6.25643 and 20000 or 1)
+	local freq = note > note_min and note < 6.25643 and math.min(math.max(267.9 * (2 ^ note), 1), 20000) or (note >= 6.25643 and 20000 or 1)
 	if i ~= 1 and ratios[i].nte ~= 0 then freq = freq * ratios[i].nte end
 	local cyc = 1/(freq * (s.cawnte > 0 and caw_mult[i] or 1))
 	output[i].dyn.cyc = s.splash > 0 and (math.random()*0.1 < cyc/0.1 and cyc + (cyc * 0.2 * math.random()*s.splash) or cyc + math.random()*0.002*s.splash) or cyc
@@ -403,7 +404,6 @@ function trig_enable(ch, reset)
 	end
 end
 function init()
-	print("init!")
 	clock.tempo = 300
 	setup_state(1); setup_synth(1, 1, 1);
 	for i = 2, 4 do setup_state(i); setup_ratio(i);	setup_synth(i, 1, 1); end	
