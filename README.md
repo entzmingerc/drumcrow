@@ -138,35 +138,31 @@ Selects a parameter. Voltage at crow input 1 sets the parameter value.
 | `82X` | 8 | 2 | any number | Set global update speed of all voices <br> 0 <= V <= 10 :: 0.002 sec ... 0.1 sec <br> Defualt 0.005, shorter speeds may cause CPU overload, higher speeds result in stair-step modulation| 
 | `85X` | 8 | 2 | 0-4 Channel | Reset position of trigger sequencer, keeps length and repeat values the same | 
 | `86X` | 8 | 6 | 0-4 Channel | Set a channel to its initial value [86 Term](https://en.wikipedia.org/wiki/86_(term))| 
-
-### 4 digits  
-| TT Command | DIGIT 4 | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
-| --- | --- | --- | --- | --- | --- |
-| `CROW.C1 1XYZ` | 1 SET MODEL | 1-9 Shape | 1-7 Model | 1-4 Channel | Set model on a channel with a [shape](https://monome.org/docs/crow/reference/#shaping-cv) <br> Default :: Model = 1 var_saw, Shape = 1 linear|
-| `CROW.C1 3XYZ` | 3 SET RATIO | 1-3 Mod Source | 1-5 Mod Parameter | 2-4 Channel | Set a channel's parameter value to a scaled value of channel 1's parameter value <br> 0 <= V <= 10 :: 1/10, 1/9, ..., 1/2, 1/1, 0, 1, 2, ..., 9, 10 <br> A value of 0 (V 5) disables the ratio setting|
+| `1XYZ` | 1 SET RATIO | Parameter <br> X: 1-5 Digit 3 <br> Y: 1-9 Digit 2 | 0, 2-4 Channel | Set a channel's parameter value to be a scaled value of channel 1's parameter value <br> 0 <= V <= 10 :: 0, 1/10, 1/9, ..., 1/2, 1, 2, ..., 9, 10 <br> A value of 0 disables ratio, otherwise the ratio value overrules any other attempt to set value|
+| `2XYZ` | 2 SET MODEL | 1-9 Shape<br>1-6 Model | 0-4 Channel | Set model on a channel with a [shape](https://monome.org/docs/crow/reference/#shaping-cv) <br> Default :: Model = 1 var_saw, Shape = 1 linear|
 
 ## CROW.C2 X Y
 | TT Command | Parameter | Value | Description |
 | --- | --- | --- | --- |
-| `CROW.C2 X Y` | 11-364 <br> Select Parameter <br> CROW.C1 see above | V 0 ... V 10 <br> TT Value | Set a channel parameter to a value directly |
-| `CROW.C2 999 Y` | 999 <br> Set Modulation Update Time | V -10 ... V 10 <br> TT Value | Set update time <br> V -10 ... V 10 :: 0.002 - 0.1 seconds (default 0.003) <br> Parameters and modulation sources update faster ... slower <br> Turns a smooth ENV slope into a stair step |
+| `CROW.C2 X Y` | Select Parameter for X <br> CROW.C1 see above | V 0 ... V 10 <br> TT Value | Set a channel parameter to a value directly <br> Can be used to set ratios directly (1XYZ) <br> Values set with CROW.C1 takes higher priority than CROW.C2|
 
-CROW.C2 X Y = (mod source, mod parameter, channel) (value)  
-Set a parameter directly  
-CROW.C1 has higher priority than CROW.C2.  
-If `CROW.C1 151` is currently selected and `CROW.C2 151 V 4` is sent, then the value of 151 is set to Crow input 1 (CROW.C1) and ignores CROW.C2.  
-Most parameters can be set to zero by using V 5. (The 0V to 10V input is scaled to a -10 to +10 value internally)  
-Use VV to set a parameter to a decimal value. For example: `CROW.C2 21 VV 750`  
-Some parameters are sensitive to decimal changes (PW2, PW, CYCLE TIME, ...).  
+CROW.C1 has higher priority than CROW.C2. If `CROW.C1 151` is currently selected and `CROW.C2 151 V 4` is sent, then the value of 151 is set to Crow input 1 (CROW.C1) and ignores CROW.C2. Many parameters can be set to zero by using V 5. (The 0V to 10V input is scaled to a -10 to +10 value internally). Most ratio values can be set to zero by setting input voltage to 0V (or V -10 from TT). Use the teletype OP `VV` to set a parameter to a decimal value. Some parameters are sensitive to decimal changes.  
+
+Deselect a parameter first before trying to set it using C2: `CROW.C1 0` deselect  
+Set LFO frequency mod depth to zero on channel 1: `CROW.C2 311 V 5`  
+Set amplitude to zero on channel 3: `CROW.C2 123 V 5`  
+Set envelope decay time to a random value from teletype: `CROW.C2 362 RRAND V 0 V 5`  
+Try setting the update speed to decimal values near minimum: `CROW.C2 821 VV 120`  
+Try exploring PW2 values with the ASLsine and Noise models: `CROW.C2 141 VV 510`  
 
 ## CROW.C3 X Y Z
 | TT Command | X | Y | Z | Description |
 | --- | --- | --- | --- | --- |
-| `CROW.C3 X Y Z` | 1-4 Channel | V -10 ... V 10 <br> Note <br> TT Value | V -10 ... V 10 <br> Volume <br> TT Value | Triggers channel at note and volume <br> Retrigger AMP ENV and FREQ ENV if passed attack stage <br> Note usually V -2 ... V 8 <br> Volume usually V 0 ... V 10|
+| `CROW.C3 X Y Z` | 1-4 Channel | V -10 ... V 10 <br> Note <br> TT Value | V -10 ... V 10 <br> Amplitude <br> TT Value | Set note, set amplitude, then retrigger envelopes <br> Only Trigger AMP ENV and FREQ ENV if passed attack stage <br> Note typically V -2 ... V 8 <br> Amplitude usually V 0 ... V 10|
 
-CROW.C3 X Y Z = (channel) (note) (volume)  
-Trigger a note on a channel.  
-Sequence notes using TT patterns, random values, and so on. Synth models change tone depending on note.  
+CROW.C3 X Y Z = (channel) (note) (amplitude)  
+Set note. Set amplitude. Trigger envelopes.  
+Sequence notes using TT patterns, random values, and so on. Some synth models change tone depending on note.  
 Mix oscillators using volume parameter, sequence velocity, set to 0 to mute.
 
 ## Models
