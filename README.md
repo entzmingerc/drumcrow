@@ -168,18 +168,40 @@ Mix oscillators using volume parameter, sequence velocity, set to 0 to mute.
 ## Models
 1. var_saw(amp, cyc, pw, shape) (Default)  
 Up to a voltage, down to a negative voltage. Triangle shape with pulse width control. Time to travel between each voltage determined by cyc. Use shape to select 1 triangle, 2 sine, 5 square, or select any shape 1-9 to hear different tones.  
-2. var_saw(amp, cyc, pw, shape)  
-Same as 1 but with random noise added to cyc variable during the udpate loop, distinctive splashy noise.  
-3. bytebeat(amp, cyc, pw, shape)  
-Output voltage is stepped by PW each loop and wrapped between -20 ... 20. The time to complete each voltage step is determined by cyc.  
-4. LCG(amp, cyc, pw, pw2, shape)  
+```
+loop { to(  dyn{amp=2}, dyn{cyc=1/440} * dyn{pw=1/2}, shape), to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape) } 
+```
+2. bytebeat(amp, cyc, pw, shape)  
+Output voltage is stepped by PW each loop and wrapped between -20 ... 20. The time to complete each voltage step is determined by cyc. 
+```
+-- dyn.pw = pw * pw2
+loop { to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape) }
+```
+3. LCG(amp, cyc, pw, pw2, shape)  
 Linear Congruential Generator is a pseudorandom number generator using the equation voltage(n+1) = (pw2 * voltage(n) + pw) mod 10. PW2 can be used to sweep through a large range of noisy sounds. PW2 is sensitive to decimal values as well, explore sweet spots. Note affects the sounds as well, higher pitches for higher frequency noise. Use short amplitude envelope cycle times for high hats and snares.  
-5. FMstep(amp, cyc, pw, pw2, shape)  
+```
+-- dyn.pw = pw, dyn.pw2 = pw2
+loop { to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}/2, shape) } 
+```
+4. FMstep(amp, cyc, pw, pw2, shape)  
 This expands the var_saw model to multiply cyc by a dynamic variable x that sweeps between 1 and 2 at a speed set by PW2. Low PW values means a lower frequency is multiplied to the Note freq.  
-6. ASLsine(amp, cyc, pw, shape)  
-This is a root-product sine wave approximation y = x + 0.101321(x)^3. The var_saw model can select two voltage points to move between, but ASL can't directly step through a waveshape unless we were to make 100 ASL stages and step through a waveshape manually. Instead, we can loop one ASL stage, step x by PW each loop, wrap it between -pi and +pi, and now each voltage step roughly traces out a sine wave. Sounds real good. Time it takes between each voltage step is determined by cyc.  
-7. ASLharmonic(amp, cyc, pw, shape)  
-Same as ASLsine but we add a mul(-1) to x so that its polarity is negated each loop. This gives a frequency from the time it takes to step through the sine wave approximation and the frequency from the x variable flipping polarity back and forth. An attempt to generate harmonics.  
+```
+-- dyn.pw = pw, dyn.pw2 = pw2 / 50
+loop {to(  dyn{amp=2}, dyn{x=1}:step(dyn{pw2=1}):wrap(1,2) * dyn{cyc=1} * dyn{pw=1}, shape),
+			to(0-dyn{amp=2}, dyn{x=1} * dyn{cyc=1} * (1-dyn{pw=1}), shape) }
+```
+5. ASLsine(amp, cyc, pw, shape)  
+This is a root-product sine wave approximation y = x + 0.101321(x)^3. The var_saw model can select two voltage points to move between, but ASL can't directly step through a waveshape unless we were to make 100 ASL stages and step through a waveshape manually. Instead, we can loop one ASL stage, step x by PW each loop, wrap it between -pi and +pi, and now each voltage step roughly traces out a sine wave. Sounds cool. Time it takes between each voltage step is determined by cyc.  
+```
+-- dyn.pw = pw * pw2
+loop { to((dyn{x=0}:step(dyn{pw=0.314}):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape) }
+```
+6. ASLharmonic(amp, cyc, pw, shape)  
+Same as ASLsine but we add a mul(-1) to x so that its polarity is negated each loop. This gives a frequency from the time it takes to step through the sine wave approximation and the frequency from the x variable flipping polarity back and forth. Slightly more chaotic with PW2.  
+```
+-- dyn.pw = pw * pw2
+loop { to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape) }
+```
 
 ## Shapes  
 Select the shape of the synth model listed in Monome Crow [documentation](https://monome.org/docs/crow/reference/#shaping-cv)  
@@ -196,17 +218,15 @@ Shapes can be used to change the tone of the ASL oscillator.
 9 = rebound  
 
 ## Ratios
-`CROW.C1 3XYZ` The action (3) sets the parameter (XY) on channel (Z) equal to a scaled value of the same parameter on channel 1. Select a multiplier using Crow input 1 voltage. Multipliers are quantized to integer scalings.  
-`CROW.C1 3312` turn up input voltage to V 6 ish, now Channel 2's amplitude envelope cycle time (31) is set to Channel 1's amplitude envelope cycle time x 2. When Channel 1's value is changed, Channel 2's value will be updated as well.  
-Try linking channel 2, 3, and 4's LFO speed, ENV cycle time, ENV pitch modulation to channel 1. Experiment!  
-0 <= V <= 10 :: 1/10, 1/9, ..., 1/2, 1/1, 0, 1, 2, ..., 9, 10  
+`CROW.C1 1XYZ` The action (1) sets the parameter (XY) on channel (Z) equal to a scaled value of the same parameter on channel 1. Select a multiplier using Crow input 1 voltage. Multipliers are quantized to integer scalings. `CROW.C1 1462` turn up input voltage to V 6 ish, now Channel 2's amplitude envelope cycle time (46) is set to Channel 1's amplitude envelope cycle time x 2. When Channel 1's value is changed, Channel 2's value will be updated as well. Try linking channel 2, 3, and 4's LFO speed, ENV cycle time, ENV pitch modulation to channel 1. Experiment!  
+0 <= V <= 10 :: 0, 1/10, 1/9, ..., 1/2, 1, 2, ..., 9, 10  
 0 - disables ratio for the parameter  
 
-## Trigger Sequencer
+## Trigger Sequencer CAW
 drumcrow can be triggered externally regardless if the trigger sequencer is on or off. 
-`CROW.C1 40X` turns on / turns off the trigger sequencer for a channel.  
-`CROW.C1 9X` can be used to set the main tempo on crow for all channels (X can be anything, just need it to be 9X) 10 BPM to 2010 BPM  
-When a trigger sequencer is turned on, it will trigger the channel immediately with the last set value of note and volume which are set using `CROW.C3 X Y Z`. Trigger sequencers start in stage A. At each stage, a trigger will occur then the clock will wait a certain amount of time. After the time is up, it will trigger again, then wait that length of time. `41X` sets how long of a time to wait and `42X` sets how many times to repeat this action before moving on to stage B. Stage B is exactly the same as stage A. `43X` sets how long of a time to wait and `44X` sets how many times to repeat this action before moving on to stage A.  
+`CROW.C1 50X` turns on / turns off the trigger sequencer for a channel.  
+`CROW.C1 81X` can be used to set the main tempo on crow for all channels (X can be anything, just need it to be 81X) 10 BPM to 2010 BPM  
+When a trigger sequencer is turned on, it will trigger the channel immediately with the last set value of note and volume which are set using `CROW.C3 X Y Z`. Trigger sequencers start in stage A. At each stage, a trigger will occur then the clock will wait a certain amount of time. After the time is up, it will trigger again, then wait that length of time. `51X` sets how long of a time to wait and `52X` sets how many times to repeat this action before moving on to stage B. Stage B is exactly the same as stage A. `53X` sets how long of a time to wait and `54X` sets how many times to repeat this action before moving on to stage A.  
 ```
 1 : A___A___A___B_B_A___A___A___B_B_A___A___A___B_B_A___A___A___B_B_  
 2 : A__A__A__B_____A__A__A__B_____A__A__A__B_____A__A__A__B_____A__A  
@@ -215,7 +235,7 @@ When a trigger sequencer is turned on, it will trigger the channel immediately w
 ```
 -Different trigger sequencer per channel. Each A or B represents a trigger.  
 
-The length of time between triggers is synced to clock divisions/multiplications of the main tempo set with `9X`. All channels are synced to the same main tempo. Varying rhythms can be created between channels with a small changes to length and repeats. Setting a length to 0 <= V <= 5 will result in a shorter beats whereas 5 < V <= 10 results in much widers spacing between triggers. For ratchet effects, set length to a smaller value and set the number of repeats very high. For a constant rhythm, set length of A using `41X` then immediately change to `43X` without adjusting the input voltage, both will be set to the same clock division. For phasing drum patterns, try setting the main tempo to a high value, the length and repeats of A to a high value, and the number of repeats of B to 1. A small value for length of B could then be used to slightly offset one channel from another. Notice how in the visual example above, sequence 2 phases slowly to the left when compared to sequence 1. 
+The length of time between triggers is synced to clock divisions/multiplications of the main tempo set with `81X`. All channels are synced to the same main tempo. Varying rhythms can be created between channels with a small changes to length and repeats. Setting a length to 0 <= V <= 5 will result in a shorter beats whereas 5 < V <= 10 results in much widers spacing between triggers. For ratchet effects, set length to a smaller value and set the number of repeats very high. For a constant rhythm, set length of A using `51X` then immediately change to `53X` without adjusting the input voltage, both will be set to the same clock division. For phasing drum patterns, try setting the main tempo to a high value, the length and repeats of A to a high value, and the number of repeats of B to 1. A small value for length of B could then be used to slightly offset one channel from another. Notice how in the visual example above, sequence 2 phases slowly to the left when compared to sequence 1. 
 
 ```
 LenA 1 RepA 1 LenB 2   RepB 1 : A_B__A_B__A_B__A_B__
@@ -228,10 +248,7 @@ LenA 3 RepA 1 LenB 1/2 RepB 5 : A___BBBBBA___BBBBBA___BBBBBA___BBBBB
 ```
 -4 cycles of various trigger patterns. Each A or B represents a trigger.  
 
+Paramters `56X, 57X, 58X, 59X` 
+
 # Future Development
-- Skip trigger sequencer stage if rep or len = 0? 
-- 49X should restart all trigger sequences 
-- Test ratio op fixes
-- Get/set presets, sequence through presets, possibly using norns app
-- Write up ASL oscillator theory
-- ByteBeat and Rungler oscillator possibly
+- port to norns
