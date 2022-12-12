@@ -248,7 +248,21 @@ LenA 3 RepA 1 LenB 1/2 RepB 5 : A___BBBBBA___BBBBBA___BBBBBA___BBBBB
 ```
 -4 cycles of various trigger patterns. Each A or B represents a trigger.  
 
-Paramters `56X, 57X, 58X, 59X` 
+Parameters `56X, 57X, 58X, 59X` set the frequency multiplier for each step 1, 2, 3, 4. Default values for each step is {1, 1, 1, 1} but each step can be set to 0, 1/10, 1/9, ... 1/2, 1, 2, ... 9, 10. For example, if channel 1 note is set to 400Hz and the multiplier is set to 3 then you will hear 1200Hz. This is the 3rd harmonic of the fundamental frequency 400Hz. This is why it's called a harmonic sequencer, we sequence ratios instead of absolute values. Harmonics are integer values, subharmonics are fractional multipliers. Each trigger we step forward to the next ratio. Sequencing the note value is ON by default, but it can be turned off using `18X`. The sequencer can be mapped to AMP ENV cycle time `46X` using the parameter `16X` which sets the mod depth (0 ... 2) of the sequencer value. The sequencer can be mapped to LFO cycle time `36X` using the parameter `17X` which sets the mod depth (0 ... 2) of the sequencer value.  
+
+Flaps `55X` sets how many steps forward we step each trigger {1, 2, 3, 4}.  
+Flaps = 1, one step forward each trigger, forwards.  
+Flaps = 2, two steps forward each trigger, toggle between two steps.  
+Flaps = 3, three steps forward each trigger, backwards.  
+Flaps = 4, four steps forward each trigger, no change.  
+
+Try using ratios to manipulate harmonics across all channels simultaneously.  
+Try sequencing AMP ENV cycle time for open / closed high hat sounds.  
+Try turning on and off trigger sequencers at various rates to step patterns irregularly.  
+Try using various ratio values with Flaps to change all channels' directions simultaneously.  
+Try making noise by cranking tempo up to 2000 BPM and using subharmonic divisions and trigger length divisions.  
+Try sequencing the LFO, make dubstep wubs with LFO frequency mod depth `31X` and PW mod depth `34X`.  
+Try CAW CAW CAW.  
 
 # Future Development
 - port to norns
