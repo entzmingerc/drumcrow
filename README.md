@@ -2,24 +2,33 @@
 This script turns monome crow into a 4-channel drum machine synth driven with monome teletype or druid.  
 
 **Demos**  
-Drumcrow sound compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)
+Drumcrow sound compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)  
 Originally adapted from License's Flash Crash performance [here](https://www.youtube.com/watch?v=SYfeBtJjQ-M)  
 postsolarpunk Flash Crash performance [here](https://www.youtube.com/watch?v=_EKpT1tO02o)  
 playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
 
-# What is this?
-Upload this script to Crow using Druid. Connect Crow to Teletype using i2c connection.  
+# What is this?  
+Turns crow into a 4 oscillator drum machine / synth  
+4 outputs (voices)  
+6 oscillator models  
+3 modulation sources (cycle time, attack/decay shape, curvature, retriggering) per voice  
+1 trigger and harmonic sequencer per voice  
+Frequency, amplitude, pulse width, bitcrush control  
+Able to set relationships between parameter values of multiple voices  
 
-ASL makes an oscillator by pushing voltage up and down. Dyn variables update amplitude, frequency, and other parameters of the ASL oscillator. Teletype sends commands to Crow using i2c to set parameters and trigger envelopes. Teletype + drumcrow = Drum machine!  
+Upload this script to Crow using Druid. Connect Crow to Teletype using i2c connection. Patch a constant voltage with a range 0 - 10V into crow input 1. Use Teletype to do this or something else. In teletype, in the M script type `CV 4 PRM` to set CV 4 to the Parameter knob. Patch CV 4 to crow's input 1. Finally, patch each Crow output to a mixer so you can hear the audio.  
 
-First, patch a constant voltage with a range 0 - 10V into Crow input 1. You can use teletype to do this or something else. In M type `CV 4 PRM` to set CV 4 output to the Parameter knob. Then patch this to Crow's input 1. Next, patch each Crow output to a mixer so you can hear the audio.  
-`CROW.C3 X Y Z` Trigger the envelope on X (channel) Y (note) Z (volume)  
-`CROW.C1 X` Select a parameter. Adjust the voltage at Crow input 1 to adjust the parameter value.  
+`CROW.C1 X` Select a parameter. The voltage at crow input 1 sets the parameter value. (0 - 10V)  
+`CROW.C2 X Y` Set parameter X to value Y
+`CROW.C3 X Y Z` Trigger envelopes on channel X with note Y and amplitude Z  
 
 # Example Kick and Snare Pattern
 Connect CV output 4 on Teletype to Crow input 1.  
 Use the Param knob on Teletype to set Crow input 1 voltage 0-10V. Alternatively, you can use any 0-10V voltage source. 
 ```
+// CROW.C3 X Y Z
+// Trigger Channel 1 (1) Note (V -1) Amplitude (V 10) = 1 V -1 V 10
+// Trigger Channel 2 (2) Note (V 4) Amplitude (V 6) = 2 V 4 V 6
 TELETYPE SCRIPTS:
 M: 
 CV 4 PARAM
@@ -27,7 +36,7 @@ EVERY 2: SCRIPT 1
 EVERY 4: SCRIPT 2
 
 1:
-CROW.C3 1 V -2 V 10
+CROW.C3 1 V -1 V 10
 
 2: 
 CROW.C3 2 V 4 V 6
@@ -64,7 +73,10 @@ CROW.C1 212
 Continue adding more voices, adjusting parameters, modulating sounds, sequencing drum patterns  
 
 # Teletype Commands
-Channel = 0 is used to set a parameter on all channels simultaneously. Channel = 1-4 is used to set a parameter on a selected channel. All parameters do slightly different things depending on what ASL oscillator model is being used. For example, both the note and pulse width control the resulting frequency of the oscillator in the bytebeat inspired synth model.  
+Channel = 0 set parameter on all channels simultaneously  
+Channel = 1-4 set parameter on channel 1, 2, 3, or 4  
+(Channel = 5, 6, 7, 8, 9 wraps the selection to 0, 1, 2, 3, 4 respectively)  
+Frequency, Amplitude, Pulse Width, and PW2 do slightly different things depending on what ASL oscillator model is being used. For example, both the note and pulse width control the resulting frequency of the oscillator in the bytebeat inspired model.  
 
 ## CROW.C1 X  
 Selects a parameter. Voltage at crow input 1 sets the parameter value.  
