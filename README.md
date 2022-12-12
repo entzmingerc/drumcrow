@@ -102,35 +102,42 @@ Selects a parameter. Voltage at crow input 1 sets the parameter value.
 | `23X` | 2 FREQ ENV | 3 Mod Depth PW | 0-4 Channel | ENV mod depth of pulse width <br> 0 <= V <= 10 :: -2 ... 0 ... +2|
 | `24X` | 2 FREQ ENV | 4 Mod Depth PW2 | 0-4 Channel | ENV mod depth of PW2 (misc) <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
 | `25X` | 2 FREQ ENV | 5 Mod Depth BIT | 0-4 Channel | ENV mod depth of bitcrush amount <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
-| `26X` | 2 FREQ ENV | 6 Cycle Time | 0-4 Channel | Select enevelope cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds <br> [billions and billions](https://en.wikipedia.org/wiki/Carl_Sagan#%22Billions_and_billions%22)|
-| `27X` | 2 FREQ ENV | 7 Attack / Decay | 0-4 Channel | Select envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
-| `28X` | 2 FREQ ENV | 8 Curvature | 0-4 Channel | Select envelope curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
-| `29X` | 2 FREQ ENV | 9 Looping | 0-4 Channel | V <= 1 :: Envelope looping OFF (default) <br> V > 1 :: Envelope looping ON | 
-
-
-
-
-| `31X` | 2 LFO | 1 Cycle Time | 0-4 Channel | Select LFO cycle time <br> 0.25 <= V <= 10 :: 0.001 Hz - 1024 Hz :: 724 sec - 0.001 sec <br> 0 <= V <= 0.25 :: 2<sup>32</sup> seconds <br> Fastest update time is 0.002sec or 250Hz, aliasing above this|
-| `32X` | 2 LFO | 2 Attack / Decay | 0-4 Channel | Select LFO attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
-| `CROW.C1 23X` | 2 LFO | 3 Curvature | 0-4 Channel | Select LFO curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
-| `CROW.C1 24X` | 2 LFO | 4 Mod Depth PW | 0-4 Channel | Select LFO modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
-| `CROW.C1 25X` | 2 LFO | 5 Mod Depth NOTE | 0-4 Channel | Select LFO modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
-| `CROW.C1 26X` | 2 LFO | 6 Looping | 0-4 Channel | V <= 1 :: LFO looping OFF <br> V > 1 :: LFO looping ON (default)| 
-
-
-
-| `CROW.C1 31X` | 3 AMP ENV | 1 Cycle Time | 1-4 Channel | Select enevelope cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds |
-| `CROW.C1 32X` | 3 AMP ENV | 2 Attack / Decay | 0-4 Channel | Select envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
-| `CROW.C1 33X` | 3 AMP ENV | 3 Curvature | 0-4 Channel | Select envelope curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
-| `CROW.C1 34X` | 3 AMP ENV | 4 Mod Depth PW | 0-4 Channel | Select envelope modulation depth of PW <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -5 ... 0 ... +5|
-| `CROW.C1 35X` | 3 AMP ENV | 5 Mod Depth NOTE | 0-4 Channel | Select envelope modulation depth of NOTE <br> Scales the envelope by a number <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
-| `CROW.C1 36X` | 3 AMP ENV | 6 Looping | 0-4 Channel | V <= 1 :: Envelope looping OFF (default) <br> V > 1 :: Envelope looping ON | 
-| `CROW.C1 40X` | 4 TRIG SEQ | 0 ON/OFF | 0-4 Channel | Turn ON/OFF Trig Sequencer for channel |
-| `CROW.C1 41X` | 4 TRIG SEQ | 1 Length A | 0-4 Channel | Set length of time to wait between triggers in A <br> 0 <= V <= 10 :: 1/10, ..., 1/2, 1/1, 0, 1, 2, ..., 10 Beats |
-| `CROW.C1 42X` | 4 TRIG SEQ | 2 Repeats A | 0-4 Channel | Set number of times to repeat "Trigger then wait Length A" before moving to B <br> 0 <= V <= 10 :: 10, ..., 2, 1, 0, 1, 2, ..., 10 Repeats |
-| `CROW.C1 43X` | 4 TRIG SEQ | 3 Length B | 0-4 Channel | Set length of time to wait between triggers in B <br> 0 <= V <= 10 :: 1/10, ..., 1/2, 1/1, 0, 1, 2, ..., 10 Beats |
-| `CROW.C1 44X` | 4 TRIG SEQ | 4 Repeats B | 0-4 Channel | Set number of times to repeat "Trigger then wait Length B" before moving to A <br> 0 <= V <= 10 :: 10, ..., 2, 1, 0, 1, 2, ..., 10 Repeats |
-| `CROW.C1 86X` | 8 | 6 | 0-4 Channel | Set a channel to its initial value [86 Term](https://en.wikipedia.org/wiki/86_(term))| 
+| `26X` | 2 FREQ ENV | 6 Cycle Time | 0-4 Channel | Set ENV cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds <br> [billions and billions](https://en.wikipedia.org/wiki/Carl_Sagan#%22Billions_and_billions%22)|
+| `27X` | 2 FREQ ENV | 7 Attack / Decay | 0-4 Channel | Set ENV attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
+| `28X` | 2 FREQ ENV | 8 Curvature | 0-4 Channel | Set ENV curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `29X` | 2 FREQ ENV | 9 Looping | 0-4 Channel | V <= 0 :: ENV looping OFF (default) <br> V > 0 :: ENV looping ON | 
+| `31X` | 3 LFO | 1 Mod Depth NOTE | 0-4 Channel | LFO mod depth of frequency <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `32X` | 3 LFO | 2 Mod Depth AMP | 0-4 Channel | LFO mod depth of amplitude <br> 0 <= V <= 10 :: -3.3 ... 0 ... +3.3|
+| `33X` | 3 LFO | 3 Mod Depth PW | 0-4 Channel | LFO mod depth of pulse width <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `34X` | 3 LFO | 4 Mod Depth PW2 | 0-4 Channel | LFO mod depth of PW2 (misc) <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `35X` | 3 LFO | 5 Mod Depth BIT | 0-4 Channel | LFO mod depth of bitcrush amount <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `36X` | 3 LFO | 6 Cycle Time | 0-4 Channel | Set LFO cycle time <br> 0.25 <= V <= 10 :: 1 Hz - 1024 Hz :: 724 sec - 0.001 sec <br> 0 <= V <= 0.25 :: 2<sup>32</sup> seconds <br> Fastest update time is 0.002sec or 250Hz, aliasing above this|
+| `37X` | 3 LFO | 7 Attack / Decay | 0-4 Channel | Set LFO attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
+| `38X` | 3 LFO | 8 Curvature | 0-4 Channel | Set LFO curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `39X` | 3 LFO | 9 Looping | 0-4 Channel | LFO does not reset phase when voice is triggered <br> V <= 1 :: LFO looping OFF <br> V > 1 :: LFO looping ON (default)| 
+| `41X` | 4 AMP ENV | 1 Mod Depth NOTE | 0-4 Channel | ENV mod depth of frequency <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `42X` | 4 AMP ENV | 2 Mod Depth AMP | 0-4 Channel | ENV mod depth of amplitude <br> 0 <= V <= 10 :: -3.3 ... 0 ... +3.3|
+| `43X` | 4 AMP ENV | 3 Mod Depth PW | 0-4 Channel | ENV mod depth of pulse width <br> 0 <= V <= 10 :: -2 ... 0 ... +2|
+| `44X` | 4 AMP ENV | 4 Mod Depth PW2 | 0-4 Channel | ENV mod depth of PW2 (misc) <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `45X` | 4 AMP ENV | 5 Mod Depth BIT | 0-4 Channel | ENV mod depth of bitcrush amount <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `46X` | 4 AMP ENV | 6 Cycle Time | 0-4 Channel | Set ENV cycle time <br> 0 <= V <= 9.75 :: 0.006 sec - 100 sec <br> 9.75 < V <= 10 :: 2<sup>32</sup> seconds|
+| `47X` | 4 AMP ENV | 7 Attack / Decay | 0-4 Channel | Set envelope attack / decay ratio <br> V = 0.0 :: Attack 0% Decay 100% Quieter <br> V = 2.5 :: Attack 0% Decay 100% <br> V = 5.0 :: Attack 50% Decay 50% <br> V = 7.5 :: Attack 100% Decay 0% <br> V = 10 :: Attack 100% Decay 0% Quieter Infinite Release|
+| `48X` | 4 AMP ENV | 8 Curvature | 0-4 Channel | Set ENV curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
+| `49X` | 4 AMP ENV | 9 Looping | 0-4 Channel | V <= 0 :: ENV looping OFF (default) <br> V > 0 :: ENV looping ON | 
+| `50X` | 5 TRIG SEQ | 0 ON/OFF | 0-4 Channel | Turn ON/OFF Trig Sequencer for channel |
+| `51X` | 5 TRIG SEQ | 1 Length A | 0-4 Channel | Set length of time to wait after a trigger in A <br> 0 <= V <= 10 :: 0, 1/10, ..., 1/2, 1, 2, ..., 10 Beats |
+| `52X` | 5 TRIG SEQ | 2 Repeats A | 0-4 Channel | Set number of times to "trigger then wait length A" before moving to B <br> 0 <= V <= 10 :: 10, ..., 2, 1, 0, 1, 2, ..., 10 Repeats |
+| `53X` | 5 TRIG SEQ | 3 Length B | 0-4 Channel | Set length of time to wait after a trigger in B <br> 0 <= V <= 10 :: 0, 1/10, ..., 1/2, 1/1, 1, 2, ..., 10 Beats |
+| `54X` | 5 TRIG SEQ | 4 Repeats B | 0-4 Channel | Set number of times to "trigger then wait length B" before moving to A <br> 0 <= V <= 10 :: 10, ..., 2, 1, 0, 1, 2, ..., 10 Repeats |
+| `55X` | 5 TRIG SEQ | 5 Flaps | 0-4 Channel | Set number of steps to advance CAW sequence <br> 0 <= V <= 10 :: 1 (default), 2, 3, 4 |
+| `56X` | 5 TRIG SEQ | 5 CAW1 | 0-4 Channel | Select Harmonic for Step 1 <br> 0 <= V <= 10 :: 0, 1/10, ..., 1/2, 1, 2, ..., 10 |
+| `57X` | 5 TRIG SEQ | 5 CAW2 | 0-4 Channel | Select Harmonic for Step 2 <br> 0 <= V <= 10 :: 0, 1/10, ..., 1/2, 1, 2, ..., 10 |
+| `58X` | 5 TRIG SEQ | 5 CAW3 | 0-4 Channel | Select Harmonic for Step 3 <br> 0 <= V <= 10 :: 0, 1/10, ..., 1/2, 1, 2, ..., 10 |
+| `59X` | 5 TRIG SEQ | 5 CAW4 | 0-4 Channel | Select Harmonic for Step 4 <br> 0 <= V <= 10 :: 0, 1/10, ..., 1/2, 1, 2, ..., 10 |
+| `81X` | 8 | 1 | any number | Set global tempo of all sequencers <br> 0 <= V <= 10 :: 10 BPM ... 2010 BPM| 
+| `82X` | 8 | 2 | any number | Set global update speed of all voices <br> 0 <= V <= 10 :: 0.002 sec ... 0.1 sec <br> Defualt 0.005, shorter speeds may cause CPU overload, higher speeds result in stair-step modulation| 
+| `85X` | 8 | 2 | 0-4 Channel | Reset position of trigger sequencer, keeps length and repeat values the same | 
+| `86X` | 8 | 6 | 0-4 Channel | Set a channel to its initial value [86 Term](https://en.wikipedia.org/wiki/86_(term))| 
 
 ### 4 digits  
 | TT Command | DIGIT 4 | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
