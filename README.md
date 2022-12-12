@@ -76,7 +76,7 @@ CROW.C1 212
 ```
 Continue adding more voices, adjusting parameters, modulating sounds, sequencing drum patterns  
 
-![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20parameter%20matrix.png?raw=true)
+![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20parameter%20matrix.PNG?raw=true)
 
 # Teletype Commands
 Channel = 0 set parameter on all channels simultaneously  
