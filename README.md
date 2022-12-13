@@ -22,6 +22,11 @@ Upload this script to crow using druid. Connect crow to teletype using i2c conne
 `CROW.C1 X` Select a parameter. The voltage at crow input 1 sets the parameter value. (0 - 10V)  
 `CROW.C2 X Y` Set parameter X to value Y  
 `CROW.C3 X Y Z` Trigger envelopes on channel X with note Y and amplitude Z  
+Navigate drumcrow parameters using digits (module, param, channel)  
+`CROW.C1 234` reads Freq Envelope (2) Pulse Width (3) Channel 4 (4)  
+`CROW.C1 1234` put a 1 in front and it sets param 23 on Ch4 to be a ratio of Ch1  
+`CROW.C1 2234` reads Set Synth Model (2) Shape (2) Model (3) Channel 4 (4)  
+For an bird's eye view, see drumcrow parameter matrix below. 
 
 # MORE ABSTRACT
 The [panharmonicorvus](https://en.wikipedia.org/wiki/Corvus) is a widely distributed genus of small-sized [panharmonicons](https://en.wikipedia.org/wiki/Panharmonicon) in the family [orchestrion](https://en.wikipedia.org/wiki/Orchestrion). It includes species commonly known as panharmonicrows, crrrazow and sharrow. The species commonly encountered in [Chembayou](https://cci.dev/pr/02) are the [drumcrow](https://github.com/entzmingerc/drumcrow/) named chiefly on the basis of their distinctive percussive sounding calls. The 45 or so members of this genus occur on all temperate continents. The collective name for a group of drumcrows is a "[chorus](https://en.wikipedia.org/wiki/Choir)". Recent research has found some drumcrow species capable of not only [tool use](https://en.wikipedia.org/wiki/Low-frequency_oscillation) but also [tool construction](https://monome.org/docs/crow/reference/). Drumcrows are now considered to be among the world's most sonically efficient animals with a [Kolmogorov complexity](https://en.wikipedia.org/wiki/Kolmogorov_complexity) equal to that of [bytebeat cyberbees](https://llllllll.co/t/bytebeats-a-beginner-s-guide/16491).
@@ -152,6 +157,8 @@ CROW.C3 X Y Z = (channel) (note) (amplitude)
 Set note. Set amplitude. Trigger envelopes. Sequence notes using TT patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, sequence velocity, set to 0 to mute. Set all Amplitude modulation to zero as well if volume is still heard.  
 
 ## Models
+`CROW.C1 2XYZ` Sets synth model (2) Shape (X) Model (Y) Channel (Z). There are 9 shapes and currently 6 synth models. You can set all channels by using Ch = 0. Explore different combinations of shapes and synth models. Each model behaves differently depending on how the parameters are set. Some work better at higher Note values, so if it doesn't sound quite right, try a higher note. Either turn up the note (11) yourself or set the note using a quick CROW.C3 command.  
+
 1. var_saw(amp, cyc, pw, shape) (Default)  
 Up to a voltage, down to a negative voltage. Triangle shape with pulse width control. Time to travel between each voltage determined by cyc. Use shape to select 1 triangle, 2 sine, 5 square, or select any shape 1-9 to hear different tones.  
 ```
