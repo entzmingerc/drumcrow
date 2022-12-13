@@ -205,16 +205,15 @@ Shapes can be used to change the tone of the ASL oscillator.
 
 ## Ratios
 `CROW.C1 1XYZ` Set ratio (1) sets a parameter (XY) on channel (Z) equal to a scaled value of Ch1 parameter. Select a multiplier using crow input 1 voltage. Multipliers are quantized to integer scalings and fractions (see below). `CROW.C1 1462` turn up input voltage to V 6 ish, now Ch2's amplitude envelope cycle time (46) is set to Ch1's amplitude envelope cycle time x 2. When Ch1's value is changed, Ch2's value will be updated as well. All parameters in blue in the drumcrow parameter matrix (see figure further above) can have ratios enabled between Ch1 and Ch2,3,4. If a ratio is on, then that parameter will ignore any attempts to set its value. A ratio is off if the ratio is set to 0. A ratio is on if a ratio value is not zero. You can initialize a channel's ratios with `CROW.C1 186X`. You can set multiple channel's ratios using Ch = 0.  
- 
-For example: `CROW.C1 1362` Set ratio (1) LFO cycle (36) Channel 2 (2)  
+
 ratio 0 <= V <= 10 :: 0, 1/10, 1/9, ..., 1/2, 1, 2, ..., 9, 10  
 0 - disables ratio for the parameter  
 
 ### RATIOS CAW CAW CAW  
-Try setting LFO cycle ratio for all channels, then vary Ch1: `CROW.C1 1360` `CROW.C1 361`  
-Try setting LFO Loop ratio negative for Ch2 and positive for Ch3. Turning off Ch1 will turn on Ch2 and turn on Ch3: `CROW.C1 1392` `CROW.C1 1393`  
-Try setting Ch2's Note ratio: 'CROW.C1 1112`  
-Set Ratio (1) Note (11) on Ch2 (2) to Ch1 as always: 'CROW.C1 1112`  
+Try setting LFO cycle ratio (36) for all channels, then vary Ch1: `CROW.C1 1360` `CROW.C1 361`  
+Try setting LFO Loop ratio (39) negative for Ch2 and positive for Ch3. Turning on Ch1 will turn on Ch2 and turn on Ch3.  
+Try setting Ch2's Note ratio: `CROW.C1 1112`  
+Set Ratio (1) Note (11) on Ch2 (2) to Ch1 as always: `CROW.C1 1112`  
 ....Use CROW.C3 to sequence Ch1 Note using teletype and listen to Ch2 following along: `CROW.C3 1 N PN.NEXT 0 V 5`  
 ........Turn on Ch1 and Ch2 trig sequencers (50X) and hear the rhythms: `CROW.C1 501` `CROW.C1 502`  
 ............Set Ratio (1) LenA parameter (51) on Ch2 (2), then vary LenA (51) on Ch1 (1): `CROW.C1 1512` `CROW.C1 511`  
