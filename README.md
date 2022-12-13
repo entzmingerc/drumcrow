@@ -163,7 +163,7 @@ Output voltage is stepped by PW each loop and wrapped between -20 ... 20. The ti
 -- dyn.pw = pw * pw2
 loop { to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape) }
 ```
-3. LCG(amp, cyc, pw, pw2, shape)  
+3. noise(amp, cyc, pw, pw2, shape)  
 Linear Congruential Generator is a pseudorandom number generator using the equation voltage(n+1) = (pw2 * voltage(n) + pw) mod 10. PW2 can be used to sweep through a large range of noisy sounds. PW2 is sensitive to decimal values as well, explore sweet spots. Note affects the sounds as well, higher pitches for higher frequency noise. Use short amplitude envelope cycle times for high hats and snares.  
 ```
 -- dyn.pw = pw, dyn.pw2 = pw2
