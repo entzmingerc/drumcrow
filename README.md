@@ -17,7 +17,7 @@ Turns crow into a 4 oscillator drum machine / synth
 Frequency, amplitude, pulse width, bitcrush control  
 Able to set relationships between parameter values of multiple voices  
 
-Upload this script to Crow using Druid. Connect Crow to Teletype using i2c connection. Patch a constant voltage with a range 0 - 10V into crow input 1. Use Teletype to do this or something else. In teletype, in the M script type `CV 4 PRM` to set CV 4 to the Parameter knob. Patch CV 4 to crow's input 1. Finally, patch each Crow output to a mixer so you can hear the audio.  
+Upload this script to crow using druid. Connect crow to teletype using i2c connection. Patch a constant voltage with a range 0 - 10V into crow input 1. Use teletype to do this or something else. In teletype, in the M script type `CV 4 PRM` to set CV 4 to the parameter knob. Patch CV 4 to crow's input 1. Finally, patch each crow output to a mixer so you can hear the audio.  
 
 `CROW.C1 X` Select a parameter. The voltage at crow input 1 sets the parameter value. (0 - 10V)  
 `CROW.C2 X Y` Set parameter X to value Y  
@@ -126,7 +126,7 @@ Selects a parameter. Voltage at crow input 1 sets the parameter value. These are
 | --- | --- | --- | --- |
 | `CROW.C2 X Y` | Select Parameter for X <br> CROW.C1 see above | V 0 ... V 10 <br> TT Value | Set a channel parameter to a value directly <br> Can be used to set ratios directly (1XYZ) <br> Values set with CROW.C1 takes higher priority than CROW.C2|
 
-CROW.C1 has higher priority than CROW.C2. If `CROW.C1 151` is currently selected and `CROW.C2 151 V 4` is sent, then the value of 151 is set to Crow input 1 (CROW.C1) and ignores CROW.C2. Many parameters can be set to zero by using V 5. (The 0V to 10V input is scaled to a -10 to +10 value internally). Most ratio values can be set to zero by setting input voltage to 0V (or V -10 from TT). Use the teletype OP `VV` to set a parameter to a decimal value. Some parameters are sensitive to decimal changes.  
+Many parameters can be set to zero by using V 5. (The 0V to 10V input is scaled to a -10 to +10 value internally). Most ratio values can be set to zero by setting input voltage to 0V (or V -10 from TT). Use the teletype OP `VV` to set a parameter to a decimal value. Some parameters are sensitive to decimal changes. If CROW.C1 is selecting the same parameter CROW.C2 is trying to set, CROW.C1 takes higher priority than CROW.C2. (Technically speaking, CROW.C2 will set the parameter, but it will then be immediately overwritten by the C1 value in the next update loop, CAW).  
 
 ### C2 CAW CAW CAW
 Try doing everything with C2 instead of C1 and the PARAM knob  
@@ -204,9 +204,21 @@ Shapes can be used to change the tone of the ASL oscillator.
 9 = rebound  
 
 ## Ratios
-`CROW.C1 1XYZ` The action (1) sets the parameter (XY) on channel (Z) equal to a scaled value of the same parameter on channel 1. Select a multiplier using Crow input 1 voltage. Multipliers are quantized to integer scalings. `CROW.C1 1462` turn up input voltage to V 6 ish, now Channel 2's amplitude envelope cycle time (46) is set to Channel 1's amplitude envelope cycle time x 2. When Channel 1's value is changed, Channel 2's value will be updated as well. Try linking channel 2, 3, and 4's LFO speed, ENV cycle time, ENV pitch modulation to channel 1. Experiment!  
-0 <= V <= 10 :: 0, 1/10, 1/9, ..., 1/2, 1, 2, ..., 9, 10  
+`CROW.C1 1XYZ` Set ratio (1) sets a parameter (XY) on channel (Z) equal to a scaled value of Ch1 parameter. Select a multiplier using crow input 1 voltage. Multipliers are quantized to integer scalings and fractions (see below). `CROW.C1 1462` turn up input voltage to V 6 ish, now Ch2's amplitude envelope cycle time (46) is set to Ch1's amplitude envelope cycle time x 2. When Ch1's value is changed, Ch2's value will be updated as well. All parameters in blue in the drumcrow parameter matrix (see figure further above) can have ratios enabled between Ch1 and Ch2,3,4. If a ratio is on, then that parameter will ignore any attempts to set its value. A ratio is off if the ratio is set to 0. A ratio is on if a ratio value is not zero. You can initialize a channel's ratios with `CROW.C1 186X`. You can set multiple channel's ratios using Ch = 0.  
+ 
+For example: `CROW.C1 1362` Set ratio (1) LFO cycle (36) Channel 2 (2)  
+ratio 0 <= V <= 10 :: 0, 1/10, 1/9, ..., 1/2, 1, 2, ..., 9, 10  
 0 - disables ratio for the parameter  
+
+### RATIOS CAW CAW CAW  
+Try setting LFO cycle ratio for all channels, then vary Ch1: `CROW.C1 1360` `CROW.C1 361`  
+Try setting LFO Loop ratio negative for Ch2 and positive for Ch3. Turning off Ch1 will turn on Ch2 and turn on Ch3: `CROW.C1 1392` `CROW.C1 1393`  
+Try setting Ch2's Note ratio: 'CROW.C1 1112`  
+Set Ratio (1) Note (11) on Ch2 (2) to Ch1 as always: 'CROW.C1 1112`  
+....Use CROW.C3 to sequence Ch1 Note using teletype and listen to Ch2 following along: `CROW.C3 1 N PN.NEXT 0 V 5`  
+........Turn on Ch1 and Ch2 trig sequencers (50X) and hear the rhythms: `CROW.C1 501` `CROW.C1 502`  
+............Set Ratio (1) LenA parameter (51) on Ch2 (2), then vary LenA (51) on Ch1 (1): `CROW.C1 1512` `CROW.C1 511`  
+................Set Ratio (1) Flaps (55) on Ch2 (2), then vary Flaps (55) on Ch1 (1): `CROW.C1 1552` `CROW.C1 551`  
 
 ## Trigger Sequencer
 drumcrow can be triggered externally if the trigger sequencer is on or off. `CROW.C1 50X` turns on / turns off the trigger sequencer for a channel. `CROW.C1 81X` can be used to set the main tempo on crow for all channels 10 BPM to 2010 BPM (X is any number, 81X). When a trigger sequencer is turned on, it will trigger the channel immediately with the current setting of note (11X) and amplitude (12X). `CROW.C3 X Y Z` can quickly set the note and amplitude if desired.  
