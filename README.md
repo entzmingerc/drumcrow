@@ -27,67 +27,44 @@ Upload this script to Crow using Druid. Connect Crow to Teletype using i2c conne
 The [panharmonicorvus](https://en.wikipedia.org/wiki/Corvus) is a widely distributed genus of small-sized [panharmonicons](https://en.wikipedia.org/wiki/Panharmonicon) in the family [orchestrion](https://en.wikipedia.org/wiki/Orchestrion). It includes species commonly known as panharmonicrows, crrrazow and sharrow. The species commonly encountered in [Chembayou](https://cci.dev/pr/02) are the [drumcrow](https://github.com/entzmingerc/drumcrow/) named chiefly on the basis of their distinctive percussive sounding calls. The 45 or so members of this genus occur on all temperate continents. The collective name for a group of drumcrows is a "[chorus](https://en.wikipedia.org/wiki/Choir)". Recent research has found some drumcrow species capable of not only [tool use](https://en.wikipedia.org/wiki/Low-frequency_oscillation) but also [tool construction](https://monome.org/docs/crow/reference/). Drumcrows are now considered to be among the world's most sonically efficient animals with a [Kolmogorov complexity](https://en.wikipedia.org/wiki/Kolmogorov_complexity) equal to that of [bytebeat cyberbees](https://llllllll.co/t/bytebeats-a-beginner-s-guide/16491).
 
 # Example Kick and Snare Pattern
-Connect CV output 4 on Teletype to Crow input 1.  
-Use the Param knob on Teletype to set Crow input 1 voltage 0-10V. Alternatively, you can use any 0-10V voltage source.  
 ```
-// CROW.C3 X Y Z
-// Trigger Channel 1 (1) Note (V -1) Amplitude (V 10) = 1 V -1 V 10
-// Trigger Channel 2 (2) Note (V 4) Amplitude (V 6) = 2 V 4 V 6
-TELETYPE SCRIPTS:
+// Connect CV 4 to crow input 1, use PARAM knob to set values on crow (0 - 10V input)
 M: 
 CV 4 PARAM
 EVERY 2: SCRIPT 1
 EVERY 4: SCRIPT 2
 
 1:
-CROW.C3 1 V -1 V 10
+CROW.C3 1 V -1 V 10	// Trig Ch1 (1) Note (V -1) Amplitude (V 10)
 
 2: 
-CROW.C3 2 V 4 V 6
-```
-```
-LIVE INPUT: 
-// Set M to your favorite tempo
-M 172
+CROW.C3 2 V 4 V 6	// Trig Ch2 (2) Note (V 4) Amplitude (V 6) = 2 V 4 V 6
 
-// Make Channel 1 a sine wave kick drum
-// Set Model (2) Shape sine (2) Model var_saw (1) Channel 1 (1) = 2211
-CROW.C1 2211
+LIVE INPUT:	// Let's make Ch1 a kick and Ch2 a snare, adjust PARAM knob to set values
+M 172		// your new favorite tempo
+CROW.C1 2211	// Set Model (2) Shape sine (2) Model var_saw (1) Channel 1 (1)
+CROW.C1 261	// Freq ENV (2) Decay time (6) Channel 1 (1)
+CROW.C1 211	// Freq ENV (2) Pitch mod depth (1) Channel 1 (1)
 
-// Adjust Kick drum 
-// Pitch ENV (2) Decay time (6) Channel 1 (1) = 261, turn it down to a shorter time
-// Pitch ENV (2) Pitch mod depth (1) Channel 1 (1) = 211, turn it up to go high freq to low
-// Use PARAM knob to set the value each time
-CROW.C1 261
-CROW.C1 211
-
-// Make Channel 2 a snare drum using noise model
-// Set Model (2) Shape linear (1) Model noise (3) Channel 2 (2) = 2132
-CROW.C1 2132
-
-// Adjust Snare drum parameters 
-// Oscillator (1) PW2 (4) Channel 2 (2) = 142, BRING THE NOISE
-// Pitch ENV (2) Decay time (6) Channel 2 (2) = 262, SHORTEN the noise
-// Pitch ENV (2) Pitch mod depth (1) Channel 2 (2) = 212, pitch the noise if you want
-// Use PARAM knob to set the value each time
-CROW.C1 142
-CROW.C1 262
-CROW.C1 212
-```
+CROW.C1 2132	// Set Model (2) Shape linear (1) Model noise (3) Ch2 (2)
+CROW.C1 142	// Oscillator (1) PW2 (4) Channel 2 (2) = 142, BRING THE NOISE
+CROW.C1 262	// Pitch ENV (2) Decay time (6) Channel 2 (2) = 262, SHORTEN the noise
+CROW.C1 212	// Pitch ENV (2) Pitch mod depth (1) Channel 2 (2), pitch the noise?
+...
+```  
 Continue adding more voices, adjusting parameters, modulating sounds, sequencing drum patterns  
 
 ![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20parameter%20matrix.PNG?raw=true)
 
 # Teletype Commands
-Channel = 0 set parameter on all channels simultaneously  
-Channel = 1-4 set parameter on channel 1, 2, 3, or 4  
-(5, 6, 7, 8, 9 wraps the selection to 0, 1, 2, 3, 4 respectively)  
-Frequency, Amplitude, Pulse Width, and PW2 do slightly different things depending on what ASL oscillator model is being used. For example, both the note and pulse width control the resulting frequency of the oscillator in the bytebeat inspired model.  
+Channel = 0 select all channels  
+Channel = 1-4 select a channel  
+(5, 6, 7, 8, 9 wraps to 0, 1, 2, 3, 4 respectively)  
 
-The modulation sources are mostly the same, however they have some small differences. CROW.C3 sets the note (11X) and amplitude (12X) values of the synth, then triggers the envelopes. By default, the AMP ENV (4) is used for amplitude envelope and FREQ ENV (2) is used for frequency envelope. All 3 mod sources can affect the amplitude or frequency of the oscillator if desired. All 3 mod sources can be set to cycle, but only AMP ENV (4) and FREQ ENV (2) will be retriggered if CROW.C3 is called. The LFO (3) is not retriggered when CROW.C3 is called.  
+Note, Amplitude, Pulse Width, and PW2 act differently depending on the oscillator model used. For example, both Note and Pulse Width control the resulting frequency of the bytebeat inspired oscillator. The modulation sources are mostly the same with small difference. The CROW.C3 command sets Note (11X) and Amplitude (12X) of the oscillator, then triggers the envelopes. The AMP ENV (4) is for amplitude control. The FREQ ENV (2) is for frequency modulation. However, all 3 mod sources can affect amplitude or frequency of the oscillator if desired. All 3 mod sources can be set to cycle infinitely, but only AMP ENV (4) and FREQ ENV (2) will be retriggered if CROW.C3 is called. The LFO (3) is not retriggered when CROW.C3 is called.  
 
 ## CROW.C1 X  
-Selects a parameter. Voltage at crow input 1 sets the parameter value.  
+Selects a parameter. Voltage at crow input 1 sets the parameter value. These are the available sliders / knobs / buttons.  
 | TT Command | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
 | --- | --- | --- | --- | --- |
 | `0` | ~ | ~ |  ~ | Deselect a parameter, maps input voltage to nothing <br> Any unused number deselects a parameter |
@@ -151,12 +128,20 @@ Selects a parameter. Voltage at crow input 1 sets the parameter value.
 
 CROW.C1 has higher priority than CROW.C2. If `CROW.C1 151` is currently selected and `CROW.C2 151 V 4` is sent, then the value of 151 is set to Crow input 1 (CROW.C1) and ignores CROW.C2. Many parameters can be set to zero by using V 5. (The 0V to 10V input is scaled to a -10 to +10 value internally). Most ratio values can be set to zero by setting input voltage to 0V (or V -10 from TT). Use the teletype OP `VV` to set a parameter to a decimal value. Some parameters are sensitive to decimal changes.  
 
-Deselect a parameter first before trying to set it using C2: `CROW.C1 0` deselect  
-Set LFO frequency mod depth to zero on channel 1: `CROW.C2 311 V 5`  
-Set amplitude to zero on channel 3: `CROW.C2 123 V 5`  
-Set envelope decay time to a random value from teletype: `CROW.C2 362 RRAND V 0 V 5`  
+### C2 CAW CAW CAW
+Try doing everything with C2 instead of C1 and the PARAM knob  
+Try deselecting a parameter before setting it using C2: `CROW.C1 0`  
+Try setting things to zero! This sets LFO frequency mod depth to zero on channel 1: `CROW.C2 311 V 5`  
+Try setting amplitude to 0 (mute / turn off): `CROW.C2 123 V 5`  
+Try setting envelope decay time to a random value from teletype: `CROW.C2 362 RRAND V 0 V 5`  
 Try setting the update speed to decimal values near minimum: `CROW.C2 821 VV 120`  
-Try exploring PW2 values with the ASLsine and Noise models: `CROW.C2 141 VV 510`  
+Try exploring decimal PW2 values with the ASLsine and Noise models: `CROW.C2 141 VV 510`  
+Try sequencing Ch1 note with teletype patterns: `CROW.C2 111 PN.NEXT 0`  
+....while triggering the channel with another pattern: `CROW.C3 1 N PN.NEXT 1 V 5`  
+........while drumcrow sequencer is ON `CROW.C1 501`  
+............while randomly updating drumcrow sequencer values `CROW.C2 + 560 RAND 3 RRAND V 4 V 7`  
+................while every 5 we set decay envelope to param for fun `EV 5: CROW.C2 461 PARAM`  
+....................(I haven't actually tested this, CAW)  
 
 ## CROW.C3 X Y Z
 | TT Command | X | Y | Z | Description |
@@ -164,9 +149,7 @@ Try exploring PW2 values with the ASLsine and Noise models: `CROW.C2 141 VV 510`
 | `CROW.C3 X Y Z` | 1-4 Channel | V -10 ... V 10 <br> Note <br> TT Value | V -10 ... V 10 <br> Amplitude <br> TT Value | Set note, set amplitude, then retrigger envelopes <br> Only Trigger AMP ENV and FREQ ENV if passed attack stage <br> Note typically V -2 ... V 8 <br> Amplitude usually V 0 ... V 10|
 
 CROW.C3 X Y Z = (channel) (note) (amplitude)  
-Set note. Set amplitude. Trigger envelopes.  
-Sequence notes using TT patterns, random values, and so on. Some synth models change tone depending on note.  
-Mix oscillators using volume parameter, sequence velocity, set to 0 to mute.
+Set note. Set amplitude. Trigger envelopes. Sequence notes using TT patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, sequence velocity, set to 0 to mute. Set all Amplitude modulation to zero as well if volume is still heard.  
 
 ## Models
 1. var_saw(amp, cyc, pw, shape) (Default)  
@@ -225,11 +208,10 @@ Shapes can be used to change the tone of the ASL oscillator.
 0 <= V <= 10 :: 0, 1/10, 1/9, ..., 1/2, 1, 2, ..., 9, 10  
 0 - disables ratio for the parameter  
 
-## Trigger Sequencer CAW
-drumcrow can be triggered externally regardless if the trigger sequencer is on or off. 
-`CROW.C1 50X` turns on / turns off the trigger sequencer for a channel.  
-`CROW.C1 81X` can be used to set the main tempo on crow for all channels (X can be anything, just need it to be 81X) 10 BPM to 2010 BPM  
-When a trigger sequencer is turned on, it will trigger the channel immediately with the last set value of note and volume which are set using `CROW.C3 X Y Z`. Trigger sequencers start in stage A. At each stage, a trigger will occur then the clock will wait a certain amount of time. After the time is up, it will trigger again, then wait that length of time. `51X` sets how long of a time to wait and `52X` sets how many times to repeat this action before moving on to stage B. Stage B is exactly the same as stage A. `53X` sets how long of a time to wait and `54X` sets how many times to repeat this action before moving on to stage A.  
+## Trigger Sequencer
+drumcrow can be triggered externally if the trigger sequencer is on or off. `CROW.C1 50X` turns on / turns off the trigger sequencer for a channel. `CROW.C1 81X` can be used to set the main tempo on crow for all channels 10 BPM to 2010 BPM (X is any number, 81X). When a trigger sequencer is turned on, it will trigger the channel immediately with the current setting of note (11X) and amplitude (12X). `CROW.C3 X Y Z` can quickly set the note and amplitude if desired.  
+
+Trigger sequencers start in stage A. At each stage, a trigger will occur then the clock will wait a certain amount of time. After the time is up, it will trigger again, then wait that length of time. `51X` sets how long of a time to wait and `52X` sets how many times to repeat this action before moving on to stage B. Stage B is exactly the same as stage A. `53X` sets how long of a time to wait and `54X` sets how many times to repeat this action before moving on to stage A.  
 ```
 1 : A___A___A___B_B_A___A___A___B_B_A___A___A___B_B_A___A___A___B_B_  
 2 : A__A__A__B_____A__A__A__B_____A__A__A__B_____A__A__A__B_____A__A  
@@ -251,14 +233,16 @@ LenA 3 RepA 1 LenB 1/2 RepB 5 : A___BBBBBA___BBBBBA___BBBBBA___BBBBB
 ```
 -4 cycles of various trigger patterns. Each A or B represents a trigger.  
 
-Parameters `56X, 57X, 58X, 59X` set the frequency multiplier for each step 1, 2, 3, 4. Default values for each step is {1, 1, 1, 1} but each step can be set to 0, 1/10, 1/9, ... 1/2, 1, 2, ... 9, 10. For example, if channel 1 note is set to 400Hz and the multiplier is set to 3 then you will hear 1200Hz. This is the 3rd harmonic of the fundamental frequency 400Hz. This is why it's called a harmonic sequencer, we sequence ratios instead of absolute values. Harmonics are integer values, subharmonics are fractional multipliers. Each trigger we step forward to the next ratio. Sequencing the note value is ON by default, but it can be turned off using `18X`. The sequencer can be mapped to AMP ENV cycle time `46X` using the parameter `16X` which sets the mod depth (0 ... 2) of the sequencer value. The sequencer can be mapped to LFO cycle time `36X` using the parameter `17X` which sets the mod depth (0 ... 2) of the sequencer value.  
+### Harmonic Sequencer
+Parameters `56X, 57X, 58X, 59X` set the frequency multiplier for each step 1, 2, 3, 4. Default values for each step is {1, 1, 1, 1} but each step can be set to 0, 1/10, 1/9, ... 1/2, 1, 2, ... 9, 10. For example, if channel 1 note is set to 400Hz and the multiplier is set to 3 then you will hear 1200Hz. This is the 3rd harmonic of the fundamental frequency 400Hz. This is why it's called a harmonic sequencer, [we sequence ratios](https://www.youtube.com/watch?v=yA9uguVcd6o) instead of absolute values. Harmonics are integer values, subharmonics are fractional multipliers. Each trigger we step forward to the next ratio. Sequencing the note value is ON by default, but it can be turned off using `18X`. The sequencer can be mapped to AMP ENV cycle time `46X` using the parameter `16X` which sets the mod depth (0 ... 2) of the sequencer value. The sequencer can be mapped to LFO cycle time `36X` using the parameter `17X` which sets the mod depth (0 ... 2) of the sequencer value.  
 
-Flaps `55X` sets how many steps forward we step each trigger {1, 2, 3, 4}.  
-Flaps = 1, one step forward each trigger, forwards.  
-Flaps = 2, two steps forward each trigger, toggle between two steps.  
-Flaps = 3, three steps forward each trigger, backwards.  
-Flaps = 4, four steps forward each trigger, no change.  
+Flaps `55X` sets how many steps forward we step each trigger {1, 2, 3, 4}. Results in 4 directions  
+Flaps = 1, forwards  
+Flaps = 2, toggle between current step and two steps forward  
+Flaps = 3, backwards  
+Flaps = 4, no change  
 
+### TRIG SEQ CAW CAW CAW
 Try using ratios to manipulate harmonics across all channels simultaneously.  
 Try sequencing AMP ENV cycle time for open / closed high hat sounds.  
 Try turning on and off trigger sequencers at various rates to step patterns irregularly.  
