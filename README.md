@@ -3,8 +3,9 @@
 This script turns monome crow into a 4-channel drum machine synth driven with monome teletype or druid.  
 
 **Demos**  
-Drumcrow sound compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)  
-Originally adapted from License's Flash Crash performance [here](https://www.youtube.com/watch?v=SYfeBtJjQ-M)  
+drumcrow sound compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)  
+party time improv [here](https://soundcloud.com/user-123356992/crow-live-jam-19)  
+originally adapted from License's Flash Crash performance [here](https://www.youtube.com/watch?v=SYfeBtJjQ-M)  
 postsolarpunk Flash Crash performance [here](https://www.youtube.com/watch?v=_EKpT1tO02o)  
 playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
 
@@ -198,7 +199,7 @@ loop { to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=
 ```
 
 ## Shapes  
-Select the shape of the synth model listed in Monome Crow [documentation](https://monome.org/docs/crow/reference/#shaping-cv)  
+Select the shape of the synth model listed in monome crow [documentation](https://monome.org/docs/crow/reference/#shaping-cv)  
 [Easing functions](https://easings.net/) define how to walk point to point  
 Shapes can be used to change the tone of the ASL oscillator.  
 1 = linear  
@@ -253,7 +254,7 @@ LenA 3 RepA 1 LenB 1/2 RepB 5 : A___BBBBBA___BBBBBA___BBBBBA___BBBBB
 -4 cycles of various trigger patterns. Each A or B represents a trigger.  
 
 ### Harmonic Sequencer
-Parameters `56X, 57X, 58X, 59X` set the frequency multiplier for each step 1, 2, 3, 4. Default values for each step is {1, 1, 1, 1} but each step can be set to 0, 1/10, 1/9, ... 1/2, 1, 2, ... 9, 10. For example, if channel 1 note is set to 400Hz and the multiplier is set to 3 then you will hear 1200Hz. This is the 3rd harmonic of the fundamental frequency 400Hz. This is why it's called a harmonic sequencer, [we sequence ratios](https://www.youtube.com/watch?v=yA9uguVcd6o) instead of absolute values. Harmonics are integer values, subharmonics are fractional multipliers. Each trigger we step forward to the next ratio. Sequencing the note value is ON by default, but it can be turned off using `18X`. The sequencer can be mapped to AMP ENV cycle time `46X` using the parameter `16X` which sets the mod depth (0 ... 2) of the sequencer value. The sequencer can be mapped to LFO cycle time `36X` using the parameter `17X` which sets the mod depth (0 ... 2) of the sequencer value.  
+Parameters `56X, 57X, 58X, 59X` set the frequency multiplier for each step 1, 2, 3, 4. Default values for each step is {1, 1, 1, 1} but each step can be set to 0, 1/10, 1/9, ... 1/2, 1, 2, ... 9, 10. For example, if channel 1 note is set to 400Hz and the multiplier is set to 3 then you will hear 1200Hz. This is the 3rd harmonic of the fundamental frequency 400Hz. Harmonic sequencers [sequence ratios](https://www.youtube.com/watch?v=yA9uguVcd6o) instead of absolute values. Harmonics are integer values, subharmonics are fractional multipliers. Each trigger we step forward to the next ratio depending on the direction of Flaps. Sequencing the note value is ON by default, but it can be turned off using `18X`. The sequencer can be mapped to AMP ENV cycle time `46X` using the parameter `16X` which sets the mod depth (0 ... 2) of the sequencer value. The sequencer can be mapped to LFO cycle time `36X` using the parameter `17X` which sets the mod depth (0 ... 2) of the sequencer value.  
 
 Flaps `55X` sets how many steps forward we step each trigger {1, 2, 3, 4}. Results in 4 directions  
 Flaps = 1, forwards  
@@ -261,14 +262,13 @@ Flaps = 2, toggle between current step and two steps forward
 Flaps = 3, backwards  
 Flaps = 4, no change  
 
-### TRIG SEQ CAW CAW CAW
+### TRIG SEQ CAW
 Try using ratios to manipulate harmonics across all channels simultaneously.  
 Try sequencing AMP ENV cycle time for open / closed high hat sounds.  
 Try turning on and off trigger sequencers at various rates to step patterns irregularly.  
 Try using various ratio values with Flaps to change all channels' directions simultaneously.  
 Try making noise by cranking tempo up to 2000 BPM and using subharmonic divisions and trigger length divisions.  
-Try sequencing the LFO, make dubstep wubs with LFO frequency mod depth `31X` and PW mod depth `34X`.  
-Try CAW CAW CAW.  
+Try sequencing the LFO, make dubstep wubs with LFO frequency mod depth `31X` and PW mod depth `34X`.    
 
 # Future Development
 - port to norns
