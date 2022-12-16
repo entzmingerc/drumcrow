@@ -64,7 +64,7 @@ setup_hof_param(28, 'ecr', make_divide(2))
 setup_hof_param(29, 'etype', make_divide(1))
 setup_hof_param(31, 'lnt', make_divide(1))
 setup_hof_param(32, 'lamp', make_divide(3))
-setup_hof_param(33, 'lpw', make_divide(1))
+setup_hof_param(33, 'lpw', make_divide(5))
 setup_hof_param(34, 'lpw2', make_divide(1))
 setup_hof_param(35, 'lbit', make_divide(1))
 setup_hof_param(36, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328))
@@ -120,25 +120,28 @@ function setup_input()
 end
 function setup_synth(ch, model, shape)
 	function var_saw(shape)
-		return loop { to(  dyn{amp=2}, dyn{cyc=1/440} * dyn{pw=1/2}, shape), to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape) } 
+		return loop{to(dyn{amp=2}, dyn{cyc=1/440} * dyn{pw=1/2}, shape), to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape)} 
 	end	
 	function bytebeat(shape)
-		return loop { to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape) }
+		return loop{to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape)}
 	end
 	function noise(shape)
-		return loop { to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}/2, shape) } 
+		return loop{to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}/2, shape)} 
 	end
 	function FMstep(shape) 
-		return loop { 
+		return loop{
 			to(  dyn{amp=2}, dyn{x=1}:step(dyn{pw2=1}):wrap(1,2) * dyn{cyc=1} * dyn{pw=1}, shape),
 			to(0-dyn{amp=2}, dyn{x=1} * dyn{cyc=1} * (1-dyn{pw=1}), shape)
 		}
 	end
 	function ASLsine(shape)
-		return loop { to((dyn{x=0}:step(dyn{pw=0.314}):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape) }
+		return loop{to((dyn{x=0}:step(dyn{pw=0.314}):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)}
 	end
 	function ASLharmonic(shape)
-		return loop { to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape) }
+		return loop{to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)}
+	end
+	function bytebeat5(shape)
+		return loop{to(dyn{x=0}:step(dyn{pw=0.1}):wrap(0, 10) % dyn{pw2=1} * dyn{amp=2}, dyn{cyc=1}, shape)}
 	end
 	states[ch].mdl = model
 		if model == 1 then output[ch]( var_saw(shapes[shape]) )
@@ -147,6 +150,7 @@ function setup_synth(ch, model, shape)
 	elseif model == 4 then output[ch]( FMstep(shapes[shape]) )
 	elseif model == 5 then output[ch]( ASLsine(shapes[shape]) )
 	elseif model == 6 then output[ch]( ASLharmonic(shapes[shape]) ) 
+	elseif model == 7 then output[ch]( bytebeat5(shapes[shape]) ) 
 	else output[ch]( var_saw(shapes[shape]) ) end
 end
 function setup_i2c()
@@ -356,7 +360,7 @@ function update_synth(i)
 	if bitz > 0 then output[i].scale({}, 2, bitz * 3) else output[i].scale('none') end
 	pw = (math.min(math.max(pw, -1), 1) + 1) / 2
 	if s.mdl == 2 or s.mdl == 5 or s.mdl == 6 then output[i].dyn.pw = pw * pw2
-	elseif s.mdl == 3 then
+	elseif s.mdl == 3 or s.mdl == 7 then
 		output[i].dyn.pw = pw
 		output[i].dyn.pw2 = pw2
 	elseif s.mdl == 4 then
