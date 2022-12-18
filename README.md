@@ -90,7 +90,7 @@ Explore from here, add ch4, adjust parameters, modulate sounds, sequence drum pa
 `CROW.C3 X Y Z` Trigger envelopes on channel X with note Y and amplitude Z  
 Input voltage 0-10V is typically mapped to -10 to +10 value inside drumcrow.  
 
-Navigate and select drumcrow parameters using digits (module, param, channel)  
+Examples: navigate using digits (module, param, channel)  
 `CROW.C1 234` select module 2 param 3 on channel 4, input voltage sets the value  
 `CROW.C1 1234` put a 1 in front to set ratio  
 `CROW.C1 2234` put a 2 in front to set synth model  
