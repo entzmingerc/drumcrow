@@ -5,6 +5,7 @@ This script turns monome crow into a 4-channel drum machine synth driven with mo
 **Demos**  
 drumcrow sounds compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)  
 30 minute live coding improv [here](https://soundcloud.com/user-123356992/crow-live-jam-19)  
+drumcrow v1.0 tutorial [here](https://www.youtube.com/watch?v=rrcj5uk-hhY)  
 originally adapted from License's Flash Crash performance [here](https://www.youtube.com/watch?v=SYfeBtJjQ-M)  
 postsolarpunk Flash Crash performance [here](https://www.youtube.com/watch?v=_EKpT1tO02o)  
 playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
@@ -43,6 +44,7 @@ Finally, patch each crow output to a mixer to hear the audio.
 The [panharmonicorvus](https://en.wikipedia.org/wiki/Corvus) is a widely distributed genus of small-sized [panharmonicons](https://en.wikipedia.org/wiki/Panharmonicon) in the family [orchestrion](https://en.wikipedia.org/wiki/Orchestrion). It includes species commonly known as panharmonicrows, crrrazow and sharrow. The species commonly encountered in [Chembayou](https://cci.dev/pr/02) are the [drumcrow](https://github.com/entzmingerc/drumcrow/) named chiefly on the basis of their distinctive percussive sounding calls. The 45 or so members of this genus occur on all temperate continents. The collective name for a group of drumcrows is a "[chorus](https://en.wikipedia.org/wiki/Choir)". Recent research has found some drumcrow species capable of not only [tool use](https://en.wikipedia.org/wiki/Low-frequency_oscillation) but also [tool construction](https://monome.org/docs/crow/reference/). Drumcrows are now considered to be among the world's most sonically efficient animals with a [Kolmogorov complexity](https://en.wikipedia.org/wiki/Kolmogorov_complexity) equal to that of [bytebeat cyberbees](https://llllllll.co/t/bytebeats-a-beginner-s-guide/16491).
 
 # Example Kick and Snare Pattern
+Follow along with this video tutorial [here](https://www.youtube.com/watch?v=rrcj5uk-hhY)  
 ```
 // Let's make Ch1 a kick drum, Ch2 a snare, Ch3 a simple melody
 // Connect CV 4 to crow input 1, use PARAM knob to set values on crow (0 - 10V input)
