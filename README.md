@@ -13,21 +13,23 @@ playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
 Turns crow into a 4 oscillator drum machine / synth  
 4 outputs (voices)  
 6 oscillator models  
-3 modulation sources (cycle time, attack/decay shape, curvature, retriggering) per voice  
+3 modulation sources (cycle time, attack/decay, curvature, looping) per voice  
 1 trigger and harmonic sequencer per voice  
 Frequency, amplitude, pulse width, bitcrush control  
-Able to set relationships between parameter values of multiple voices  
+Able to set ratios between parameter values of multiple voices  
+
+For a bird's eye view, see drumcrow parameter matrix below.  
 
 ## Requirements
 crow, teletype (technically druid can be used with or without teletype)  
 
-Upload this script to crow using druid.  
+## Installation
+Navigate to the folder with drumcrow.lua in it and open druid.  
+Upload this script to crow using druid: `u drumcrow.lua`.  
 Connect crow to teletype using i2c connection.  
 Patch a constant voltage with a range 0 - 10V into crow input 1.  
 You could use teletype for this, in the M script type `CV 4 PRM` to set CV 4 to the parameter knob. Patch CV 4 to crow's input 1.  
 Finally, patch each crow output to a mixer to hear the audio.  
-
-For a bird's eye view, see drumcrow parameter matrix below.  
 
 # MORE ABSTRACT
 The [panharmonicorvus](https://en.wikipedia.org/wiki/Corvus) is a widely distributed genus of small-sized [panharmonicons](https://en.wikipedia.org/wiki/Panharmonicon) in the family [orchestrion](https://en.wikipedia.org/wiki/Orchestrion). It includes species commonly known as panharmonicrows, crrrazow and sharrow. The species commonly encountered in [Chembayou](https://cci.dev/pr/02) are the [drumcrow](https://github.com/entzmingerc/drumcrow/) named chiefly on the basis of their distinctive percussive sounding calls. The 45 or so members of this genus occur on all temperate continents. The collective name for a group of drumcrows is a "[chorus](https://en.wikipedia.org/wiki/Choir)". Recent research has found some drumcrow species capable of not only [tool use](https://en.wikipedia.org/wiki/Low-frequency_oscillation) but also [tool construction](https://monome.org/docs/crow/reference/). Drumcrows are now considered to be among the world's most sonically efficient animals with a [Kolmogorov complexity](https://en.wikipedia.org/wiki/Kolmogorov_complexity) equal to that of [bytebeat cyberbees](https://llllllll.co/t/bytebeats-a-beginner-s-guide/16491).
@@ -292,4 +294,5 @@ Try making noise by cranking tempo up to 2000 BPM and using subharmonic division
 Try sequencing the LFO, make wubs with LFO frequency mod depth `31X` and PW mod depth `34X`.    
 
 # Future Development
-- port to norns
+- see what people think
+- port to norns (zxcvbn?)
