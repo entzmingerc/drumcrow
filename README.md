@@ -3,7 +3,7 @@
 This script turns monome crow into a 4-channel drum machine synth driven with monome teletype or druid.  
 
 **Demos**  
-drumcrow sound compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)  
+drumcrow sounds compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)  
 30 minute live coding improv [here](https://soundcloud.com/user-123356992/crow-live-jam-19)  
 originally adapted from License's Flash Crash performance [here](https://www.youtube.com/watch?v=SYfeBtJjQ-M)  
 postsolarpunk Flash Crash performance [here](https://www.youtube.com/watch?v=_EKpT1tO02o)  
