@@ -95,7 +95,7 @@ Selects a parameter. Voltage at crow input 1 sets the parameter value. These are
 | `29X` | 2 FREQ ENV | 9 Looping | 0-4 Channel | V <= 0 :: ENV looping OFF (default) <br> V > 0 :: ENV looping ON | 
 | `31X` | 3 LFO | 1 Mod Depth NOTE | 0-4 Channel | LFO mod depth of frequency <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
 | `32X` | 3 LFO | 2 Mod Depth AMP | 0-4 Channel | LFO mod depth of amplitude <br> 0 <= V <= 10 :: -3.3 ... 0 ... +3.3|
-| `33X` | 3 LFO | 3 Mod Depth PW | 0-4 Channel | LFO mod depth of pulse width <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
+| `33X` | 3 LFO | 3 Mod Depth PW | 0-4 Channel | LFO mod depth of pulse width <br> 0 <= V <= 10 :: -2 ... 0 ... +2|
 | `34X` | 3 LFO | 4 Mod Depth PW2 | 0-4 Channel | LFO mod depth of PW2 (misc) <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
 | `35X` | 3 LFO | 5 Mod Depth BIT | 0-4 Channel | LFO mod depth of bitcrush amount <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
 | `36X` | 3 LFO | 6 Cycle Time | 0-4 Channel | Set LFO cycle time <br> 0.25 <= V <= 10 :: 1 Hz - 1024 Hz :: 724 sec - 0.001 sec <br> 0 <= V <= 0.25 :: 2<sup>32</sup> seconds <br> Fastest update time is 0.002sec or 250Hz, aliasing above this|
@@ -159,21 +159,21 @@ CROW.C3 X Y Z = (channel) (note) (amplitude)
 Set note. Set amplitude. Trigger envelopes. Sequence notes using TT patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, sequence velocity, set to 0 to mute. Set all Amplitude modulation to zero as well if volume is still heard.  
 
 ## Models
-`CROW.C1 2XYZ` Sets synth model (2) Shape (X) Model (Y) Channel (Z). There are 9 shapes and currently 6 synth models. You can set all channels by using Ch = 0. Explore different combinations of shapes and synth models. Each model behaves differently depending on how the parameters are set. Some work better at higher Note values, so if it doesn't sound quite right, try a higher note. Either turn up the note (11) yourself or set the note using a quick CROW.C3 command.  
+`CROW.C1 2XYZ` Sets synth model (2) Shape (X) Model (Y) Channel (Z). There are 9 shapes and currently 6 synth models. You can set all channels by using Ch = 0. Explore different combinations of shapes and synth models. Each model behaves differently depending on how the parameters are set. Some work better at higher Note values, so if it doesn't sound quite right, try a higher note. Either turn up the note (11) yourself or set the note using a CROW.C3 command.  
 
 1. var_saw(amp, cyc, pw, shape) (Default)  
-Up to a voltage, down to a negative voltage. Triangle shape with pulse width control. Time to travel between each voltage determined by cyc. Use shape to select 1 triangle, 2 sine, 5 square, or select any shape 1-9 to hear different tones.  
+Go up to a +voltage, down to a -voltage. Triangle model with pulse width control. Frequency determined by cyc (note). Use shape to select 1 triangle, 2 sine, 5 square, or select any shape 1-9 to hear different tones.  
 ```
 loop { to(  dyn{amp=2}, dyn{cyc=1/440} * dyn{pw=1/2}, shape), to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape) } 
 ```
 2. bytebeat(amp, cyc, pw, shape)  
-Output voltage is stepped by PW each loop and wrapped between -20 ... 20. The time to complete each voltage step is determined by cyc. 
+Output voltage is stepped by PW each loop and wrapped between -20 ... 20. Crow hardware limit is -5 to +10V. Cyc determines our "sample rate" and PW determines the "step rate". Both affect the output frequency. 
 ```
 -- dyn.pw = pw * pw2
 loop { to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape) }
 ```
 3. noise(amp, cyc, pw, pw2, shape)  
-Linear Congruential Generator is a pseudorandom number generator using the equation voltage(n+1) = (pw2 * voltage(n) + pw) mod 10. PW2 can be used to sweep through a large range of noisy sounds. PW2 is sensitive to decimal values as well, explore sweet spots. Note affects the sounds as well, higher pitches for higher frequency noise. Use short amplitude envelope cycle times for high hats and snares.  
+Noise is an [LCG](https://en.wikipedia.org/wiki/Linear_congruential_generator) used to create noise using the equation x(n+1) = ((x * pw2)  + pw) % 10. Set PW2 to a value to get some noise. PW2 is sensitive to decimal values as well, explore sweet spots. Higher pitches for higher frequency noise. Use short amplitude envelope cycle times for high hats and snares.  
 ```
 -- dyn.pw = pw, dyn.pw2 = pw2
 loop { to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}/2, shape) } 
@@ -186,16 +186,22 @@ loop {to(  dyn{amp=2}, dyn{x=1}:step(dyn{pw2=1}):wrap(1,2) * dyn{cyc=1} * dyn{pw
 			to(0-dyn{amp=2}, dyn{x=1} * dyn{cyc=1} * (1-dyn{pw=1}), shape) }
 ```
 5. ASLsine(amp, cyc, pw, shape)  
-This is a root-product sine wave approximation y = x + 0.101321(x)^3. The var_saw model can select two voltage points to move between, but ASL can't directly step through a waveshape unless we were to make 100 ASL stages and step through a waveshape manually. Instead, we can loop one ASL stage, step x by PW each loop, wrap it between -pi and +pi, and now each voltage step roughly traces out a sine wave. Sounds cool. Time it takes between each voltage step is determined by cyc.  
+This is a root-product sine wave approximation y = x + 0.101321(x)^3. The var_saw model can select two voltage points to move between, but ASL can't step through a waveform unless we make 100 ASL stages and step through them manually. Instead, we can loop one ASL stage, step x by PW and, wrap it between -pi and +pi, and now it roughly traces out a sine wave. The X variable is stepped each time its referenced. Time it takes to step a voltage is determined by cyc.  
 ```
 -- dyn.pw = pw * pw2
 loop { to((dyn{x=0}:step(dyn{pw=0.314}):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape) }
 ```
 6. ASLharmonic(amp, cyc, pw, shape)  
-Same as ASLsine but we add a mul(-1) to x so that its polarity is negated each loop. This gives a frequency from the time it takes to step through the sine wave approximation and the frequency from the x variable flipping polarity back and forth. Slightly more chaotic with PW2.  
+Same as ASLsine but we add a mul(-1) to x so each time x is called the polarity flips. Slightly more chaotic with PW2.  
 ```
 -- dyn.pw = pw * pw2
 loop { to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape) }
+```
+
+7. bytebeat5(amp, cyc, pw, pw2)
+Another bytebeat model. PW sets the step rate. PW2 sets the modulo range. Cyc is the "sample rate" of the bytebeat shape.  
+```
+loop{to(dyn{x=0}:step(dyn{pw=0.1}):wrap(0, 10) % dyn{pw2=1} * dyn{amp=2}, dyn{cyc=1}, shape)}
 ```
 
 ## Shapes  
