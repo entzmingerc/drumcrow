@@ -21,12 +21,20 @@ Able to set ratios between parameter values of multiple voices
 For a bird's eye view, see drumcrow parameter matrix below.  
 
 ## Requirements
-crow, teletype (technically druid can be used with or without teletype)  
+crow, teletype (...technically druid could be used with or without teletype)  
 
 ## Installation
-Navigate to the folder with drumcrow.lua in it and open druid.  
-Upload this script to crow using druid: `u drumcrow.lua`.  
 Connect crow to teletype using i2c connection.  
+Navigate to the folder with drumcrow.lua in it and open druid.  
+Run or Upload this script to crow using druid: `u drumcrow.lua` wait 10 seconds.  
+```
+> u drumcrow.lua
+uploading drumcrow.lua
+User script updated.
+Running: drumcrow
+setup complete!
+^^ready()
+```
 Patch a constant voltage with a range 0 - 10V into crow input 1.  
 You could use teletype for this, in the M script type `CV 4 PRM` to set CV 4 to the parameter knob. Patch CV 4 to crow's input 1.  
 Finally, patch each crow output to a mixer to hear the audio.  
