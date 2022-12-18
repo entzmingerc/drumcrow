@@ -14,7 +14,7 @@ Turns crow into a 4 oscillator drum machine / synth
 4 outputs (voices)  
 6 oscillator models  
 3 modulation sources (cycle time, attack/decay, curvature, looping) per voice  
-1 trigger and harmonic sequencer per voice  
+1 trigger/harmonic sequencer per voice  
 Frequency, amplitude, pulse width, bitcrush control  
 Able to set ratios between parameter values of multiple voices  
 
