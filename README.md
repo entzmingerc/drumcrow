@@ -18,10 +18,14 @@ Turns crow into a 4 oscillator drum machine / synth
 Frequency, amplitude, pulse width, bitcrush control  
 Able to set relationships between parameter values of multiple voices  
 
+## Requirements
+crow, teletype (technically druid can be used with or without teletype)  
+
 Upload this script to crow using druid.  
 Connect crow to teletype using i2c connection.  
 Patch a constant voltage with a range 0 - 10V into crow input 1.  
-Use teletype to do this or something else. In teletype, in the M script type `CV 4 PRM` to set CV 4 to the parameter knob. Patch CV 4 to crow's input 1. Finally, patch each crow output to a mixer so you can hear the audio.  
+You could use teletype for this, in the M script type `CV 4 PRM` to set CV 4 to the parameter knob. Patch CV 4 to crow's input 1.  
+Finally, patch each crow output to a mixer to hear the audio.  
 
 For a bird's eye view, see drumcrow parameter matrix below.  
 
@@ -73,13 +77,13 @@ Navigate and select drumcrow parameters using digits (module, param, channel)
 `CROW.C1 1234` put a 1 in front to set ratio  
 `CROW.C1 2234` put a 2 in front to set synth model  
 `CROW.C2 261 V 5` sets 26 on ch1 to V 5 (which sets it to zero)  
-`CROW.C3 1 V 0 V 5` triggers ch1, sets note to V 0, sets volume to V 5  
+`CROW.C3 1 V 0 V 5` sets note to V 0, sets volume to V 5, triggers ch1  
 
 Channel = 0 select all channels  
 Channel = 1-4 select a channel  
 (5, 6, 7, 8, 9 wraps to 0, 1, 2, 3, 4 respectively)  
 
-Note, Amplitude, Pulse Width, and PW2 act differently depending on the oscillator model used. For example, both Note and Pulse Width control the resulting frequency of the bytebeat inspired oscillator. The modulation sources are mostly the same with small difference. The CROW.C3 command sets Note (11X) and Amplitude (12X) of the oscillator, then triggers the envelopes. The AMP ENV (4) is for amplitude control. The FREQ ENV (2) is for frequency modulation. However, all 3 mod sources can affect amplitude or frequency of the oscillator if desired. All 3 mod sources can be set to cycle infinitely, but only AMP ENV (4) and FREQ ENV (2) will be retriggered if CROW.C3 is called. The LFO (3) is not retriggered when CROW.C3 is called.  
+Note, Amplitude, Pulse Width, and PW2 act differently depending on the oscillator model used. The modulation sources are mostly the same with small differences. The CROW.C3 command sets Note (11X) and Amplitude (12X) of the oscillator, then triggers the envelopes. The AMP ENV (4) is for amplitude control. The FREQ ENV (2) is for frequency modulation. However, all 3 mod sources can affect amplitude or frequency of the oscillator if desired. All 3 mod sources can be set to cycle infinitely, but only AMP ENV (4) and FREQ ENV (2) will be retriggered if CROW.C3 is called. The LFO (3) is not retriggered when CROW.C3 is called.  
 
 ## CROW.C1 X  
 Selects a parameter. Voltage at crow input 1 sets the parameter value. These are the available sliders / knobs / buttons.  
@@ -146,7 +150,7 @@ Selects a parameter. Voltage at crow input 1 sets the parameter value. These are
 
 Many parameters can be set to zero by using V 5. (The 0V to 10V input is scaled to a -10 to +10 value internally). Most ratio values can be set to zero by setting input voltage to 0V (or V -10 from TT). Use the teletype OP `VV` to set a parameter to a decimal value. Some parameters are sensitive to decimal changes. If CROW.C1 is selecting the same parameter CROW.C2 is trying to set, CROW.C1 takes higher priority than CROW.C2. (Technically speaking, CROW.C2 will set the parameter, but it will then be immediately overwritten by the C1 value in the next update loop, CAW).  
 
-### C2 CAW CAW CAW
+### CAW! C2 IDEAS
 Try doing everything with C2 instead of C1 and the PARAM knob  
 Try deselecting a parameter before setting it using C2: `CROW.C1 0`  
 Try setting things to zero! This sets LFO frequency mod depth to zero on channel 1: `CROW.C2 311 V 5`  
@@ -209,7 +213,7 @@ Same as ASLsine but we add a mul(-1) to x so each time x is called the polarity 
 loop { to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape) }
 ```
 
-7. bytebeat5(amp, cyc, pw, pw2)
+7. bytebeat5(amp, cyc, pw, pw2)  
 Another bytebeat model. PW sets the step rate. PW2 sets the modulo range. Cyc is the "sample rate" of the bytebeat shape.  
 ```
 loop{to(dyn{x=0}:step(dyn{pw=0.1}):wrap(0, 10) % dyn{pw2=1} * dyn{amp=2}, dyn{cyc=1}, shape)}
@@ -235,7 +239,7 @@ Shapes can be used to change the tone of the ASL oscillator.
 ratio 0 <= V <= 10 :: 0, 1/10, 1/9, ..., 1/2, 1, 2, ..., 9, 10  
 0 - disables ratio for the parameter  
 
-### RATIOS CAW CAW CAW  
+### CAW! RATIO IDEAS  
 Try setting LFO cycle ratio (36) for all channels, then vary Ch1: `CROW.C1 1360` `CROW.C1 361`  
 Try setting LFO Loop ratio (39) negative for Ch2 and positive for Ch3. Turning on Ch1 will turn on Ch2 and turn on Ch3.  
 Try setting Ch2's Note ratio: `CROW.C1 1112`  
@@ -273,19 +277,19 @@ LenA 3 RepA 1 LenB 1/2 RepB 5 : A___BBBBBA___BBBBBA___BBBBBA___BBBBB
 ### Harmonic Sequencer
 Parameters `56X, 57X, 58X, 59X` set the frequency multiplier for each step 1, 2, 3, 4. Default values for each step is {1, 1, 1, 1} but each step can be set to 0, 1/10, 1/9, ... 1/2, 1, 2, ... 9, 10. For example, if channel 1 note is set to 400Hz and the multiplier is set to 3 then you will hear 1200Hz. This is the 3rd harmonic of the fundamental frequency 400Hz. Harmonic sequencers [sequence ratios](https://www.youtube.com/watch?v=yA9uguVcd6o) instead of absolute values. Harmonics are integer values, subharmonics are fractional multipliers. Each trigger we step forward to the next ratio depending on the direction of Flaps. Sequencing the note value is ON by default, but it can be turned off using `18X`. The sequencer can be mapped to AMP ENV cycle time `46X` using the parameter `16X` which sets the mod depth (0 ... 2) of the sequencer value. The sequencer can be mapped to LFO cycle time `36X` using the parameter `17X` which sets the mod depth (0 ... 2) of the sequencer value.  
 
-Flaps `55X` sets how many steps forward we step each trigger {1, 2, 3, 4}. Results in 4 directions  
+Flaps `55X` sets how many steps forward we step each trigger {1, 2, 3, 4}. Results in 4 step directions  
 Flaps = 1, forwards  
-Flaps = 2, toggle between current step and two steps forward  
+Flaps = 2, switches between current step and two steps forward  
 Flaps = 3, backwards  
 Flaps = 4, no change  
 
-### TRIG SEQ CAW
+### CAW! TRIG SEQ IDEAS
 Try using ratios to manipulate harmonics across all channels simultaneously.  
-Try sequencing AMP ENV cycle time for open / closed high hat sounds.  
+Try sequencing AMP ENV cycle time `16X` for open / closed high hat sounds.  
 Try turning on and off trigger sequencers at various rates to step patterns irregularly.  
 Try using various ratio values with Flaps to change all channels' directions simultaneously.  
 Try making noise by cranking tempo up to 2000 BPM and using subharmonic divisions and trigger length divisions.  
-Try sequencing the LFO, make dubstep wubs with LFO frequency mod depth `31X` and PW mod depth `34X`.    
+Try sequencing the LFO, make wubs with LFO frequency mod depth `31X` and PW mod depth `34X`.    
 
 # Future Development
 - port to norns
