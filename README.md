@@ -18,16 +18,11 @@ Turns crow into a 4 oscillator drum machine / synth
 Frequency, amplitude, pulse width, bitcrush control  
 Able to set relationships between parameter values of multiple voices  
 
-Upload this script to crow using druid. Connect crow to teletype using i2c connection. Patch a constant voltage with a range 0 - 10V into crow input 1. Use teletype to do this or something else. In teletype, in the M script type `CV 4 PRM` to set CV 4 to the parameter knob. Patch CV 4 to crow's input 1. Finally, patch each crow output to a mixer so you can hear the audio.  
+Upload this script to crow using druid.  
+Connect crow to teletype using i2c connection.  
+Patch a constant voltage with a range 0 - 10V into crow input 1.  
+Use teletype to do this or something else. In teletype, in the M script type `CV 4 PRM` to set CV 4 to the parameter knob. Patch CV 4 to crow's input 1. Finally, patch each crow output to a mixer so you can hear the audio.  
 
-`CROW.C1 X` Select a parameter. The voltage at crow input 1 sets the parameter value. (0 - 10V)  
-`CROW.C2 X Y` Set parameter X to value Y  
-`CROW.C3 X Y Z` Trigger envelopes on channel X with note Y and amplitude Z  
-
-Navigate drumcrow parameters using digits (group, param, channel)  
-`CROW.C1 234` sets group 2 param 3 on channel 4  
-`CROW.C1 1234` put a 1 in front to set ratio  
-`CROW.C1 2234` put a 2 in front to set synth model  
 For a bird's eye view, see drumcrow parameter matrix below.  
 
 # MORE ABSTRACT
@@ -64,6 +59,22 @@ Continue adding more voices, adjusting parameters, modulating sounds, sequencing
 ![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20parameter%20matrix.PNG?raw=true)
 
 # Teletype Commands
+## Quick Summary
+`CROW.C1 X` Select a parameter. The voltage at crow input 1 sets the parameter value. (0 - 10V)  
+`CROW.C2 X Y` Set parameter X to value Y  
+`CROW.C3 X Y Z` Trigger envelopes on channel X with note Y and amplitude Z  
+Input voltage 0-10V is mapped to -10 to +10 value inside drumcrow.  
+Thus, `V 5` is usually 0 for params. Ratios use `V 0` to disable 0.  
+
+Navigate and select drumcrow parameters using digits (module, param, channel)  
+`CROW.C1 234` just an example, this sets module 2 param 3 on channel 4  
+`CROW.C1 50X` turns on/off trig sequencer for channel X  
+`CROW.C1 86X` initializes state matrix for channel X  
+`CROW.C1 1234` put a 1 in front to set ratio  
+`CROW.C1 2234` put a 2 in front to set synth model  
+`CROW.C2 261 V 5` sets 26 on ch1 to V 5 (which sets it to zero)  
+`CROW.C3 1 V 0 V 5` triggers ch1, sets note to V 0, sets volume to V 5  
+
 Channel = 0 select all channels  
 Channel = 1-4 select a channel  
 (5, 6, 7, 8, 9 wraps to 0, 1, 2, 3, 4 respectively)  
