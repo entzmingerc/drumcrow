@@ -44,6 +44,7 @@ The [panharmonicorvus](https://en.wikipedia.org/wiki/Corvus) is a widely distrib
 
 # Example Kick and Snare Pattern
 ```
+// Let's make Ch1 a kick drum, Ch2 a snare, Ch3 a simple melody
 // Connect CV 4 to crow input 1, use PARAM knob to set values on crow (0 - 10V input)
 M: 
 CV 4 PARAM
@@ -51,24 +52,34 @@ EVERY 2: SCRIPT 1
 EVERY 4: SCRIPT 2
 
 1:
-CROW.C3 1 V -1 V 10	// Trig Ch1 (1) Note (V -1) Amplitude (V 10)
+CROW.C3 1 V -1 V 7	// Trig Ch1 (1) Note (V -1) Amplitude (V 7)
 
 2: 
-CROW.C3 2 V 4 V 6	// Trig Ch2 (2) Note (V 4) Amplitude (V 6) = 2 V 4 V 6
+CROW.C3 2 V 4 V 6	// Trig Ch2 (2) Note (V 4) Amplitude (V 6)
 
-LIVE INPUT:	// Let's make Ch1 a kick and Ch2 a snare, adjust PARAM knob to set values
-M 172		// your new favorite tempo
+LIVE INPUT:	// select params on crow, adjust PARAM knob to set values on crow
+M 172		
 CROW.C1 2211	// Set Model (2) Shape sine (2) Model var_saw (1) Channel 1 (1)
-CROW.C1 261	// Freq ENV (2) Decay time (6) Channel 1 (1)
-CROW.C1 211	// Freq ENV (2) Pitch mod depth (1) Channel 1 (1)
+CROW.C1 211	// Freq ENV (2) Pitch mod depth (1) Channel 1 (1), turn knob up
+CROW.C1 261	// Freq ENV (2) Cycle time (6) Channel 1 (1), turn knob down
 
 CROW.C1 2132	// Set Model (2) Shape linear (1) Model noise (3) Ch2 (2)
-CROW.C1 142	// Oscillator (1) PW2 (4) Channel 2 (2) = 142, BRING THE NOISE
-CROW.C1 262	// Pitch ENV (2) Decay time (6) Channel 2 (2) = 262, SHORTEN the noise
-CROW.C1 212	// Pitch ENV (2) Pitch mod depth (1) Channel 2 (2), pitch the noise?
+CROW.C1 142	// Oscillator (1) PW2 (4) Channel 2 (2) turn knob, BRING THE NOISE
+CROW.C1 462	// Amp ENV (4) Cycle time (6) Channel 2 (2) turn knob shorten the noise!
+CROW.C1 212	// Pitch ENV (2) Pitch mod depth (1) Channel 2 (2) turn knob pitch the noise!
+CROW.C1 312	// LFO (3) Pitch mod depth (1) Channel 2 (2) turn knob mod the noise!
+CROW.C1 362	// LFO (3) Cycle time (6) Channel 2 (2) turn knob LFO the noise!
+
+CROW.C1 503	// Trig Seq (5) turn on (0) for Ch 3 (3)
+CROW.C1 463	// Amp ENV (4) Decay time (6) Channel 2 (2) turn knob
+CROW.C1 563	// Trig Seq (5) step 1 (6) for Ch 3 (3) turn knob select harmonic
+CROW.C1 573	// Trig Seq (5) step 2 (7) for Ch 3 (3) turn knob select harmonic
+CROW.C1 583	// Trig Seq (5) step 3 (8) for Ch 3 (3) turn knob select harmonic
+
+CROW.C1 460	// Amp ENV (4) Cycle time (6) All Channels (0) turn knob back and forth
 ...
 ```  
-Continue adding more voices, adjusting parameters, modulating sounds, sequencing drum patterns  
+Explore from here, add ch4, adjust parameters, modulate sounds, sequence drum patterns, explore synth models  
 
 ![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20parameter%20matrix.PNG?raw=true)
 
@@ -77,17 +88,14 @@ Continue adding more voices, adjusting parameters, modulating sounds, sequencing
 `CROW.C1 X` Select a parameter. The voltage at crow input 1 sets the parameter value. (0 - 10V)  
 `CROW.C2 X Y` Set parameter X to value Y  
 `CROW.C3 X Y Z` Trigger envelopes on channel X with note Y and amplitude Z  
-Input voltage 0-10V is mapped to -10 to +10 value inside drumcrow.  
-Thus, `V 5` is usually 0 for params. Ratios use `V 0` to disable 0.  
+Input voltage 0-10V is typically mapped to -10 to +10 value inside drumcrow.  
 
 Navigate and select drumcrow parameters using digits (module, param, channel)  
-`CROW.C1 234` just an example, this sets module 2 param 3 on channel 4  
-`CROW.C1 50X` turns on/off trig sequencer for channel X  
-`CROW.C1 86X` initializes state matrix for channel X  
+`CROW.C1 234` select module 2 param 3 on channel 4, input voltage sets the value  
 `CROW.C1 1234` put a 1 in front to set ratio  
 `CROW.C1 2234` put a 2 in front to set synth model  
-`CROW.C2 261 V 5` sets 26 on ch1 to V 5 (which sets it to zero)  
-`CROW.C3 1 V 0 V 5` sets note to V 0, sets volume to V 5, triggers ch1  
+`CROW.C2 261 V 4` sets 26 on Ch1 to V 4  
+`CROW.C3 1 V 0 V 8` sets note to V 0, sets volume to V 8, triggers Ch1  
 
 Channel = 0 select all channels  
 Channel = 1-4 select a channel  
