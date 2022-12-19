@@ -193,6 +193,9 @@ Try sequencing Ch1 note with teletype patterns: `CROW.C2 111 PN.NEXT 0`
 CROW.C3 X Y Z = (channel) (note) (amplitude)  
 Set note. Set amplitude. Trigger envelopes. Sequence notes using TT patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, sequence velocity, set to 0 to mute. Set all Amplitude modulation to zero as well if volume is still heard.  
 
+### Note "values"  
+CROW.C3 note value V 0 from teletype translates to the musical note C2. CROW.C3 note range using teletype is `V -10 ... V 0 ... V 10` which translates to the numbers -16384 to 0 to +16384 inside teletype. CROW.C3 is compatible with N and VV voltage commands from teletype. Teletype CV only outputs 0 to 10V. Thus, setting note with `CROW.C1 111` maps the actual voltage at crow input (range 0 to 10 volts) to the same range of musical notes as the teletype value V -10 to V 10 range covers. Try sequencing notes using teletype and CROW.C3.  
+
 ## Models
 `CROW.C1 2XYZ` Sets synth model (2) Shape (X) Model (Y) Channel (Z). There are 9 shapes and currently 6 synth models. You can set all channels by using Ch = 0. Explore different combinations of shapes and synth models. Each model behaves differently depending on how the parameters are set. Some work better at higher Note values, so if it doesn't sound quite right, try a higher note. Either turn up the note (11) yourself or set the note using a CROW.C3 command.  
 
