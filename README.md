@@ -217,7 +217,7 @@ Noise is an [LCG](https://en.wikipedia.org/wiki/Linear_congruential_generator) u
 loop { to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}/2, shape) } 
 ```
 4. FMstep(amp, cyc, pw, pw2, shape)  
-This expands the var_saw model to multiply cyc by a dynamic variable x that sweeps between 1 and 2 at a speed set by PW2. Low PW values means a lower frequency is multiplied to the Note freq.  
+This expands the var_saw model to multiply cyc by a dynamic variable x that sweeps between 1 and 2 at a speed set by PW2. Low PW2 values means the frequency modulates slowly, higher PW2 value results in a more FM type sound.  
 ```
 -- dyn.pw = pw, dyn.pw2 = pw2 / 50
 loop {to(  dyn{amp=2}, dyn{x=1}:step(dyn{pw2=1}):wrap(1,2) * dyn{cyc=1} * dyn{pw=1}, shape),
