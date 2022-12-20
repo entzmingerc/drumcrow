@@ -111,6 +111,7 @@ function get_digits(b1)
 end
 function setup_input()
 	input[1].stream = function (v)
+		v = (v <= 0) and 0 or (v >= 10) and 10 or v
 		v = (math.min(math.max(v, -10), 10) - 5) * 2
 		if act == 1 then set_ratio(channel, param_list[parameter], v) end
 		;(c2[parameter] or bad_param)(channel,v)--KEEP SEMICOLON!
@@ -155,13 +156,14 @@ function setup_synth(ch, model, shape)
 end
 function setup_i2c()
 	ii.self.call1 = function (b1)
+		if b1 == nil then print("CAW!") return end
 		digits, action, param, ch = get_digits(b1)
 		process_action(digits, action, param, ch, 1)
 	end
 	ii.self.call2 = function (b1, v)
+		if b1 == nil or v == nil then print("CAW!") return end
 		digits, action, param, ch = get_digits(b1)
-		v = (u16_to_v10(v) - 5) * 2
-		v = math.min(math.max(v, -10), 10)
+		v = u16_to_v10(math.min(math.max(v, -16384), 16384))
 		print(" action "..action.." param "..param.." ch "..ch.." v "..v)
 		process_action(digits, action, param, ch, 2, v)
 	end
@@ -176,8 +178,10 @@ function setup_i2c()
 			set_state(ch, 'amp', u16_to_v10(amp), 3)
 			trigger_note(ch)
 		end
-		if ch == nil or note == nil or amp == nil then return end
+		if ch == nil or note == nil or amp == nil then print("CAW!") return end
 		ch = ch % 5;
+		note = math.min(math.max(note, -16384), 16384)
+		amp = math.min(math.max(amp, -16384), 16384)
 		if ch == 0 then
 			trig_1(1, note, amp)
 			for i = 2,4 do 
@@ -256,7 +260,8 @@ function process_action(digits, action, param, ch, cmd, v)
 			end
 		elseif param_list[param] ~= nil then -- set state 
 			if cmd == 2 then
-				set_state(ch, param_list[param], v, 2)
+				-- set_state(ch, param_list[param], v, 2)
+				;(c2[param] or bad_param)(ch,v)
 			else
 				channel = ch; parameter = param; act = action
 			end
