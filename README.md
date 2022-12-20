@@ -174,15 +174,14 @@ Many parameters can be set to zero by using V 5. (The 0V to 10V input is scaled 
 Try doing everything with C2 instead of C1 and the PARAM knob  
 Try deselecting a parameter before setting it using C2: `CROW.C1 0`  
 Try setting things to zero! This sets LFO frequency mod depth to zero on channel 1: `CROW.C2 311 V 5`  
-Try setting amplitude to 0 (mute / turn off): `CROW.C2 123 V 5`  
-Try setting envelope decay time to a random value from teletype: `CROW.C2 362 RRAND V 0 V 5`  
+Try setting envelope decay time to a random value from teletype: `CROW.C2 462 RRAND V 0 V 5`  
 Try setting the update speed to decimal values near minimum: `CROW.C2 821 VV 120`  
 Try exploring decimal PW2 values with the ASLsine and Noise models: `CROW.C2 141 VV 510`  
 Try sequencing Ch1 note with teletype patterns: `CROW.C2 111 PN.NEXT 0`  
 ....while triggering the channel with another pattern: `CROW.C3 1 N PN.NEXT 1 V 5`  
 ........while drumcrow sequencer is ON `CROW.C1 501`  
-............while randomly updating drumcrow sequencer values `CROW.C2 + 560 RAND 3 RRAND V 4 V 7`  
-................while every 5 we set decay envelope to param for fun `EV 5: CROW.C2 461 PARAM`  
+............while randomly updating drumcrow sequencer values `CROW.C2 + 510 RAND 3 RRAND V 4 V 7`  
+................while every 5 we set decay envelope to PARAM for fun `EV 5: CROW.C2 461 PARAM`  
 ....................(I haven't actually tested this, CAW)  
 
 ## CROW.C3 X Y Z
@@ -191,7 +190,7 @@ Try sequencing Ch1 note with teletype patterns: `CROW.C2 111 PN.NEXT 0`
 | `CROW.C3 X Y Z` | 1-4 Channel | V -10 ... V 10 <br> Note <br> TT Value | V -10 ... V 10 <br> Amplitude <br> TT Value | Set note, set amplitude, then retrigger envelopes <br> Only Trigger AMP ENV and FREQ ENV if passed attack stage <br> Note typically V -2 ... V 8 <br> Amplitude usually V 0 ... V 10|
 
 CROW.C3 X Y Z = (channel) (note) (amplitude)  
-Set note. Set amplitude. Trigger envelopes. Sequence notes using TT patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, sequence velocity, set to 0 to mute. Set all Amplitude modulation to zero as well if volume is still heard.  
+Set note. Set amplitude. Trigger envelopes. Sequence notes using TT patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, set to 0 to mute. Set all Amp modulation `2` type parameters to zero as well if volume is still heard while trying to mute.  
 
 ### Note "values"  
 CROW.C3 note value V 0 from teletype translates to the musical note C2. CROW.C3 note range using teletype is `V -10 ... V 0 ... V 10` which translates to the numbers -16384 to 0 to +16384 inside teletype. CROW.C3 is compatible with N and VV voltage commands from teletype. Teletype CV only outputs 0 to 10V. Thus, setting note with `CROW.C1 111` maps the actual voltage at crow input (range 0 to 10 volts) to the same range of musical notes as the teletype value V -10 to V 10 range covers. Try sequencing notes using teletype and CROW.C3.  
@@ -264,9 +263,8 @@ ratio 0 <= V <= 10 :: 0, 1/10, 1/9, ..., 1/2, 1, 2, ..., 9, 10
 
 ### CAW! RATIO IDEAS  
 Try setting LFO cycle ratio (36) for all channels, then vary Ch1: `CROW.C1 1360` `CROW.C1 361`  
-Try setting LFO Loop ratio (39) negative for Ch2 and positive for Ch3. Turning on Ch1 will turn on Ch2 and turn on Ch3.  
-Try setting Ch2's Note ratio: `CROW.C1 1112`  
-Set Ratio (1) Note (11) on Ch2 (2) to Ch1 as always: `CROW.C1 1112`  
+Try setting LFO Loop ratio (39) negative for Ch2 and positive for Ch3. Turning on Ch1 will turn off Ch2 and turn on Ch3.    
+Set Ratio (1) Note (11) on Ch2 (2) to Ch1: `CROW.C1 1112`  
 ....Use CROW.C3 to sequence Ch1 Note using teletype and listen to Ch2 following along: `CROW.C3 1 N PN.NEXT 0 V 5`  
 ........Turn on Ch1 and Ch2 trig sequencers (50X) and hear the rhythms: `CROW.C1 501` `CROW.C1 502`  
 ............Set Ratio (1) LenA parameter (51) on Ch2 (2), then vary LenA (51) on Ch1 (1): `CROW.C1 1512` `CROW.C1 511`  
