@@ -45,7 +45,7 @@ Finally, patch each crow output to a mixer to hear the audio.
 # MORE ABSTRACT
 The [panharmonicorvus](https://en.wikipedia.org/wiki/Corvus) is a widely distributed genus of small-sized [panharmonicons](https://en.wikipedia.org/wiki/Panharmonicon) in the family [orchestrion](https://en.wikipedia.org/wiki/Orchestrion). It includes species commonly known as panharmonicrows, crrrazow and sharrow. The species commonly encountered in [Chembayou](https://cci.dev/pr/02) are the [drumcrow](https://github.com/entzmingerc/drumcrow/) named chiefly on the basis of their distinctive percussive sounding calls. The 45 or so members of this genus occur on all temperate continents. The collective name for a group of drumcrows is a "[chorus](https://en.wikipedia.org/wiki/Choir)". Recent research has found some drumcrow species capable of not only [tool use](https://en.wikipedia.org/wiki/Low-frequency_oscillation) but also [tool construction](https://monome.org/docs/crow/reference/). Drumcrows are now considered to be among the world's most sonically efficient animals with a [Kolmogorov complexity](https://en.wikipedia.org/wiki/Kolmogorov_complexity) equal to that of [bytebeat cyberbees](https://llllllll.co/t/bytebeats-a-beginner-s-guide/16491).
 
-# Example Kick and Snare Pattern (Teletype)
+# Example Kick and Snare Pattern
 Follow along with this video tutorial [here](https://www.youtube.com/watch?v=rrcj5uk-hhY)  
 ```
 // Let's make Ch1 a kick drum, Ch2 a snare, Ch3 a simple melody
@@ -87,8 +87,8 @@ Explore from here, add ch4, adjust parameters, modulate sounds, sequence drum pa
 
 ![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20parameter%20matrix.PNG?raw=true)
 
-# Teletype Commands
-## Quick Summary
+# Commands
+## Teletype Operation
 `CROW.C1 X` Select a parameter. The voltage at crow input 1 sets the parameter value. (0 - 10V)  
 `CROW.C2 X Y` Set parameter X to value Y (uses TT range V -10 to V 10 to cover the same range as 0 - 10V input)  
 `CROW.C3 X Y Z` Trigger envelopes on channel X with note Y and amplitude Z  
@@ -117,7 +117,7 @@ Use `ii.self.call1(50X)` to turn on/off crow trig sequencers where X is channel 
 
 When using call2 or call3, these commands are tuned to the teletype range of `V -10` to `V 10` which translates to the range: -16384 to 16384. 0V at crow input 1 is -16384, 10V at crow input 1 is 16384, and 5V at crow input 1 is 0. An easy way to work with this is to use multiples of 1000 from -16000 to 16000 for quick value settings. However, if you set note this way, you'll be out of tune from other synths (from 440Hz). Note value V 0 = 0 is tuned to C2. The exact teletype V to Int values are listed below.  
 
-Here's how to read the Example Kick and Snare Pattern from above using druid:  
+Translated Example Kick and Snare Pattern from above using druid:  
 ```
 ii.self.call1(501)		// turns on crow trig sequencer 1, could use call2 also
 ii.self.call3(0, -1000, 10000)	// trigger all channels (0), set all notes to -1000, set all volumes to 10000
