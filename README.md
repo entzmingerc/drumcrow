@@ -1,6 +1,6 @@
 # drumcrow 
 ![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20discord%20emote.png?raw=true)  
-This script turns monome crow into a 4-channel drum machine synth. Driven with monome teletype or druid.  
+This script turns monome crow into a 4-channel drum machine synth. Driven with monome teletype or druid (and hopefully norns soon).  
 
 **Demos**  
 drumcrow sounds compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)  
@@ -201,7 +201,7 @@ Selects a parameter. Voltage at crow input 1 sets the parameter value. These are
 | `82X` | 8 | 2 | any number | Set global update speed of all voices <br> 0 <= V <= 10 :: 0.002 sec ... 0.1 sec <br> Defualt 0.005, shorter speeds may cause CPU overload, slower speeds result in stair-step modulation| 
 | `85X` | 8 | 2 | 0-4 Channel | Reset position of trigger sequencer, keeps length and repeat values the same | 
 | `86X` | 8 | 6 | 0-4 Channel | Set a channel to its initial value [86 Term](https://en.wikipedia.org/wiki/86_(term))| 
-| `1XYZ` | 2 SET MODEL | 1-9 Shape<br>1-7 Model | 0-4 Channel | Set model on a channel with a [shape](https://monome.org/docs/crow/reference/#shaping-cv) <br> Default :: Model = 1 var_saw, Shape = 1 linear|
+| `1XYZ` | 1 SET MODEL | 1-9 Shape<br>1-7 Model | 0-4 Channel | Set model on a channel with a [shape](https://monome.org/docs/crow/reference/#shaping-cv) <br> Default :: Model = 1 var_saw, Shape = 1 linear|
 
 ## CROW.C2 X Y
 | TT Command | Parameter | Value | Description |
@@ -233,7 +233,7 @@ CROW.C3 X Y Z = (channel) (note) (amplitude)
 Set note. Set amplitude. Trigger envelopes. Sequence notes and volumes from teletype using patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, set to 0 to mute. Set all Amp modulation `2` type parameters to zero as well if volume is still heard while trying to mute. Try using channel 0 to quickly set the note and volume of all channels. It uses the same teletype range of V -10 to V 10 as CROW.C2 for note and volume. Trigger chords by using multiple CROW.C3 commands in a single teletype script each selecting different notes and channels. CROW.C3 note value V 0 from teletype translates to the musical note C2. CROW.C3 is compatible with N and VV voltage commands from teletype.  
 
 ## Models
-`CROW.C1 1XYZ` Sets synth model (1) Shape (X) Model (Y) Channel (Z). There are 9 shapes and currently 7 synth models. You can set all channels by using Ch = 0. Explore different combinations of shapes and synth models. Each model behaves differently depending on how the parameters are set. Some work better at higher Note values, so if it doesn't sound quite right, try a higher note. Set the note using a CROW.C3 command or turn up the note (11) yourself. Refer to the ASL Oscillator document in the forum post for further model discussion.  
+`CROW.C1 1XYZ` Sets synth model (1) Shape (X) Model (Y) Channel (Z). There are 9 shapes and currently 7 synth models. You can set all channels by using Ch = 0. Explore different combinations of shapes and synth models. Each model behaves differently depending on how the parameters are set. Some work better at higher Note values, so if it doesn't sound quite right, try a higher note. Set the note using a CROW.C3 command or turn up the note (11) yourself. Refer to the [ASL Oscillator document](https://docs.google.com/document/d/1rif4Xkr2mvPt7-AtZXZ10HZQSWhS0JS5iVN1x0s7KBg/edit?usp=sharing) in the forum post for further model discussion.  
 
 1. var_saw(amp, cyc, pw, shape) (Default)  
 Go up to a +voltage, down to a -voltage. Triangle model with pulse width control. Frequency determined by cyc (note). Use shape to select 1 triangle, 2 sine, 5 square, or select any shape 1-9 to hear different tones.  
