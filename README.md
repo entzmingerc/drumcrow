@@ -1,6 +1,6 @@
 # drumcrow 
 ![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20discord%20emote.png?raw=true)  
-This script turns monome crow into a 4-channel drum machine synth driven with monome teletype or druid.  
+This script turns monome crow into a 4-channel drum machine synth. Driven with monome teletype or druid.  
 
 **Demos**  
 drumcrow sounds compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)  
@@ -22,7 +22,8 @@ Able to set ratios between parameter values of multiple voices
 For a bird's eye view, see drumcrow parameter matrix below.  
 
 ## Requirements
-crow, teletype (...technically druid could be used with or without teletype)  
+crow  
+(teletype recommended, not required)  
 
 ## Installation
 Connect crow to teletype using i2c connection.  
@@ -38,6 +39,7 @@ setup complete!
 ```
 Patch a constant voltage with a range 0 - 10V into crow input 1.  
 You could use teletype for this, in the M script type `CV 4 PRM` to set CV 4 to the parameter knob. Patch CV 4 to crow's input 1.  
+If you do not have teletype and/or way to send 0-10V to crow input 1, then you can use druid to operate drumcrow.  
 Finally, patch each crow output to a mixer to hear the audio.  
 
 # MORE ABSTRACT
@@ -85,10 +87,10 @@ Explore from here, add ch4, adjust parameters, modulate sounds, sequence drum pa
 
 ![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20parameter%20matrix.PNG?raw=true)
 
-# Teletype Commands
-## Quick Summary
+# Commands
+## Teletype Operation
 `CROW.C1 X` Select a parameter. The voltage at crow input 1 sets the parameter value. (0 - 10V)  
-`CROW.C2 X Y` Set parameter X to value Y  
+`CROW.C2 X Y` Set parameter X to value Y (uses TT range V -10 to V 10 to cover the same range as 0 - 10V input)  
 `CROW.C3 X Y Z` Trigger envelopes on channel X with note Y and amplitude Z  
 Input voltage 0-10V is typically mapped to -10 to +10 value inside drumcrow.  
 
@@ -104,6 +106,46 @@ Channel = 1-4 select a channel
 (5, 6, 7, 8, 9 wraps to 0, 1, 2, 3, 4 respectively)  
 
 Note, Amplitude, Pulse Width, and PW2 act differently depending on the oscillator model used. The modulation sources are mostly the same with small differences. The CROW.C3 command sets Note (11X) and Amplitude (12X) of the oscillator, then triggers the envelopes. The AMP ENV (4) is for amplitude control. The FREQ ENV (2) is for frequency modulation. However, all 3 mod sources can affect amplitude or frequency of the oscillator if desired. All 3 mod sources can be set to cycle infinitely, but only AMP ENV (4) and FREQ ENV (2) will be retriggered if CROW.C3 is called. The LFO (3) is not retriggered when CROW.C3 is called.  
+
+## Druid Operation
+Druid can use the same functions teletype uses.  
+`ii.self.call1( param )` is `CROW.C1 param`  
+`ii.self.call2( param, value )` is `CROW.C2 param value`  
+`ii.self.call3( channel, note, volume )` is `CROW.C3 channel note volume`  
+
+Use `ii.self.call1(50X)` to turn on/off crow trig sequencers where X is channel (0-4). If you can, patch a constant voltage 0 to 10V to crow input 1, and use `ii.self.call1` to select parameters and set values with the input voltage. If you can not send an input voltage, then use `ii.self.call2` to select parameters and set their values directly from druid. Params such as 50X, 81X, 86X, that do not require a value can be called with ii.self.call2, it just ignores the sent value.  
+
+When using call2 or call3, these commands are tuned to the teletype range of `V -10` to `V 10` which translates to the range: -16384 to 16384. 0V at crow input 1 is -16384, 10V at crow input 1 is 16384, and 5V at crow input 1 is 0. An easy way to work with this is to use multiples of 1000 from -16000 to 16000 for quick value settings. However, if you set note this way, you'll be out of tune from other synths (from 440Hz). Note value V 0 = 0 is tuned to C2. The exact teletype V to Int values are listed below.  
+
+Translated Example Kick and Snare Pattern from above using druid:  
+```
+ii.self.call1(501)		// turns on crow trig sequencer 1, could use call2 also
+ii.self.call3(0, -1000, 10000)	// trigger all channels (0), set all notes to -1000, set all volumes to 10000
+ii.self.call2(2211, 1)		// Set Model (2) Shape sine (2) Model var_saw (1) Channel 1 (1), ignores second value
+ii.self.call2(211, 2000) 	// Freq ENV (2) Pitch mod depth (1) Channel 1 (1), send value 2000, ~5V
+ii.self.call2(261, -3000)	// Freq ENV (2) Cycle time (6) Channel 1 (1), send value -3000, ~4V
+
+ii.self.call2(2132, 1)		// Set Model (2) Shape linear (1) Model noise (3) Ch2 (2), ignores second value
+ii.self.call2(112, 5000)	// Oscillator (1) Note (1) Channel 2 (2), send value 5000, ~6V
+ii.self.call2(142, 11000)	// Oscillator (1) PW2 (4) Channel 2 (2), send value 11000, ~8V
+ii.self.call2(462, -3000)	// Amp ENV (4) Cycle time (6) Channel 2 (2), send value -3000, ~4V
+ii.self.call2(212, 8000)	// Pitch ENV (2) Pitch mod depth (1) Channel 2 (2), send value 8000, ~7V
+...
+```
+
+teletype V = druid int  
+V10 = 16384  
+V 9 = 14746  
+V 8 = 13107  
+V 7 = 11469  
+V 6 = 9830  
+V 5 = 8192  
+V 4 = 6554  
+V 3 = 4915  
+V 2 = 3277  
+V 1 = 1638  
+V 0 = 0  
+negatives are similarly valued  
 
 ## CROW.C1 X  
 Selects a parameter. Voltage at crow input 1 sets the parameter value. These are the available sliders / knobs / buttons.  
@@ -166,17 +208,17 @@ Selects a parameter. Voltage at crow input 1 sets the parameter value. These are
 ## CROW.C2 X Y
 | TT Command | Parameter | Value | Description |
 | --- | --- | --- | --- |
-| `CROW.C2 X Y` | Select Parameter for X <br> CROW.C1 see above | V 0 ... V 10 <br> TT Value | Set a channel parameter to a value directly <br> Can be used to set ratios directly (1XYZ) <br> Values set with CROW.C1 takes higher priority than CROW.C2|
+| `CROW.C2 X Y` | Select Parameter for X <br> CROW.C1 see above | TT value `V -10` ... `V 10` <br> similar to 0-10 input volts <br> druid -16384 to 16384 | Set a channel parameter to a value directly <br> Can be used to set ratios directly (1XYZ) <br> Values set with CROW.C1 take higher priority than CROW.C2|
 
-Many parameters can be set to zero by using V 5. (The 0V to 10V input is scaled to a -10 to +10 value internally). Most ratio values can be set to zero by setting input voltage to 0V (or V -10 from TT). Use the teletype OP `VV` to set a parameter to a decimal value. Some parameters are sensitive to decimal changes. If CROW.C1 is selecting the same parameter CROW.C2 is trying to set, CROW.C1 takes higher priority than CROW.C2. (Technically speaking, CROW.C2 will set the parameter, but it will then be immediately overwritten by the C1 value in the next update loop, CAW).  
+Many parameters can be set to zero by using V 0. Most ratio values can be set to zero by setting input voltage to 0V (or V -10 from TT). The 0 to 10 input voltage range is the same range as teletype V -10 to V 10 is the same as from druid -16384 to 16384. Any CROW.C1 command can be replaced by CROW.C2. Use the teletype OP `VV` to set a parameter to a decimal value. Some parameters are sensitive to decimal changes. If CROW.C1 is selecting the same parameter CROW.C2 is trying to set, CROW.C1 takes higher priority than CROW.C2. (Technically speaking, CROW.C2 will set the parameter, but it will then be immediately overwritten by the C1 value in the next update loop, CAW).  
 
 ### CAW! C2 IDEAS
 Try doing everything with C2 instead of C1 and the PARAM knob  
 Try deselecting a parameter before setting it using C2: `CROW.C1 0`  
-Try setting things to zero! This sets LFO frequency mod depth to zero on channel 1: `CROW.C2 311 V 5`  
-Try setting envelope decay time to a random value from teletype: `CROW.C2 462 RRAND V 0 V 5`  
-Try setting the update speed to decimal values near minimum: `CROW.C2 821 VV 120`  
-Try exploring decimal PW2 values with the ASLsine and Noise models: `CROW.C2 141 VV 510`  
+Try setting things to zero! This sets LFO frequency mod depth to zero on channel 1: `CROW.C2 311 V 0`  
+Try setting envelope decay time to a random value from teletype: `CROW.C2 462 RRAND V -5 V 5`  
+Try setting the update speed to decimal values near minimum: `CROW.C2 821 VV -820`  
+Try exploring decimal PW2 values with the ASLsine and Noise models: `CROW.C2 141 VV 10`  
 Try sequencing Ch1 note with teletype patterns: `CROW.C2 111 PN.NEXT 0`  
 ....while triggering the channel with another pattern: `CROW.C3 1 N PN.NEXT 1 V 5`  
 ........while drumcrow sequencer is ON `CROW.C1 501`  
@@ -190,10 +232,7 @@ Try sequencing Ch1 note with teletype patterns: `CROW.C2 111 PN.NEXT 0`
 | `CROW.C3 X Y Z` | 1-4 Channel | V -10 ... V 10 <br> Note <br> TT Value | V -10 ... V 10 <br> Amplitude <br> TT Value | Set note, set amplitude, then retrigger envelopes <br> Only Trigger AMP ENV and FREQ ENV if passed attack stage <br> Note typically V -2 ... V 8 <br> Amplitude usually V 0 ... V 10|
 
 CROW.C3 X Y Z = (channel) (note) (amplitude)  
-Set note. Set amplitude. Trigger envelopes. Sequence notes using TT patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, set to 0 to mute. Set all Amp modulation `2` type parameters to zero as well if volume is still heard while trying to mute.  
-
-### Note "values"  
-CROW.C3 note value V 0 from teletype translates to the musical note C2. CROW.C3 note range using teletype is `V -10 ... V 0 ... V 10` which translates to the numbers -16384 to 0 to +16384 inside teletype. CROW.C3 is compatible with N and VV voltage commands from teletype. Teletype CV only outputs 0 to 10V. Thus, setting note with `CROW.C1 111` maps the actual voltage at crow input (range 0 to 10 volts) to the same range of musical notes as the teletype value V -10 to V 10 range covers. Try sequencing notes using teletype and CROW.C3.  
+Set note. Set amplitude. Trigger envelopes. Sequence notes and volumes from teletype using patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, set to 0 to mute. Set all Amp modulation `2` type parameters to zero as well if volume is still heard while trying to mute. Try using channel 0 to quickly set the note and volume of all channels. It uses the same teletype range of V -10 to V 10 as CROW.C2 for note and volume. CROW.C3 note value V 0 from teletype translates to the musical note C2. CROW.C3 is compatible with N and VV voltage commands from teletype.  
 
 ## Models
 `CROW.C1 2XYZ` Sets synth model (2) Shape (X) Model (Y) Channel (Z). There are 9 shapes and currently 6 synth models. You can set all channels by using Ch = 0. Explore different combinations of shapes and synth models. Each model behaves differently depending on how the parameters are set. Some work better at higher Note values, so if it doesn't sound quite right, try a higher note. Either turn up the note (11) yourself or set the note using a CROW.C3 command.  
@@ -305,6 +344,7 @@ Flaps = 3, backwards
 Flaps = 4, no change  
 
 ### CAW! TRIG SEQ IDEAS
+Try setting all channels to the same note and volume using CROW.C3, and then sequence each channel differently.  
 Try using ratios to manipulate harmonics across all channels simultaneously.  
 Try sequencing AMP ENV cycle time `16X` for open / closed high hat sounds.  
 Try turning on and off trigger sequencers at various rates to step patterns irregularly.  
