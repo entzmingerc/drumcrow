@@ -1,6 +1,7 @@
---- drumcrow4
+--- drumcrow
 note_min = -8.03127 -- (-8.03127, 1Hz, 1sec) (-11.3532, 0.1Hz, 10sec) (-14.67513, 0.01Hz, 100sec) (-17.997, 0.001Hz, 1000sec)
 states = {}
+ratios = {}
 caw_mult = {1, 1, 1, 1}
 flaps = {1, 1, 1, 1}
 channel = 1
@@ -20,14 +21,17 @@ function setup_state(ch)
 		nte = 0, amp = 4,  pw = 0,  pw2 = 4,  bit = 0, cawfr3 = 0, cawfr4 = 0, cawnte = 1, splash = 0, mdl = 1,  
 	}
 end
-function v10_to_int(v) 
-	v = v >= 0 and math.floor(v+0.5) or math.ceil(v-0.5)
-	return (v >= 1) and v or (v <= -1) and v or 1 
+function setup_ratio(ch)
+	ratios[ch] = {
+		tlenA = 0, trepA = 0, tlenB = 0, trepB = 0, flaps = 0, caw1 = 0, caw2 = 0, caw3 = 0, caw4 = 0, 
+		ant = 0, aamp = 0, apw = 0, apw2 = 0, abit = 0, afr = 0, asy = 0, acr = 0, atype = 0, aph = 0, 
+		lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 0, lsy = 0, lcr = 0, ltype = 0, lph = 0, 
+		ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 0, esy = 0, ecr = 0, etype = 0, eph = 0, 
+		nte = 0, amp = 0,  pw = 0,  pw2 = 0,  bit = 0, cawfr3 = 0, cawfr4 = 0, cawnte = 0, splash = 0, mdl = 0,
+	}
 end
-function v10_to_ratio(v) 
-	v = v >= 0 and math.floor(v+0.5) or math.ceil(v-0.5)
-	return (v >= 1) and v or (v <= -1) and 1/(-1*v) or 1
-end
+function v10_to_int(v) return (v >= 1) and (v - v % 1) or (v <= -1) and (-1*(v + (-1*v) % 1)) or 1 end
+function v10_to_ratio(v) return (v >= 1) and math.floor(v) or (v >= -9) and 1/(-1*(math.floor(v)-1)) or 0 end
 function make_divide(divisor) return function (x) return x / divisor end end
 function make_rectify_right(thresh, out_coeff, static)
 	return function (v) return (v <= thresh) and (2 ^ (v*out_coeff)) or (v > thresh) and static end
@@ -45,8 +49,8 @@ setup_hof_param(12, 'amp', make_divide(2))
 setup_hof_param(13, 'pw', make_divide(10))
 setup_hof_param(14, 'pw2', make_divide(1)) 
 setup_hof_param(15, 'bit', make_divide(1))
-setup_hof_param(16, 'cawfr3', make_divide(5))
-setup_hof_param(17, 'cawfr4', make_divide(5))
+setup_hof_param(16, 'cawfr4', make_divide(5))
+setup_hof_param(17, 'cawfr3', make_divide(5))
 setup_hof_param(18, 'cawnte', make_divide(1))
 setup_hof_param(19, 'splash', make_divide(2))
 setup_hof_param(21, 'ent', make_divide(1))
@@ -90,12 +94,7 @@ setup_hof_param(57, 'caw2', v10_to_ratio)
 setup_hof_param(58, 'caw3', v10_to_ratio)
 setup_hof_param(59, 'caw4', v10_to_ratio)
 param_list[81] = 'tempo'
-c2[81] = function (ch, v) 
-	v = (v+10.1) * 100 
-	clock.tempo = v
-	channel = 1; parameter = 0; act = 0
-	print("Set tempo: "..v..", deselect")
-end
+c2[81] = function (ch, v) clock.tempo = (v+10.1) * 100 end
 param_list[82] = 'update_time'
 c2[82] = function (ch, v) 
 	v = (v + 10) / 20 * (0.1 - 0.002) + 0.002 
@@ -114,24 +113,21 @@ function setup_input()
 	input[1].stream = function (v)
 		v = (v <= 0) and 0 or (v >= 10) and 10 or v
 		v = (math.min(math.max(v, -10), 10) - 5) * 2
+		if act == 1 then set_ratio(channel, param_list[parameter], v) end
 		;(c2[parameter] or bad_param)(channel,v)--KEEP SEMICOLON!
-		for i = 1, 4 do update_synth(i) end
+		for i = 1, 4 do if i ~= nil then update_synth(i) end end
 	end
 	input[1]{mode = 'stream', time = 0.005}
 end
 function setup_synth(ch, model, shape)
 	function var_saw(shape)
-		return loop{
-			to(dyn{amp=2}, dyn{cyc=1/440} * dyn{pw=1/2}, shape), 
-			to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape)} 
+		return loop{to(dyn{amp=2}, dyn{cyc=1/440} * dyn{pw=1/2}, shape), to(0-dyn{amp=2}, dyn{cyc=1/440} * (1-dyn{pw=1/2}), shape)} 
 	end	
 	function bytebeat(shape)
-		return loop{
-			to(dyn{x=1}:step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}, shape)}
+		return loop{to(dyn{x=1}:step(dyn{pw=1}):wrap(-20,20) * dyn{amp=2}, dyn{cyc=1}, shape)}
 	end
 	function noise(shape)
-		return loop{
-			to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-5,5) * dyn{amp=2}, dyn{cyc=1}/2, shape)} 
+		return loop{to(dyn{x=1}:mul(dyn{pw2=1}):step(dyn{pw=1}):wrap(-10,10) * dyn{amp=2}, dyn{cyc=1}/2, shape)} 
 	end
 	function FMstep(shape) 
 		return loop{
@@ -140,16 +136,13 @@ function setup_synth(ch, model, shape)
 		}
 	end
 	function ASLsine(shape)
-		return loop{
-			to((dyn{x=0}:step(dyn{pw=0.314}):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)}
+		return loop{to((dyn{x=0}:step(dyn{pw=0.314}):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)}
 	end
 	function ASLharmonic(shape)
-		return loop{
-			to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)}
+		return loop{to((dyn{x=0}:step(dyn{pw=1}):mul(-1):wrap(-3.14,3.14) + 0.101321 * dyn{x=0} * dyn{x=0} * dyn{x=0}) * dyn{amp=2}, dyn{cyc=1}, shape)}
 	end
 	function bytebeat5(shape)
-		return loop{
-			to(dyn{x=0}:step(dyn{pw=0.1}):wrap(0, 10) % dyn{pw2=1} * dyn{amp=2}, dyn{cyc=1}, shape)}
+		return loop{to(dyn{x=0}:step(dyn{pw=0.1}):wrap(0, 10) % dyn{pw2=1} * dyn{amp=2}, dyn{cyc=1}, shape)}
 	end
 	states[ch].mdl = model
 		if model == 1 then output[ch]( var_saw(shapes[shape]) )
@@ -175,26 +168,35 @@ function setup_i2c()
 		process_action(digits, action, param, ch, 2, v)
 	end
 	ii.self.call3 = function (ch, note, amp)
-		if ch == nil or note == nil or amp == nil then print("CAW!") return end
-		ch   = ch % 5;
-		note = math.min(math.max(note, -16384), 16384)
-		amp  = math.min(math.max(amp, -16384), 16384)
-		if ch == 0 then
-			for i = 1,4 do 
-				set_state(i, 'nte', u16_to_v10(note), 3)
-				set_state(i, 'amp', u16_to_v10(amp), 3)
-				trigger_note(i)
-			end
-		else 
+		local function trig_234(ch, note, amp)
+			if ratios[ch].nte == 0 then set_state(ch, 'nte', u16_to_v10(note), 3) end
+			if ratios[ch].amp == 0 then set_state(ch, 'amp', u16_to_v10(amp), 3) end
+			trigger_note(ch)
+		end
+		local function trig_1(ch, note, amp)
 			set_state(ch, 'nte', u16_to_v10(note), 3)
 			set_state(ch, 'amp', u16_to_v10(amp), 3)
 			trigger_note(ch)
+		end
+		if ch == nil or note == nil or amp == nil then print("CAW!") return end
+		ch = ch % 5;
+		note = math.min(math.max(note, -16384), 16384)
+		amp = math.min(math.max(amp, -16384), 16384)
+		if ch == 0 then
+			trig_1(1, note, amp)
+			for i = 2,4 do 
+				trig_234(i, note, amp) 
+			end
+		elseif ch ~= 1 then	
+			trig_234(ch, note, amp) 
+		else 
+			trig_1(ch, note, amp)
 		end
 	end
 end
 function process_action(digits, action, param, ch, cmd, v)
 	v = v or 0
-	if action == 1 then -- 1: set new ASL construct (shape, model) keep act the same
+	if action == 2 then -- 2: set new ASL construct (shape, model) keep act the same
 		if ch == 0 then
 			for i = 1, 4 do
 				setup_synth(i, digits[2], digits[3])
@@ -202,7 +204,29 @@ function process_action(digits, action, param, ch, cmd, v)
 		else
 			setup_synth(ch, digits[2], digits[3])
 		end
-		print("Setup Synth, Shape: "..digits[3].." Model: "..digits[2].." Channel: "..ch)
+		print("Setup Synth, Shape: "..digits[3].." Engine: "..digits[2].." Channel: "..ch)
+	elseif action == 1 then -- 1: set ratio 
+		if param == 86 then -- init
+			if ch == 0 then
+				for i = 2, 4 do
+					setup_ratio(i)
+					print("Init ratio: "..i)
+				end	
+			elseif ch ~= 1 then
+				setup_ratio(ch)
+				print("Init ratio: "..ch)
+			end
+		elseif ch ~= 1 then
+			if cmd == 1 then
+				channel = ch; parameter = param; act = action
+			else
+				set_ratio(ch, param_list[param], v)
+			end
+			print("Ratio to Ch1, Param: "..param.." Channel: "..ch)
+		else
+			channel = 1; parameter = 0; act = 0
+			print("Deselect")
+		end
 	elseif action == 0 then -- 0: set state
 		if param == 86 then -- init
 			if ch == 0 then
@@ -236,6 +260,7 @@ function process_action(digits, action, param, ch, cmd, v)
 			end
 		elseif param_list[param] ~= nil then -- set state 
 			if cmd == 2 then
+				-- set_state(ch, param_list[param], v, 2)
 				;(c2[param] or bad_param)(ch,v)
 			else
 				channel = ch; parameter = param; act = action
@@ -251,13 +276,63 @@ function process_action(digits, action, param, ch, cmd, v)
 	end
 end 
 function set_state(ch, key, v, cmd)
+	local function check_ratio_zero(ch, key, value)
+		if ratios[ch][key] == 0 then
+			states[ch][key] = value
+		elseif key ~= 'nte' then
+			states[ch][key] = states[1][key] * ratios[ch][key]
+		else
+			states[ch][key] = states[1][key]
+		end
+	end
 	local cmd = cmd or 0
 	if ch == 0 then
-		for i = 1,4 do states[i][key] = v end
-	else
+		if act == 1 then
+			for i = 2,4 do
+				check_ratio_zero(i, key, 0)
+			end
+		else
+			for i = 1,4 do
+				if i == 1 then
+					states[i][key] = v
+				else
+					check_ratio_zero(i, key, v)
+				end
+			end
+		end
+	elseif ch ~= 1 then
+		if act == 1 then
+			if cmd == 3 then
+				check_ratio_zero(ch, key, v)
+			else
+				check_ratio_zero(ch, key, 0)
+			end
+		else
+			check_ratio_zero(ch, key, v)
+		end
+	elseif ch == 1 then
 		states[ch][key] = v
+		for i = 2,4 do
+			if ratios[i][key] ~= 0 then
+				if key ~= 'nte' then
+					states[i][key] = states[1][key] * ratios[i][key]
+				else
+					states[i][key] = states[1][key]
+				end
+			end
+		end
 	end
 end	
+function set_ratio(ch, key, v)
+	ratio_keys = { nte = true, efr = true, afr = true, lfr = true, tlenA = true, trepA = true, tlenB = true, trepB = true, caw1 = true, caw2 = true, caw3 = true, caw4 = true } 
+	local function check_ratio(chan, key)
+		if ratios[chan][key] ~= nil then 
+			ratios[chan][key] = ratio_keys[key] and v10_to_ratio(v) or math.floor(5*v)/10
+		end
+	end
+	if ch == 0 then for i = 2,4 do check_ratio(i, key) end
+	elseif ch ~= 1 then check_ratio(ch, key) end
+end
 function acc(phase, freq, sec, looping)
 	phase = phase + (freq * sec)
 	phase = looping and (1 + phase) % 2 - 1 or math.max(math.min(1, phase), -1)
@@ -283,22 +358,20 @@ function update_synth(i)
 	local pw2    = s.pw2 + (modenv * s.epw2) + (lfo * s.lpw2) + (ampenv * s.apw2) 
 	local bitz   = s.bit + (modenv * s.ebit) + (lfo * s.lbit) + (ampenv * s.abit)
 	local freq = note > note_min and note < 6.25643 and math.min(math.max(267.9 * (2 ^ note), 1), 20000) or (note >= 6.25643 and 20000 or 1)
+	if i ~= 1 and ratios[i].nte ~= 0 then freq = freq * ratios[i].nte end
 	local cyc = 1/(freq * (s.cawnte > 0 and caw_mult[i] or 1))
 	output[i].dyn.cyc = s.splash > 0 and (math.random()*0.1 < cyc/0.1 and cyc + (cyc * 0.2 * math.random()*s.splash) or cyc + math.random()*0.002*s.splash) or cyc
 	output[i].dyn.amp = math.min(math.max(volume, -10), 10)
 	if bitz > 0 then output[i].scale({}, 2, bitz * 3) else output[i].scale('none') end
 	pw = (math.min(math.max(pw, -1), 1) + 1) / 2
-	if s.mdl == 2 or s.mdl == 5 or s.mdl == 6 then 
-		output[i].dyn.pw = pw * pw2
+	if s.mdl == 2 or s.mdl == 5 or s.mdl == 6 then output[i].dyn.pw = pw * pw2
 	elseif s.mdl == 3 or s.mdl == 7 then
 		output[i].dyn.pw = pw
 		output[i].dyn.pw2 = pw2
 	elseif s.mdl == 4 then
 		output[i].dyn.pw = pw
 		output[i].dyn.pw2 = pw2 / 50
-	else 
-		output[i].dyn.pw = pw 
-	end
+	else output[i].dyn.pw = pw end
 end
 function trigger_note(ch)
 	if states[ch].aph >= states[ch].asy then states[ch].aph = -1 end
@@ -342,7 +415,7 @@ end
 function init()
 	clock.tempo = 300
 	setup_state(1); setup_synth(1, 1, 1);
-	for i = 2, 4 do setup_state(i); setup_synth(i, 1, 1); end	
+	for i = 2, 4 do setup_state(i); setup_ratio(i);	setup_synth(i, 1, 1); end	
 	setup_i2c()
 	setup_input()
 	print("setup complete!")
