@@ -15,10 +15,10 @@ clock_on = {0,0,0,0}
 function setup_state(ch)
 	states[ch] = {
 		tlenA = 1, trepA = 2, tlenB = 2, trepB = 2, flaps = 4, caw1 = 1, caw2 = 1, caw3 = 1, caw4 = 1, 
-		aslew = 0, ant = 0, aamp = 1, apw = 0, apw2 = 0, abit = 0, afr = 4, asy = -1, acr = 3, atype = 0, aph = 1, 
-		lslew = 0, lnt = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 5, lsy = 0,  lcr = 0, ltype = 1, lph = -1, 
-		eslew = 0, ent = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 1, esy = -1, ecr = 4, etype = 0, eph = 1, 
-		slew = 1, nte = 0, amp = 4, pw = 0, pw2 = 4, bit = 0, cawfr3 = 0, cawfr4 = 0, cawnte = 1, splash = 0, mdl = 1, 
+		amfreq = 0, ante = 0, aamp = 1, apw = 0, apw2 = 0, abit = 0, afr = 4, asy = -1, acr = 3, atype = 0, aph = 1, 
+		lmfreq = 0, lnte = 0, lamp = 0, lpw = 0, lpw2 = 0, lbit = 0, lfr = 5, lsy = 0,  lcr = 0, ltype = 1, lph = -1, 
+		emfreq = 0, ente = 0, eamp = 0, epw = 0, epw2 = 0, ebit = 0, efr = 1, esy = -1, ecr = 4, etype = 0, eph = 1, 
+		mfreq = 1, nte = 0, amp = 4, pw = 0, pw2 = 4, bit = 0, cawfr3 = 0, cawfr4 = 0, cawnte = 1, splash = 0, mdl = 1, 
 	}
 end
 function v10_to_int(v) 
@@ -42,9 +42,7 @@ function setup_hof_param (index, param_name, fn)
 	c2[index] = function (ch, v) set_state(ch, param_name, fn(v)) end
 end
 local bad_param = function (ch, v) end 
--- param_list[10] = 'slew'
--- c2[10] = function (ch, v) set_state(ch, 'slew', (v+10)/20 + 0.0001) end
-setup_hof_param(10, 'slew', make_A_to_1(0.001))
+setup_hof_param(10, 'mfreq', make_A_to_1(0.001))
 setup_hof_param(11, 'nte', make_divide(1))
 setup_hof_param(12, 'amp', make_divide(2))
 setup_hof_param(13, 'pw', make_divide(10))
@@ -54,8 +52,8 @@ setup_hof_param(16, 'cawfr3', make_divide(5))
 setup_hof_param(17, 'cawfr4', make_divide(5))
 setup_hof_param(18, 'cawnte', make_divide(1))
 setup_hof_param(19, 'splash', make_divide(3))
-setup_hof_param(20, 'eslew', make_A_to_1(0))
-setup_hof_param(21, 'ent', make_divide(1))
+setup_hof_param(20, 'emfreq', make_A_to_1(0))
+setup_hof_param(21, 'ente', make_divide(1))
 setup_hof_param(22, 'eamp', make_divide(3))
 setup_hof_param(23, 'epw', make_divide(5))
 setup_hof_param(24, 'epw2', make_divide(1))
@@ -64,8 +62,8 @@ setup_hof_param(26, 'efr', make_rectify_right(9.5, -0.7, 0.0000000002328))
 setup_hof_param(27, 'esy', make_divide(1))
 setup_hof_param(28, 'ecr', make_divide(2))
 setup_hof_param(29, 'etype', make_divide(1))
-setup_hof_param(30, 'lslew', make_A_to_1(0))
-setup_hof_param(31, 'lnt', make_divide(1))
+setup_hof_param(30, 'lmfreq', make_A_to_1(0))
+setup_hof_param(31, 'lnte', make_divide(1))
 setup_hof_param(32, 'lamp', make_divide(3))
 setup_hof_param(33, 'lpw', make_divide(5))
 setup_hof_param(34, 'lpw2', make_divide(1))
@@ -74,8 +72,8 @@ setup_hof_param(36, 'lfr', make_rectify_left(-9.5, 1, 0.0000000002328))
 setup_hof_param(37, 'lsy', make_divide(5))
 setup_hof_param(38, 'lcr', make_divide(2))
 setup_hof_param(39, 'ltype', make_divide(1))
-setup_hof_param(40, 'aslew', make_A_to_1(0))
-setup_hof_param(41, 'ant', make_divide(1))
+setup_hof_param(40, 'amfreq', make_A_to_1(0))
+setup_hof_param(41, 'ante', make_divide(1))
 setup_hof_param(42, 'aamp', make_divide(3))
 setup_hof_param(43, 'apw', make_divide(5))
 setup_hof_param(44, 'apw2', make_divide(1))
@@ -289,13 +287,13 @@ function update_synth(i)
 	local lfo = peak(s.lph, s.lsy, s.lcr)
 	s.eph = acc(s.eph, s.efr, sec, s.etype > 0)
 	local modenv = peak(s.eph, s.esy, s.ecr)
-	local note   = s.nte + (modenv * s.ent)  + (lfo * s.lnt)  + (ampenv * s.ant)
+	local note   = s.nte + (modenv * s.ente)  + (lfo * s.lnte)  + (ampenv * s.ante)
 	local volume = (modenv * s.eamp * s.amp) + (lfo * s.lamp * s.amp) + (ampenv * s.aamp * s.amp)
 	local pw     = s.pw  + (modenv * s.epw)  + (lfo * s.lpw)  + (ampenv * s.apw) 
 	local pw2    = s.pw2 + (modenv * s.epw2) + (lfo * s.lpw2) + (ampenv * s.apw2) 
 	local bitz   = s.bit + (modenv * s.ebit) + (lfo * s.lbit) + (ampenv * s.abit)
-	local freq = note > note_min and note < 6.25643 and math.min(math.max(267.9 * (2 ^ note), 1), (s.slew + (modenv*s.eslew)+(lfo*s.lslew)+(ampenv*s.aslew))*max_freq) or (note >= 6.25643 and (s.slew + (modenv*s.eslew)+(lfo*s.lslew)+(ampenv*s.aslew))*max_freq or 1)
-	local cyc = 1/(freq * (s.cawnte > 0 and caw_mult[i] or 1))
+	local freq = note > note_min and note < 6.25643 and math.min(math.max(267.9 * (2 ^ note), 1), max_freq) or (note >= 6.25643 and max_freq or 1)
+	local cyc = 1/math.min(max_freq*(s.mfreq+(modenv*s.emfreq)+(lfo*s.lmfreq)+(ampenv*s.amfreq)), freq*(s.cawnte > 0 and caw_mult[i] or 1))
 	output[i].dyn.cyc = s.splash > 0 and (math.random()*0.1 < cyc/0.1 and cyc + (cyc * 0.2 * math.random()*s.splash) or cyc + math.random()*0.002*s.splash) or cyc
 	output[i].dyn.amp = math.min(math.max(volume, -10), 10)
 	if bitz > 0 then output[i].scale({}, 2, bitz * 3) else output[i].scale('none') end
