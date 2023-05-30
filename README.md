@@ -211,7 +211,7 @@ Selects a parameter. Control voltage at crow input 1 sets the parameter value (0
 ## CROW.C2 X Y
 | TT Command | Parameter | Value | Description |
 | --- | --- | --- | --- |
-| `CROW.C2 X Y` | 3-digit parameter X <br> CROW.C1 see above | TT value `V -10` ... `V 10` <br> =input voltage 0-10V <br> =druid -16384 to 16384 | set a parameter on a channel to a value directly, without input voltage <br> CROW.C1 takes higher priority than CROW.C2|
+| `CROW.C2 X Y` | 3-digit parameter X <br> CROW.C1 see above | TT value `V -10` ... `V 10` <br> =input voltage 0-10V <br> =druid -16384 to 16384 | set parameter value directly <br> CROW.C1 takes higher priority than CROW.C2|
 
 Many parameters can be set to zero by using `V 0`. The 0 to 10V input control voltage range is the same range as teletype `V -10` to `V 10` is the same as from druid -16384 to 16384. Any CROW.C1 command can be replaced by CROW.C2. Use the teletype OP `VV` to set a parameter to a decimal value. Some parameters, like pulse width, are sensitive to decimal changes. If CROW.C1 is selecting the same parameter CROW.C2 is trying to set, CROW.C1 takes higher priority than CROW.C2. (Technically speaking, CROW.C2 will set the parameter, but it will then be immediately overwritten by the C1 value in the next update loop, CAW).  
 
@@ -231,7 +231,7 @@ Try sequencing Ch1 note with teletype patterns: `CROW.C2 111 PN.NEXT 0`
 ## CROW.C3 X Y Z
 | TT Command | X | Y | Z | Description |
 | --- | --- | --- | --- | --- |
-| `CROW.C3 X Y Z` | 0-4 channel | V -10 ... V 10 <br> note <br> TT Value | V -10 ... V 10 <br> amplitude <br> TT Value | channel, note, amplitude, triggers envelopes <br> only triggers amp env and note env if passed attack stage <br> note usually `V -3` ... `V 7` <br> amplitude usually `V 0` ... `V 10`|
+| `CROW.C3 X Y Z` | 0-4 channel | V -10 ... V 10 <br> note <br> TT Value | V -10 ... V 10 <br> amplitude <br> TT Value | channel, note, amplitude, triggers envelopes <br> only triggers if passed attack stage <br> note usually `V -3` ... `V 7` <br> amplitude usually `V 0` ... `V 10`|
 
 CROW.C3 X Y Z = (channel) (note) (amplitude)  
 Select channel. Set note. Set amplitude. Triggers envelopes. Sequence notes and volumes from teletype using patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, set to 0 to mute. Set all amp modulation `2` type parameters to zero as well if volume is still heard while trying to mute. Try using channel 0 to quickly set the note and volume of all channels. It uses the same teletype range of V -10 to V 10 as CROW.C2 for note and volume. Trigger chords by using multiple CROW.C3 commands in a single teletype script each selecting different notes and channels. CROW.C3 note value V 0 from teletype translates to the musical note C2. CROW.C3 is compatible with N and VV voltage commands from teletype.  
@@ -324,12 +324,12 @@ flaps = 3, backwards, next step is 3
 flaps = 4, no change, next step is 1/2  
 
 ### CAW! TRIG SEQ IDEAS
-Try using trig seq simultaneously with external TT sequencing using CROW.C3  
-Try sequencing trig seq parameters directly with CROW.C2  
+Try using trig seq simultaneously with external TT sequencing using CROW.C3.  
+Try sequencing trig seq parameters directly: `CROW.C2 560 RRAND V -5 V 5`  
 Try setting all channels to the same note and volume using CROW.C3, and then sequence each channel differently.  
 Try sequencing amp env cycle time `17X` for open / closed high hat sounds.  
-Try turning on and off trigger sequencers at various rates to step patterns irregularly.  
-Try using flaps to change all channels' directions simultaneously.  
+Try turning on and off trigger sequencers to step patterns irregularly: `IF TOSS: CROW.C2 502`  
+Try using flaps to change all channels' directions simultaneously: `CROW.C1 550`  
 Try making noise by cranking tempo up to 2000 BPM and using subharmonic divisions and trigger length divisions.  
 Try sequencing the lfo cycle rate with `16X`, make wubs with lfo frequency mod depth `31X` and PW mod depth `34X`.    
 
