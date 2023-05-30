@@ -16,7 +16,7 @@ Turns crow into a 4 oscillator drum machine / synth
 7 oscillator models  
 3 modulation sources: note env, lfo, amp env with cycle time, attack/decay, curvature, looping per voice  
 1 trigger/harmonic sequencer per voice  
-frequency, note, amplitude, pulse width, bitcrush, cycle rate, modulatable
+frequency, note, amplitude, pulse width, bitcrush, cycle rate, modulatable  
 teletype, druid, and (soon) norns control
 
 For a bird's eye view, see drumcrow parameter matrix below.  
@@ -39,8 +39,8 @@ setup complete!
 ^^ready()
 ```
 Patch a constant voltage with a range 0 - 10V into crow input 1.  
-You could use teletype for this, in the M script type `CV 4 PRM` to set CV 4 to the parameter knob. Patch CV 4 to crow's input 1.  
-If you do not have teletype and/or way to send 0-10V to crow input 1, then you can use druid to operate drumcrow.  
+You could use teletype for this, in the M script type `CV 4 PARAM` to set CV 4 to the parameter knob. Patch CV 4 to crow's input 1.  
+If you do not have teletype and/or way to send 0 - 10V to crow input 1, then you can use druid to operate drumcrow.  
 Finally, patch each crow output to a mixer to hear the audio.  
 
 # MORE ABSTRACT
@@ -90,16 +90,15 @@ Explore from here, add ch4, adjust parameters, modulate sounds, sequence drum pa
 
 # Commands
 ## Teletype Operation
-`CROW.C1 X` Select a parameter. The voltage at crow input 1 sets the parameter value. (0 - 10V)  
-`CROW.C2 X Y` Set parameter X to value Y (uses TT range V -10 to V 10 to cover the same range as 0 - 10V input)  
-`CROW.C3 X Y Z` Trigger envelopes on channel X with note Y and amplitude Z  
-Input voltage 0-10V is typically mapped to -10 to +10 value inside drumcrow.  
+`CROW.C1 X` Select a parameter. The voltage at crow input 1 sets the parameter value (0 - 10V)  
+`CROW.C2 X Y` Set parameter X to value Y (uses TT range `V -10` to `V 10` to cover the same range as 0 - 10V input)  
+`CROW.C3 X Y Z` Triggers envelopes on channel X with note Y and amplitude Z  
 
 Examples: navigate using digits (module, param, channel)  
 `CROW.C1 234` select module 2 param 3 on channel 4, input voltage sets the value  
-`CROW.C1 1234` put a 1 in front to set synth model  
-`CROW.C2 261 V 4` sets 26 on Ch1 to V 4  
-`CROW.C3 1 V 0 V 5` sets note to V 0, sets volume to V 5, triggers Ch1  
+`CROW.C1 1234` put a 1 in front to set synth (shape, model, channel)  
+`CROW.C2 261 V 4` sets 26 on channel 1 to V 4  
+`CROW.C3 1 V 0 V 5` select channel 1, set note to `V 0`, set volume to `V 5`, trigger envelopes  
 
 channel = 0 select all channels  
 channel = 1-4 select a channel  
@@ -134,28 +133,27 @@ ii.self.call2(212, 8000)	// pitch env (2) note mod depth (1) channel 2 (2), set 
 ```
 
 teletype V = druid integer  
-V 10 = 16384  
-V  9 = 14746  
-V  8 = 13107  
-V  7 = 11469  
-V  6 = 9830  
-V  5 = 8192  
-V  4 = 6554  
-V  3 = 4915  
-V  2 = 3277  
-V  1 = 1638  
-V  0 = 0  
-V -1 = -1638, etc...  
+`V 10` = 16384  
+`V  9` = 14746  
+`V  8` = 13107  
+`V  7` = 11469  
+`V  6` = 9830  
+`V  5` = 8192  
+`V  4` = 6554  
+`V  3` = 4915  
+`V  2` = 3277  
+`V  1` = 1638  
+`V  0` = 0  
+`V -1` = -1638, etc...  
 
 ## CROW.C1 X  
-Selects a parameter. Control voltage (V) at crow input 1 sets the parameter value (0 - 10V). These are the available sliders / knobs / buttons.  
-Teletype to crow input 1 conversion: `V -10` = 0, `V 0` = 5, `V 10` = 10.  
+Selects a parameter. Control voltage at crow input 1 sets the parameter value (0 - 10V). These are the available sliders / knobs / buttons.  
 | TT Command | DIGIT 3 | DIGIT 2 | DIGIT 1 | Description |
 | --- | --- | --- | --- | --- |
 | `0` | ~ | ~ |  ~ | deselect a parameter, maps input voltage to nothing <br> unused numbers deselect a parameter <br> setting trig seq tempo `81X` sets tempo then deselects |
 | `10X` | 1 osc | 0 freq | 0-4 channel | maximum allowed frequency of a channel <br> default to 1x of global max (7000 Hz) <br> 0 <= V <= 10 :: 0.001x ... 1x|
 | `11X` | 1 osc | 1 note | 0-4 channel | oscillator note of a channel <br> minimum set to 1Hz but can be set lower for LFOs <br> 0 <= V <= 10 :: 1Hz ... 20kHz|
-| `12X` | 1 osc | 2 amplitude | 0-4 channel | oscillator amplitude of a channel <br> can be overdriven using modulation sources <br> 0 < V < 5 :: -5V ... 0V <br> V = 5 :: 0V <br> 5 < V <= 10 :: 0V ... 5V |
+| `12X` | 1 osc | 2 amplitude | 0-4 channel | oscillator amplitude of a channel <br> can be overdriven using modulation sources <br> 0 < V <= 5 :: -5V ... 0V <br> 5 <= V <= 10 :: 0V ... 5V |
 | `13X` | 1 osc | 3 pulse width | 0-4 channel | pulse width of a channel <br> changes depending on the model <br> 0 <= V <= 10 :: -1 ... 1|
 | `14X` | 1 osc | 4 pw2 | 0-4 channel | optional extra parameter <br> changes depending on the model <br> 0 <= V <= 10 :: -10 ... 10 |
 | `15X` | 1 osc | 5 bitcrush amount | 0-4 channel | quantizer v/oct for a channel, bitcrush distortion <br> 0 <= V <= 5 :: OFF <br> 5 < V <= 10 :: temperament at 2 and V/Oct from 1 to 20 |
@@ -179,7 +177,7 @@ Teletype to crow input 1 conversion: `V -10` = 0, `V 0` = 5, `V 10` = 10.
 | `33X` | 3 lfo | 3 mod depth pw | 0-4 channel | lfo mod depth of pulse width <br> 0 <= V <= 10 :: -2 ... 0 ... +2|
 | `34X` | 3 lfo | 4 mod depth pw2 | 0-4 channel | lfo mod depth of pw2 (misc) <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
 | `35X` | 3 lfo | 5 mod depth bit | 0-4 channel | lfo mod depth of bitcrush amount <br> 0 <= V <= 10 :: -10 ... 0 ... +10|
-| `36X` | 3 lfo | 6 cycle time | 0-4 channel | lfo cycle time <br> 0.25 <= V <= 10 :: 1 Hz - 1024 Hz :: 724 sec - 0.001 sec <br> 0 <= V <= 0.25 :: 2<sup>32</sup> seconds <br> fastest update time is 0.002sec or 250Hz, aliasing above this|
+| `36X` | 3 lfo | 6 cycle time | 0-4 channel | lfo cycle time <br> 0.25 <= V <= 10 :: 1 Hz - 1024 Hz :: 724 sec - 0.001 sec <br> 0 <= V <= 0.25 :: 2<sup>32</sup> seconds|
 | `37X` | 3 lfo | 7 attack / decay | 0-4 channel | lfo attack / decay ratio <br> V = 0.0 :: attack 0% decay 100% quieter <br> V = 2.5 :: attack 0% decay 100% <br> V = 5.0 :: attack 50% decay 50% <br> V = 7.5 :: attack 100% decay 0% <br> V = 10 :: attack 100% decay 0% quieter infinite release|
 | `38X` | 3 lfo | 8 curvature | 0-4 channel | lfo curvature <br> 0 <= V <= 10 :: 2<sup>-5</sup> ... 0 ... 2<sup>5</sup> <br> square ... linear ... logarithmic|
 | `39X` | 3 lfo | 9 looping | 0-4 channel | lfo does not reset phase when voice is triggered <br> 0 <= V <= 5 :: lfo looping OFF <br> 5 < V <= 10 :: lfo looping ON (default)| 
@@ -204,16 +202,16 @@ Teletype to crow input 1 conversion: `V -10` = 0, `V 0` = 5, `V 10` = 10.
 | `58X` | 5 trig seq | 5 CAW3 | 0-4 channel | harmonic for step 3 <br> 0 <= V <= 10 :: 1/10, ..., 1/2, 1/1, 0, 1, 2, ..., 10 |
 | `59X` | 5 trig seq | 5 CAW4 | 0-4 channel | harmonic for step 4 <br> 0 <= V <= 10 :: 1/10, ..., 1/2, 1/1, 0, 1, 2, ..., 10 |
 | `81X` | 8 | 1 | any number | set global tempo of all sequencers then deselects <br> 0 <= V <= 10 :: 10 BPM ... 2010 BPM| 
-| `82X` | 8 | 2 | any number | global update period of all voices <br> 0 <= V <= 10 :: 0.006 sec ... 0.1 sec <br> defualt 0.006, shorter periods may cause CPU overload, longer periods result in stair-step modulation| 
-| `83X` | 8 | 2 | any number | global maximum frequency of all voices <br> 0 <= V <= 10 :: 0.01 Hz ... 20000 Hz <br> defualt 7000 Hz, WARNING: higher frequencies may cause CPU overload, lower frequencies are fine| 
-| `85X` | 8 | 2 | 0-4 channel | reset position of trigger sequencer, keeps length and repeat values the same | 
+| `82X` | 8 | 2 | any number | global update time of all voices <br> 0 <= V <= 10 :: 0.006 sec ... 0.1 sec <br> defualt 0.006 <br> shorter times may overload CPU <br> longer times result in stair-step modulation| 
+| `83X` | 8 | 2 | any number | global maximum frequency of all voices <br> 0 <= V <= 10 :: 0.01 Hz ... 20000 Hz <br> defualt 7000 Hz <br> higher frequencies than default may overload CPU| 
+| `85X` | 8 | 2 | 0-4 channel | reset position of trigger sequencer <br> keeps length and repeat values the same | 
 | `86X` | 8 | 6 | 0-4 channel | set a channel to its initial value [86 Term](https://en.wikipedia.org/wiki/86_(term))| 
 | `1XYZ` | 1 set synth | 1-9 shape<br>1-7 model | 0-4 channel | Set [shape](https://monome.org/docs/crow/reference/#shaping-cv) and model <br> default :: shape = 1 linear, model = 1 var_saw|
 
 ## CROW.C2 X Y
 | TT Command | Parameter | Value | Description |
 | --- | --- | --- | --- |
-| `CROW.C2 X Y` | select parameter for X <br> CROW.C1 see above | TT value `V -10` ... `V 10` <br> similar to 0-10 input voltage <br> druid -16384 to 16384 | set a parameter on a channel to a value directly <br> CROW.C1 takes higher priority than CROW.C2|
+| `CROW.C2 X Y` | 3-digit parameter X <br> CROW.C1 see above | TT value `V -10` ... `V 10` <br> =input voltage 0-10V <br> =druid -16384 to 16384 | set a parameter on a channel to a value directly, without input voltage <br> CROW.C1 takes higher priority than CROW.C2|
 
 Many parameters can be set to zero by using `V 0`. The 0 to 10V input control voltage range is the same range as teletype `V -10` to `V 10` is the same as from druid -16384 to 16384. Any CROW.C1 command can be replaced by CROW.C2. Use the teletype OP `VV` to set a parameter to a decimal value. Some parameters, like pulse width, are sensitive to decimal changes. If CROW.C1 is selecting the same parameter CROW.C2 is trying to set, CROW.C1 takes higher priority than CROW.C2. (Technically speaking, CROW.C2 will set the parameter, but it will then be immediately overwritten by the C1 value in the next update loop, CAW).  
 
@@ -233,10 +231,10 @@ Try sequencing Ch1 note with teletype patterns: `CROW.C2 111 PN.NEXT 0`
 ## CROW.C3 X Y Z
 | TT Command | X | Y | Z | Description |
 | --- | --- | --- | --- | --- |
-| `CROW.C3 X Y Z` | 0-4 channel | `V -10` ... `V 10` <br> note <br> TT Value | `V -10` ... `V 10` <br> amplitude <br> TT Value | Select channel, set note, set amplitude, retrigger envelopes <br> only triggers amp env and note env if passed attack stage <br> note usually `V -3` ... `V 7` <br> amplitude usually `V 0` ... `V 10`|
+| `CROW.C3 X Y Z` | 0-4 channel | V -10 ... V 10 <br> note <br> TT Value | V -10 ... V 10 <br> amplitude <br> TT Value | channel, note, amplitude, triggers envelopes <br> only triggers amp env and note env if passed attack stage <br> note usually `V -3` ... `V 7` <br> amplitude usually `V 0` ... `V 10`|
 
 CROW.C3 X Y Z = (channel) (note) (amplitude)  
-Select channel. Set note. Set amplitude. Trigger envelopes. Sequence notes and volumes from teletype using patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, set to 0 to mute. Set all amp modulation `2` type parameters to zero as well if volume is still heard while trying to mute. Try using channel 0 to quickly set the note and volume of all channels. It uses the same teletype range of V -10 to V 10 as CROW.C2 for note and volume. Trigger chords by using multiple CROW.C3 commands in a single teletype script each selecting different notes and channels. CROW.C3 note value V 0 from teletype translates to the musical note C2. CROW.C3 is compatible with N and VV voltage commands from teletype.  
+Select channel. Set note. Set amplitude. Triggers envelopes. Sequence notes and volumes from teletype using patterns, random values, and so on. Some synth models change tone depending on note. Mix oscillators using volume parameter, set to 0 to mute. Set all amp modulation `2` type parameters to zero as well if volume is still heard while trying to mute. Try using channel 0 to quickly set the note and volume of all channels. It uses the same teletype range of V -10 to V 10 as CROW.C2 for note and volume. Trigger chords by using multiple CROW.C3 commands in a single teletype script each selecting different notes and channels. CROW.C3 note value V 0 from teletype translates to the musical note C2. CROW.C3 is compatible with N and VV voltage commands from teletype.  
 
 ## Models
 `CROW.C1 1XYZ` Sets synth (1) shape (X) model (Y) channel (Z). There are 9 shapes and currently 7 synth models. You can set all channels by using channel = 0. Explore different combinations of shapes and synth models. Each model behaves differently depending on how the parameters are set. Some work better at higher note values, so if it doesn't sound quite right, try a higher note. Set the note using a CROW.C3 command or turn up the note (11) yourself. The freq parameter (10X) sets the maximum allowable ASL frequency for a channel X. The bit parameter (15X) applies quantization to the amplitude of the ASL output voltage. Refer to the [ASL Oscillator document](https://docs.google.com/document/d/1rif4Xkr2mvPt7-AtZXZ10HZQSWhS0JS5iVN1x0s7KBg/edit?usp=sharing) in the forum post for further model design discussion.  
@@ -285,8 +283,8 @@ loop{to(dyn{x=0}:step(dyn{pw=0.1}):wrap(0, 10) % dyn{pw2=1} * dyn{amp=2}, dyn{cy
 ```
 
 ## Shapes  
-Select the shape of the synth model listed in monome crow [documentation](https://monome.org/docs/crow/reference/#shaping-cv)  
-[Easing functions](https://easings.net/) define how to walk point to point  
+Select the shape of the synth model listed in monome crow [documentation](https://monome.org/docs/crow/reference/#shaping-cv).  
+[Easing functions](https://easings.net/) define how to walk point to point.  
 Shapes can be used to change the tone of the ASL oscillator.  
 1 = linear, 2 = sine, 3 = logarithmic, 4 = exponential, 5 = now, 6 = wait, 7 = over, 8 = under, 9 = rebound  
 
