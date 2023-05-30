@@ -202,7 +202,7 @@ Selects a parameter. Control voltage at crow input 1 sets the parameter value (0
 | `58X` | 5 trig seq | 5 CAW3 | 0-4 channel | harmonic for step 3 <br> 0 <= V <= 10 :: 1/10, ..., 1/2, 1/1, 0, 1, 2, ..., 10 |
 | `59X` | 5 trig seq | 5 CAW4 | 0-4 channel | harmonic for step 4 <br> 0 <= V <= 10 :: 1/10, ..., 1/2, 1/1, 0, 1, 2, ..., 10 |
 | `81X` | 8 | 1 | any number | set global tempo of all sequencers then deselects <br> 0 <= V <= 10 :: 10 BPM ... 2010 BPM| 
-| `82X` | 8 | 2 | any number | global update time of all voices <br> 0 <= V <= 10 :: 0.006 sec ... 0.1 sec <br> defualt 0.006 <br> shorter times may overload CPU <br> longer times result in stair-step modulation| 
+| `82X` | 8 | 2 | any number | global update time of all voices <br> 0 <= V <= 10 :: 0.006 sec ... 0.1 sec <br> defualt 0.006 sec <br> shorter times may overload CPU <br> longer times result in stair-step modulation| 
 | `83X` | 8 | 2 | any number | global maximum frequency of all voices <br> 0 <= V <= 10 :: 0.01 Hz ... 20000 Hz <br> defualt 7000 Hz <br> higher frequencies than default may overload CPU| 
 | `85X` | 8 | 2 | 0-4 channel | reset position of trigger sequencer <br> keeps length and repeat values the same | 
 | `86X` | 8 | 6 | 0-4 channel | set a channel to its initial value [86 Term](https://en.wikipedia.org/wiki/86_(term))| 
@@ -211,7 +211,7 @@ Selects a parameter. Control voltage at crow input 1 sets the parameter value (0
 ## CROW.C2 X Y
 | TT Command | Parameter | Value | Description |
 | --- | --- | --- | --- |
-| `CROW.C2 X Y` | 3-digit parameter X <br> CROW.C1 see above | TT value `V -10` ... `V 10` <br> =input voltage 0-10V <br> =druid -16384 to 16384 | set parameter value directly <br> CROW.C1 takes higher priority than CROW.C2|
+| `CROW.C2 X Y` | 3-digit parameter X <br> CROW.C1 see above | V -10 ... V 10 <br> TT value <br> =input voltage 0-10V <br> =druid -16384 to 16384 | set parameter value directly <br> CROW.C1 takes higher priority than CROW.C2|
 
 Many parameters can be set to zero by using `V 0`. The 0 to 10V input control voltage range is the same range as teletype `V -10` to `V 10` is the same as from druid -16384 to 16384. Any CROW.C1 command can be replaced by CROW.C2. Use the teletype OP `VV` to set a parameter to a decimal value. Some parameters, like pulse width, are sensitive to decimal changes. If CROW.C1 is selecting the same parameter CROW.C2 is trying to set, CROW.C1 takes higher priority than CROW.C2. (Technically speaking, CROW.C2 will set the parameter, but it will then be immediately overwritten by the C1 value in the next update loop, CAW).  
 
