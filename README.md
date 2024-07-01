@@ -2,13 +2,17 @@
 ![alt text](https://github.com/entzmingerc/drumcrow/blob/main/drumcrow%20discord%20emote.png?raw=true)  
 This script turns monome crow into a 4-channel drum machine synth. Driven with monome teletype (TT) or druid (and hopefully norns soon).  
 
+[![drumcrow v1.0 tutorial](drumcrowtutorial.png)](https://www.youtube.com/watch?v=rrcj5uk-hhY)  
+
+Click the image above for a tutorial. For more discussion, see the thread on [lines](https://llllllll.co/t/drumcrow/60200).  
+
 **Demos**  
 drumcrow sounds compilation [here](https://soundcloud.com/user-123356992/drumcrow-demo-sounds)  
 30 minute live coding improv [here](https://soundcloud.com/user-123356992/crow-live-jam-19)  
-drumcrow v1.0 tutorial [here](https://www.youtube.com/watch?v=rrcj5uk-hhY)  
 originally adapted from License's Flash Crash performance [here](https://www.youtube.com/watch?v=SYfeBtJjQ-M)  
 postsolarpunk Flash Crash performance [here](https://www.youtube.com/watch?v=_EKpT1tO02o)  
-playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)
+playing around [here](https://www.youtube.com/watch?v=W48sP1b27rA)  
+livecoding with druid, RAVE, and Hyrda [here](https://www.youtube.com/watch?v=3UIbLaA7vt8)  
 
 # ABSTRACT 
 Turns crow into a 4 oscillator drum machine / synth  
